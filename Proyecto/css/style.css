@@ -1,0 +1,334 @@
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: "Poppins", sans-serif;
+    line-height: 1.5;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
+    display: block;
+}
+
+
+body {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    color: #444;
+    background-color: #fff;
+}
+
+
+.header {
+    position: relative;
+    height: 100vh;
+    min-height: 500px;
+    background: url(../img/ofrenda1.jpg) no-repeat center center/cover fixed;
+    overflow: hidden;
+}
+
+
+.header .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.header .overlay .subtitle {
+    font-size: clamp(13px, 2vw, 18px);
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 8px;
+    word-spacing: 10px;
+    opacity: 0.8;
+}
+
+.header .overlay .title {
+    font-size: clamp(30px, 6vw, 70px);
+    font-weight: bold;
+}
+
+.header .shape svg {
+    position: absolute;
+    bottom: -28px;
+    left: 0;
+    width: 100%;
+    z-index: 1;
+    fill: #fff;
+}
+
+
+.header.components-header {
+    height: 450px;
+    background-position: center -140px;
+}
+
+.header.components-header .title {
+    font-size: clamp(40px, 7vw, 90px);
+    margin-top: -8%;
+    font-weight: bold;
+}
+
+.header.components-header .shape svg path {
+    fill: #f8fafc;
+}
+
+.header-mini {
+    height: 24rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    background: #cfe2ff;
+}
+
+.header-title {
+    font-size: 2.4rem;
+    font-weight: bold;
+    opacity: 0.8;
+    color: #212529;
+}
+
+@media (max-width: 992px) {
+    .header .shape svg {
+        bottom: -15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .header .shape svg {
+        bottom: 0;
+    }
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0) !important;
+    transition: background 0.3s ease, padding 0.3s ease;
+    padding: 1.5rem 0;
+}
+
+.navbar > .container,
+.navbar > .container-fluid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar .nav-link {
+    color: white !important;
+    transition: color 0.3s ease;
+}
+
+.navbar.scrolled .nav-link {
+    color: #212529 !important;
+}
+
+.navbar-brand {
+    display: inline-block;
+    margin-right: 1rem;
+    font-size: 1.25rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+
+
+.navbar-brand img {
+  width: 60px;
+  height: auto;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+
+
+.navbar-nav {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.navbar-nav .nav-link {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0.5rem 0;
+    text-decoration: none;
+    color: white;
+    transition: color 0.3s ease;
+    border-radius: 20px;
+}
+.navbar-collapse {
+    flex-basis: 100%;
+    flex-grow: 1;
+    align-items: center;
+}
+
+.navbar.scrolled {
+    background-color: white !important;
+    padding: 10px 0;
+}
+
+.navbar.scrolled .navbar-brand img {
+    max-height: 60px;
+}
+
+.navbar.scrolled .navbar-nav .nav-link {
+    color: #212529;
+}
+
+
+.custom-toggler {
+    background-color: white;
+    
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+  }
+
+.navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='black' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+    }
+    
+
+@media (min-width: 768px) {
+    .navbar-collapse {
+        display: flex !important; 
+    }
+
+    /* Clase activa cuando haces scroll */
+   
+  
+    .navbar-toggler {
+        display: none !important;
+    }
+
+    .offcanvas {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .navbar-toggler {
+        display: inline-block !important;  
+    }
+
+    .navbar-collapse {
+        display: none !important;
+    }
+
+    
+    .offcanvas {
+        display: block !important;
+    }
+
+     .navbar-scrolled .navbar-brand img {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none; /* opcional: evita clics si es un link */
+    }
+      
+    .navbar-brand img {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+}
+
+
+
+
+
+
+
+.mouse-icon {
+    border: 2px solid #fff;
+    border-radius: 16px;
+    height: 40px;
+    width: 24px;
+    display: block;
+    z-index: 10;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    margin: auto;
+}
+
+.mouse-icon .wheel {
+    position: relative;
+    border-radius: 10px;
+    background: #fff;
+    width: 2px;
+    height: 6px;
+    top: 4px;
+    margin-left: auto;
+    margin-right: auto;
+    animation-name: drop;
+    animation-duration: 1.4s;
+    animation-timing-function: linear;
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-play-state: running;
+}
+
+@keyframes drop {
+    0% {
+        top: 4px;
+        opacity: 1;
+    }
+    100% {
+        top: 12px;
+        opacity: 0;
+    }
+}
+
+
+::-webkit-scrollbar {
+    width: 12px; 
+    height: 12px; 
+}
+
+
+::-webkit-scrollbar-thumb {
+    background-color: #FF8C00;
+    border-radius: 10px; 
+}
+
+
+::-webkit-scrollbar-track {
+    background-color: #f1f1f1; 
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #D35400; 
+}
+
+
+
+.btn-orange {
+    background-color: #FF8C00;
+    color: white;
+    border: none;
+  }
+  
+  .btn-orange:hover {
+    background-color: #D35400;
+    color: white;
+  }
