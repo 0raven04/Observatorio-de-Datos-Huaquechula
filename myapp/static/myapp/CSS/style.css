@@ -1,0 +1,175 @@
+body{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+.caja{
+    box-shadow: 10px 10px 8px 10px #888888;
+    width: 90%;
+    height: 80vh;
+    max-width: 800px;
+    max-height: 90vh;
+    margin: 20px auto;
+    overflow-y: auto;
+    border-radius: 20px;   
+    padding: 20px;
+    position: relative;
+    top: initial;
+    left: initial;
+    background-color: white;
+}
+
+.h1{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;  
+}
+
+.cabeza{
+    height: 70px;
+    background-color: #D35400;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+}
+
+.logo {
+  max-width: 150px;  
+  width: 100%;       
+}
+
+
+.boton {
+    width: 100%;
+    max-width: 200px;
+    height: 50px; 
+    color: #FFF;
+    border: 2px solid #FFC300;
+    border-radius: 10px;
+    padding: 0 20px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 0 #FFC300;
+    -webkit-transition: ease-out 0.4s;
+    -moz-transition: ease-out 0.4s;
+    transition: ease-out 0.4s;
+}
+
+.boton.bt-body {
+    color: black; 
+    margin-top: 20px;
+    margin-right: auto;
+    margin-bottom: -10px;
+    margin-left: auto;
+
+
+}
+
+.boton:hover {
+    transform: scale(1);
+    color: white !important;
+    box-shadow: inset 0 0 0 50px #FFC300;
+}
+
+
+@media (max-width: 768px) {
+    .row.p-5 {
+        padding: 1rem !important;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        font-size: 0.9rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .boton {
+        height: 45px;
+        font-size: 13px;
+        padding: 0 15px;
+        max-width: 150px;
+    }
+
+    .cabeza {
+        height: 60px;
+        padding: 0 10px;
+    }
+
+    .logo {
+        width: 70px;
+    }
+}
+
+@media (max-width: 576px) {
+    .caja {
+        width: 95%;
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .boton {
+        height: 40px;
+        font-size: 12px;
+        max-width: 130px;
+    }
+
+   
+    .cabeza {
+        height: 50px; 
+    }
+
+    .logo {
+        width: 60px; 
+    }
+}
+
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 0, 1%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-toggler {
+    width: 40px;
+    height: 40px;
+    border: none; 
+    padding: 0;
+    background-color: transparent; 
+}
+
+.navbar-toggler-icon {
+    width: 40px;
+    height: 40px;
+    background-size: contain;
+}
+
+.boton-menu {
+    color: black;               
+    width: 100%;
+    max-width: 200px;
+    height: 50px; 
+    border: 2px solid #FFC300;
+    border-radius: 10px;
+    padding: 0 20px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 0 #FFC300;
+    -webkit-transition: ease-out 0.4s;
+    -moz-transition: ease-out 0.4s;
+    transition: ease-out 0.4s;
+}
+
+.boton-menu:hover {
+    transform: scale(1);
+    color: white !important;
+    box-shadow: inset 0 0 0 50px #FFC300;        
+}
