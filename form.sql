@@ -2,6 +2,22 @@ DROP DATABASE IF EXISTS observatorio_de_datos;
 CREATE DATABASE observatorio_de_datos;
 USE observatorio_de_datos;
 
+
+CREATE TABLE Registro_visita (
+    id_registro INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE DEFAULT CURRENT_DATE,
+    tamanio_grupo TINYINT UNSIGNED DEFAULT 1,
+    numero_visitas TINYINT UNSIGNED DEFAULT 1,
+    estancia_dias TINYINT UNSIGNED DEFAULT 1,
+    motivo_visita VARCHAR(50),
+    tipo_transporte VARCHAR(50),
+    procedencia VARCHAR(50),
+    pais_origen VARCHAR(50),
+    es_extranjero BOOLEAN DEFAULT FALSE,
+    id_encuestador varchar(50),
+    FOREIGN KEY (id_encuestador) REFERENCES Encuestador(clave_encuestador) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Tablas principales
 CREATE TABLE Usuario(
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,12 +37,12 @@ CREATE TABLE Administrador(
 ) ENGINE=InnoDB;
 
 CREATE TABLE Encuestador(
-    id_usuario INT PRIMARY KEY,
-    clave_encuestador VARCHAR(50) UNIQUE,
+    id_usuario INT,
+    clave_encuestador VARCHAR(50) PRIMARY KEY,
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE Propietario(
+CREATE TABLE Propietario(S
     id_usuario INT PRIMARY KEY,
     clave_propietario VARCHAR(50) UNIQUE,
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
@@ -38,25 +54,20 @@ CREATE TABLE Documento(
     fecha_carga DATETIME DEFAULT CURRENT_TIMESTAMP,
     descripcion MEDIUMTEXT,
     url MEDIUMTEXT NOT NULL,
-    fecha_actualizacion DATETIME,
+    fecha_actualizacion DATETIME,S
     clasificacion ENUM('publico', 'privado', 'confidencial'),
     id_admin INT,
     FOREIGN KEY (id_admin) REFERENCES Administrador(id_usuario)
 ) ENGINE=InnoDB;
 
-CREATE TABLE Registro_visita(
-    id_registro INT AUTO_INCREMENT PRIMARY KEY,
-    fecha DATE DEFAULT CURRENT_DATE,
-    edad TINYINT,
-    sexo ENUM('Hombre','Mujer','Otro'),
-    tamanio_grupo TINYINT DEFAULT 1,
-    numero_visitas TINYINT DEFAULT 1,
-    estancia_esperada ENUM('1','2-3','3-5','5 o mas'),
-    motivo_visita ENUM('vacacion','ocio','trabajo','visita familiar', 'otro'),
-    tipo_transporte ENUM('Automovil','Autobus', 'Otro'),
-    procedencia VARCHAR(50),
-    id_encuestador INT,
-    FOREIGN KEY (id_encuestador) REFERENCES Encuestador(id_usuario)
+
+
+CREATE TABLE Persona_visita (
+    id_persona INT AUTO_INCREMENT PRIMARY KEY,
+    id_registro INT,
+    edad TINYINT NOT NULL,
+    sexo ENUM('Hombre', 'Mujer', 'Otro') NOT NULL,
+    FOREIGN KEY (id_registro) REFERENCES Registro_visita(id_registro) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE Grafico(

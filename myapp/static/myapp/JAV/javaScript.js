@@ -32,9 +32,9 @@ numVisitas.addEventListener("keypress", soloNumeros);
                     <label for="genero${i}" class="form-label">Género</label>
                     <select class="form-select" id="genero${i}" name="genero${i}" required>
                     <option value="" disabled selected>Selecciona género</option>
-                    <option value="masculino">Masculino</option>
-                    <option value="femenino">Femenino</option>
-                    <option value="otro">Otro</option>
+                    <option value="Hombre">Hombre</option>
+                    <option value="Mujer">Mujer</option>
+                    <option value="Otro">Otro</option>
                     </select>
                     <div class="invalid-feedback">
                       Selecciona una opción
@@ -68,10 +68,10 @@ numVisitas.addEventListener("keypress", soloNumeros);
             
             Array.from(forms).forEach(form => {
               form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                  event.preventDefault()
-                  event.stopPropagation()
-                }
+                //if (!form.checkValidity()) {
+                  //event.preventDefault()
+                  //event.stopPropagation()
+                //}
                 
                 form.classList.add('was-validated')
               }, false)
@@ -122,6 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   radioSi.addEventListener("change", actualizarCampoPais);
   radioNo.addEventListener("change", actualizarCampoPais);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  crearCamposPersonas(parseInt(document.getElementById('numPersonas').value || 1));
 });
 
 

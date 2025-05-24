@@ -43,7 +43,6 @@ CREATE TABLE Registro_visita(
     numero_visitas TINYINT, -- AUTOCALCULADO
     estancia_esperada ENUM('1','2-3','3-5','5 o mas'),  
     motivo_visita ENUM('vacacion','ocio','trabajo','visita familiar', 'otro'), 
-    tipo_hospedaje ENUM('no se hospeda','hotel','casa de conocido'), 
     tipo_transporte ENUM('publico','privado'),
     procedencia VARCHAR(50)
 ) ENGINE=innodb;
@@ -64,7 +63,8 @@ CREATE TABLE genera(
 CREATE TABLE Ofrenda(
     clave_ofrenda INT AUTO_INCREMENT NOT NULL,
     anfitrion VARCHAR(50),
-    nombre VARCHAR(50) 
+    nombre VARCHAR(50),
+    id_registro INT
 ) ENGINE=innodb;
 
 CREATE TABLE Servicio(
@@ -115,9 +115,6 @@ CREATE TABLE Punto_Interes (
 CREATE TABLE Fotografia (
     id_foto INT AUTO_INCREMENT PRIMARY KEY,
     id_punto INT,
-    ruta_archivo VARCHAR(255),
-    descripcion VARCHAR(255),
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_punto) REFERENCES Punto_Interes(id_punto)
 ) ENGINE=innodb;
 

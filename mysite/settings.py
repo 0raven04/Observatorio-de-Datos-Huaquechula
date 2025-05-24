@@ -24,6 +24,9 @@ SECRET_KEY = 'django-insecure-)xzi6t)9&hsqo5&lzrx3vb(!7=@&h2eyaq9^a)2onl-#5dik%^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/registro/'
+LOGOUT_REDIRECT_URL = '/login/'
 ALLOWED_HOSTS = []
 
 
@@ -51,13 +54,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'mysite.urls'
 
+import os
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -65,6 +71,8 @@ TEMPLATES = [
         },
     },
 ]
+
+
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
@@ -76,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'OBSERVATORIO_DE_DATOS',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '',  # Puedes dejarlo vacío o poner '3306'
         'OPTIONS': {
@@ -136,3 +144,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'myapp/static')]
 
 TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'myapp/templates')]
+
+AUTHENTICATION_BACKENDS = [
+    'myapp.authentication_backend.UsuarioBackend',  # ruta a tu backend corregido
+    'django.contrib.auth.backends.ModelBackend',    # para mantener el backend default (opcional)
+]
