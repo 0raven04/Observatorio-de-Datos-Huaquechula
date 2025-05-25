@@ -6,8 +6,10 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from .forms import RegistroVisitaForm, PersonaFormSet
-
+from django.contrib.auth import logout
+from django.contrib import messages
 @login_required
+@transaction.atomic
 def registro_visita(request):
     # 1. comprueba que el usuario sea encuestador
     try:
@@ -24,6 +26,8 @@ def registro_visita(request):
             try:
                 return int(value)
             except (TypeError, ValueError):
+                if not personas:
+                    return render(request, 'myapp/formulario.html', {'error': 'Faltan datos válidos de personas.'})
                 return default
 
         es_extranjero = request.POST.get('esExtranjero') == 'si'
@@ -90,8 +94,17 @@ def registrar_usuario(request):
             tipo=tipo
         )
         usuario.save()
-        return redirect('login')  # Redirige a login o a donde quieras
+        return redirect('login')  
 
     return render(request, 'registro.html')
+
+def cerrar_sesion(request):
+    logout(request)
+    messages.success(request, "Sesión cerrada correctamente.")
+    return redirect('login')  
+
+
+def vista_inicio(request):
+    return render(request, 'myapp/index.html')
 
 
