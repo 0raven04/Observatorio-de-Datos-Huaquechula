@@ -108,3 +108,47 @@ def vista_inicio(request):
     return render(request, 'myapp/index.html')
 
 
+
+#Respaldo de base de datos formulario formato .sql
+import subprocess
+from django.http import HttpResponse
+from django.conf import settings
+from datetime import datetime
+import os
+
+def backup_database(request):
+    try:
+        # Configuración de la base de datos desde settings.py
+        db_name = settings.DATABASES['default']['NAME']
+        db_user = settings.DATABASES['default']['USER']
+        db_pass = settings.DATABASES['default']['PASSWORD']
+        db_host = settings.DATABASES['default']['HOST']
+        
+        # Nombre del archivo de respaldo con fecha y hora
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        backup_filename = f"backup_{timestamp}.sql"
+        backup_path = os.path.join(settings.BASE_DIR, 'backups', backup_filename)
+        
+        # Crear directorio backups si no existe
+        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+        
+        # Comando para mysqldump
+        cmd = f"mysqldump -h {db_host} -u {db_user} -p{db_pass} {db_name} > {backup_path}"
+        
+        # Ejecutar el comando
+        subprocess.run(cmd, shell=True, check=True)
+        
+        # Crear respuesta para descargar el archivo
+        with open(backup_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/sql')
+            response['Content-Disposition'] = f'attachment; filename={backup_filename}'
+        
+        # Opcional: eliminar el archivo después de enviarlo
+        os.remove(backup_path)
+        
+        return response
+        
+    except Exception as e:
+        return HttpResponse(f"Error al crear el respaldo: {str(e)}", status=500)
+
+
