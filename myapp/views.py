@@ -105,37 +105,41 @@ import os
 
 def backup_database(request):
     try:
-        # Configuración de la base de datos desde settings.py
         db_name = settings.DATABASES['default']['NAME']
         db_user = settings.DATABASES['default']['USER']
-        db_pass = settings.DATABASES['default']['PASSWORD']
-        db_host = settings.DATABASES['default']['HOST']
+        db_pass = settings.DATABASES['default']['PASSWORD'] or ''
+        db_host = settings.DATABASES['default']['HOST'] or 'localhost'
         
-        # Nombre del archivo de respaldo con fecha y hora
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         backup_filename = f"backup_{timestamp}.sql"
-        backup_path = os.path.join(settings.BASE_DIR, 'backups', backup_filename)
         
-        # Crear directorio backups si no existe
-        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+        # Usar una ruta temporal sin espacios
+        temp_dir = "D:\\Descargas\\respaldo"
+        os.makedirs(temp_dir, exist_ok=True)
+        backup_path = os.path.join(temp_dir, backup_filename)
         
-        # Comando para mysqldump
-        cmd = f"mysqldump -h {db_host} -u {db_user} -p{db_pass} {db_name} > {backup_path}"
+        # Construir el comando de manera más segura
+        cmd = [
+            'mysqldump',
+            f'-h{db_host}',
+            f'-u{db_user}',
+            f'-p{db_pass}',
+            db_name,
+            f'--result-file={backup_path}'
+        ]
         
         # Ejecutar el comando
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(cmd, check=True)
         
-        # Crear respuesta para descargar el archivo
+        # Leer el archivo y enviarlo como respuesta
         with open(backup_path, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/sql')
             response['Content-Disposition'] = f'attachment; filename={backup_filename}'
         
-        # Opcional: eliminar el archivo después de enviarlo
+        # Eliminar el archivo temporal
         os.remove(backup_path)
         
         return response
         
     except Exception as e:
-        return HttpResponse(f"Error al crear el respaldo: {str(e)}", status=500)
-
-
+        return HttpResponse(f"Error detallado: {str(e)}", status=500)
