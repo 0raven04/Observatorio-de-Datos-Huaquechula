@@ -5,8 +5,6 @@ from .models import RegistroVisita, PersonaVisita, Encuestador, Usuario
 from django.http import HttpResponseForbidden
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
-
-from django.db import transaction
 from .forms import RegistroVisitaForm, PersonaFormSet
 
 @login_required
@@ -28,7 +26,7 @@ def registro_visita(request):
             except (TypeError, ValueError):
                 return default
 
-        es_extranjero = request.POST.get('gridRadios') == 'option1'
+        es_extranjero = request.POST.get('esExtranjero') == 'si'
         tamanio_grupo  = to_int(request.POST.get('numPersonas'), default=1)
         estancia_dias  = to_int(request.POST.get('numDias'),default=1)
         numero_visitas = to_int(request.POST.get('numVisitas'), default=1)
@@ -60,9 +58,8 @@ def registro_visita(request):
 
         return redirect('registro')      # ← responde al POST   
 
-    # ← Si llega aquí es GET: renderiza el formulario
     return render(request, 'myapp/formulario.html')  
-    print(request.POST)  # asegúrate de que la plantilla exista
+
 
 
 
@@ -80,7 +77,8 @@ def registrar_usuario(request):
 
         if not all([nombre, ap, am, nombre_usuario, email, contrasenia, tipo]):
             return render(request, 'registro.html', {'error': 'Completa todos los campos'})
-
+       
+        
         # Crear usuario con contraseña hasheada
         usuario = Usuario(
             nombre=nombre,
@@ -97,14 +95,3 @@ def registrar_usuario(request):
     return render(request, 'registro.html')
 
 
-def registro(request):
-    if request.method == 'POST':
-        cantidad = int(request.POST.get('numPersonas'))
-
-        for i in range(1, cantidad + 1):
-            edad = request.POST.get(f'edad{i}')
-            genero = request.POST.get(f'genero{i}')
-
-
-            # Procesa o guarda en base de datos aquí
-            print(f"Persona {i}: Edad={edad}, Género={genero}")
