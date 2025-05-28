@@ -10,6 +10,8 @@ from django.contrib.auth import logout
 from django.contrib import messages
 @login_required
 @transaction.atomic
+
+
 def registro_visita(request):
     # 1. comprueba que el usuario sea encuestador
     try:
@@ -156,3 +158,22 @@ def backup_database(request):
         
     except Exception as e:
         return HttpResponse(f"Error detallado: {str(e)}", status=500)
+    
+#crud para RegistroVisita
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import RegistroVisita
+from django.contrib import messages
+
+def lista_registros(request):
+    registros = RegistroVisita.objects.all()
+    mensaje = request.GET.get('mensaje', '')
+    return render(request, 'myapp/lista_registros.html', {'registros': registros, 'mensaje': mensaje})
+
+def eliminar_registro(request, id_registro):
+    registro = get_object_or_404(RegistroVisita, pk=id_registro)
+    try:
+        registro.delete()
+        mensaje = f'Registro {id_registro} eliminado correctamente'
+    except:
+        mensaje = f'No se pudo eliminar el registro {id_registro}'
+    return redirect(f'/visitas/?mensaje={mensaje}')

@@ -4,7 +4,6 @@ from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
 
 
-from django.db import models
 
 class Usuario(models.Model):
     id_usuario = models.AutoField(primary_key=True)
@@ -54,7 +53,7 @@ class Encuestador(models.Model):
 class RegistroVisita(models.Model):
     id_registro = models.AutoField(primary_key=True)
     fecha = models.DateField(auto_now_add=True)
-    tamanio_grupo = models.PositiveSmallIntegerField(default=1)  # numPersonas
+    tamanio_grupo = models.PositiveSmallIntegerField(default=1)
     es_extranjero = models.BooleanField(default=False)
     pais_origen = models.CharField(max_length=100, null=True, blank=True)
     procedencia = models.CharField(max_length=50, null=True, blank=True)
@@ -86,20 +85,22 @@ class RegistroVisita(models.Model):
         blank=True
     )
 
-    estancia_dias = models.PositiveSmallIntegerField(default=1)  # numDias
-    numero_visitas = models.PositiveSmallIntegerField(default=1)  # numVisitas
-    
+    estancia_dias = models.PositiveSmallIntegerField(default=1)
+    numero_visitas = models.PositiveSmallIntegerField(default=1)
+
     id_encuestador = models.ForeignKey(
-    Encuestador,
-    on_delete=models.CASCADE,
-    db_column='id_encuestador',
-    to_field='clave_encuestador'
-)
+        Encuestador,
+        on_delete=models.CASCADE,
+        db_column='id_encuestador',
+        to_field='clave_encuestador'
+    )
+
     def __str__(self):
         return f'Registro {self.id_registro} - Encuestador {self.id_encuestador}'
 
     class Meta:
         db_table = 'Registro_visita'
+
 
 
 class PersonaVisita(models.Model):
@@ -144,3 +145,4 @@ class UsuarioBackend(BaseBackend):
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+        

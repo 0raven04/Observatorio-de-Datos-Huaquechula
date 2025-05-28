@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'OBSERVATORIO_DE_DATOS',
         'USER': 'root',
-        'PASSWORD': '1234',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '',  # Puedes dejarlo vacío o poner '3306'
         'OPTIONS': {
