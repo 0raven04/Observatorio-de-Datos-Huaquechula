@@ -79,7 +79,7 @@ def registrar_usuario(request):
         nombre_usuario = request.POST.get('nombre_usuario')
         email = request.POST.get('email')
         contrasenia = request.POST.get('contrasenia')
-        tipo = request.POST.get('tipo')  # admin, encuestador, propietario
+        tipo = request.POST.get('tipo')  
 
         if not all([nombre, ap, am, nombre_usuario, email, contrasenia, tipo]):
             return render(request, 'registro.html', {'error': 'Completa todos los campos'})
@@ -129,7 +129,7 @@ def backup_database(request):
         backup_filename = f"backup_{timestamp}.sql"
         
         # Usar una ruta temporal sin espacios
-        temp_dir = "D:\\Descargas\\respaldo"
+        temp_dir = "C:\\Descargas\\respaldo"
         os.makedirs(temp_dir, exist_ok=True)
         backup_path = os.path.join(temp_dir, backup_filename)
         

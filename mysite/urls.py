@@ -18,7 +18,22 @@ from django.contrib import admin
 from django.urls import path, include
 from myapp import views as myapp_views
 from django.contrib.auth import views as auth_views
+
 from django.contrib.auth.views import LogoutView
+
+
+from django.shortcuts import redirect
+
+from django.contrib.auth.views import LogoutView
+from myapp import views
+
+from django.contrib import admin
+from django.urls import path, include
+
+from myapp.views import backup_database
+from django.contrib.auth.views import LogoutView
+
+
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
@@ -26,4 +41,6 @@ urlpatterns = [
     path('registro/', myapp_views.registro_visita, name='registro'),
     path('principal/', myapp_views.vista_inicio, name='vista_inicio'),
     path('', include('myapp.urls')),
+    path('backup/',backup_database, name='backup_database'),
 ]
+

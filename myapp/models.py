@@ -4,7 +4,6 @@ from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
 
 
-
 class Usuario(models.Model):
     id_usuario = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=50)
@@ -55,8 +54,8 @@ class RegistroVisita(models.Model):
     fecha = models.DateField(auto_now_add=True)
     tamanio_grupo = models.PositiveSmallIntegerField(default=1)
     es_extranjero = models.BooleanField(default=False)
-    pais_origen = models.CharField(max_length=100, null=True, blank=True)
-    procedencia = models.CharField(max_length=50, null=True, blank=True)
+    pais_origen = models.CharField(max_length=100, blank=True)
+    procedencia = models.CharField(max_length=50, blank=True)
 
     tipo_transporte_choices = [
         ('Automovil', 'Automovil'),
