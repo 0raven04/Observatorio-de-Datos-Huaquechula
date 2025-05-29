@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from myapp import views as myapp_views  # 
+from myapp import views as myapp_views
 from django.contrib.auth import views as auth_views
+
+from django.contrib.auth.views import LogoutView
+
+
 from django.shortcuts import redirect
 
 from django.contrib.auth.views import LogoutView
@@ -30,12 +34,11 @@ from myapp.views import backup_database
 from django.contrib.auth.views import LogoutView
 
 
+
 urlpatterns = [
-    path('', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
-    path('registro/', myapp_views.registro_visita, name='registro'),
     path('logout/', LogoutView.as_view(next_page='login'),  name='logout'),
-     path('principal/', views.vista_inicio, name='vista_inicio'),
     path('backup/',backup_database, name='backup_database'),
     path('', include('myapp.urls')),
 ]

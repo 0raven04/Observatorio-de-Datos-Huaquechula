@@ -67,8 +67,6 @@ body{
     margin-right: auto;
     margin-bottom: -10px;
     margin-left: auto;
-
-
 }
 
 .boton:hover {
@@ -249,3 +247,57 @@ body{
     z-index: 1;
     opacity: 1;
 }
+
+
+  /* Estilo para el encabezado */
+  thead th {
+    background-color: #D35400;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Estilo para filas alternas */
+  tbody tr:nth-child(odd) {
+    background-color: #FFF8DC; /* un amarillo muy claro compatible con #FFC300 */
+  }
+
+  /* Bordes redondeados y sombra */
+  .custom-table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Ajustes de celdas */
+  .custom-table td,
+  .custom-table th {
+    vertical-align: middle;
+    text-align: center;
+    padding: 8px;
+  }
+
+  /* Botón eliminar: naranja fuerte */
+  .btn-danger {
+    background-color: #D35400;
+    border-color: #D35400;
+  }
+
+  .btn-danger:hover {
+    background-color: #b84300;
+    border-color: #b84300;
+  }
+
+  /* Botón editar: amarillo dorado */
+  .btn-info {
+    background-color: #FFC300;
+    border-color: #FFC300;
+    color: black;
+  }
+
+  .btn-info:hover {
+    background-color: #e6b000;
+    border-color: #e6b000;
+    color: black;
+  }
+

@@ -29,7 +29,7 @@ def registro_visita(request):
                 return int(value)
             except (TypeError, ValueError):
                 if not personas:
-                    return render(request, 'myapp/formulario.html', {'error': 'Faltan datos válidos de personas.'})
+                    return render(request, 'myapp/lista_registros.html', {'error': 'Faltan datos válidos de personas.'})
                 return default
 
         es_extranjero = request.POST.get('esExtranjero') == 'si'
@@ -61,10 +61,13 @@ def registro_visita(request):
 
         if personas:
             PersonaVisita.objects.bulk_create(personas)
+        return redirect('lista_registros')      # ← responde al POST   
+    
+    registros = RegistroVisita.objects.all()
+    mensaje = request.GET.get('mensaje', '')
+    return render(request, 'myapp/lista_registros.html', {'registros': registros, 'mensaje': mensaje})
 
-        return redirect('registro')      # ← responde al POST   
-
-    return render(request, 'myapp/formulario.html')  
+   
 
 
 
@@ -82,7 +85,7 @@ def registrar_usuario(request):
         tipo = request.POST.get('tipo')  
 
         if not all([nombre, ap, am, nombre_usuario, email, contrasenia, tipo]):
-            return render(request, 'registro.html', {'error': 'Completa todos los campos'})
+            return render(request, 'myapp/lista_registros.html', {'error': 'Completa todos los campos'})
        
         
         # Crear usuario con contraseña hasheada
@@ -98,7 +101,7 @@ def registrar_usuario(request):
         usuario.save()
         return redirect('login')  
 
-    return render(request, 'registro.html')
+    return render(request, 'myapp/lista_registros.html')
 
 def cerrar_sesion(request):
     logout(request)
@@ -109,8 +112,6 @@ def cerrar_sesion(request):
 def vista_inicio(request):
     return render(request, 'myapp/index.html')
 
-def vista_admin(request):
-    return render(request, 'myapp/ext_admin.html')
 
 
 
@@ -163,19 +164,26 @@ def backup_database(request):
         return HttpResponse(f"Error detallado: {str(e)}", status=500)
     
 
-def registroED(request):
-    registro_visita = RegistroVisita.objects.all()
-    return render(request, 'myapp/mod_db/ind.html', {'registro_visita': registro_visita})
-
-def principio(request):
-    return render(request, 'myapp/inicio.html')
 
 def editarFormulario(request):
     return render(request, 'myapp/mod_db/editar.html')
 
-    
 
-def eliminarFormulario(request, id):
-    registro_visita = get_object_or_404(RegistroVisita, id_registro=id)
-    registro_visita.delete()
-    return redirect('registroED')
+
+#crud para RegistroVisita
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import RegistroVisita
+from django.contrib import messages
+
+
+
+
+def eliminar_registro(request, id_registro):
+    registro = get_object_or_404(RegistroVisita, pk=id_registro)
+    try:
+        registro.delete()
+        mensaje = f'Registro {id_registro} eliminado correctamente'
+    except:
+        mensaje = f'No se pudo eliminar el registro {id_registro}'
+    return redirect(f'/visitas/?mensaje={mensaje}')
+

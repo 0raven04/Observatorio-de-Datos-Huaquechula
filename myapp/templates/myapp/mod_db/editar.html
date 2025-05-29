@@ -1,0 +1,16 @@
+{% extends "myapp/admin.html" %}
+
+{% block titulo %} Editar registro {% endblock %}
+
+{% block contenido %} 
+
+<div class="card">
+    <div class="card-header">Editar Formulario</div>
+    <div class="card-body">
+        <h4 class="card-title">Editar registro</h4>
+        {% include 'myapp/mod_db/form.html' %}
+    </div>
+    <div class="card-footer text-muted">Footer</div>
+</div>
+
+{% endblock %}
