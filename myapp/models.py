@@ -23,8 +23,7 @@ class Usuario(models.Model):
     
 
     class Meta:
-        db_table = 'Usuario'  # usa tabla existente con ese nombre
-
+        db_table = 'Usuario'  
 
 class Encuestador(models.Model):
     # clave_encuestador ES la PK
@@ -34,11 +33,10 @@ class Encuestador(models.Model):
         db_column='clave_encuestador'
     )
 
-    # relación 1‑a‑1 con Usuario
     id_usuario = models.OneToOneField(
         Usuario,
         on_delete=models.CASCADE,
-        db_column='id_usuario',   # ← exactamente como esté en la tabla
+        db_column='id_usuario',   
         related_name='encuestador'
     )
 
@@ -51,7 +49,7 @@ class Encuestador(models.Model):
 class RegistroVisita(models.Model):
     id_registro = models.AutoField(primary_key=True)
     fecha = models.DateField(auto_now_add=True)
-    tamanio_grupo = models.PositiveSmallIntegerField(default=1)  # numPersonas
+    tamanio_grupo = models.PositiveSmallIntegerField(default=1)  
     es_extranjero = models.BooleanField(default=False)
     pais_origen = models.CharField(max_length=100, blank=True)
     procedencia = models.CharField(max_length=50, blank=True)
@@ -124,13 +122,8 @@ class PersonaVisita(models.Model):
 class UsuarioBackend(BaseBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
-            # Busca el usuario en tu modelo personalizado por nombre_usuario
             usuario = Usuario.objects.get(nombre_usuario=username)
-            # Verifica la contraseña, si usas hash
-            # Si guardas contraseña en texto plano (no recomendado), cambia esto
-            if check_password(password, usuario.contrasenia):  # cambio según cómo guardes la contraseña
-                # Crear o devolver un objeto User para la sesión de Django
-                # Lo usamos para que Django admin y login funcionen
+            if check_password(password, usuario.contrasenia):  
                 user, created = User.objects.get_or_create(username=usuario.nombre_usuario)
                 return user
         except Usuario.DoesNotExist:

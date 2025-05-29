@@ -31,12 +31,11 @@ from django.contrib.auth.views import LogoutView
 
 
 urlpatterns = [
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('registro/', myapp_views.registro_visita, name='registro'),
-     path('logout/', LogoutView.as_view(next_page='login'),  name='logout'),
+    path('logout/', LogoutView.as_view(next_page='login'),  name='logout'),
      path('principal/', views.vista_inicio, name='vista_inicio'),
     path('backup/',backup_database, name='backup_database'),
     path('', include('myapp.urls')),
-
 ]

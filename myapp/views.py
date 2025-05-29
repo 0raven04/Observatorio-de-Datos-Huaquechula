@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .models import RegistroVisita, PersonaVisita, Encuestador, Usuario
@@ -8,6 +8,8 @@ from django.db import transaction
 from .forms import RegistroVisitaForm, PersonaFormSet
 from django.contrib.auth import logout
 from django.contrib import messages
+
+
 @login_required
 @transaction.atomic
 def registro_visita(request):
@@ -107,6 +109,9 @@ def cerrar_sesion(request):
 def vista_inicio(request):
     return render(request, 'myapp/index.html')
 
+def vista_admin(request):
+    return render(request, 'myapp/ext_admin.html')
+
 
 
 #Respaldo de base de datos formulario formato .sql
@@ -156,3 +161,21 @@ def backup_database(request):
         
     except Exception as e:
         return HttpResponse(f"Error detallado: {str(e)}", status=500)
+    
+
+def registroED(request):
+    registro_visita = RegistroVisita.objects.all()
+    return render(request, 'myapp/mod_db/ind.html', {'registro_visita': registro_visita})
+
+def principio(request):
+    return render(request, 'myapp/inicio.html')
+
+def editarFormulario(request):
+    return render(request, 'myapp/mod_db/editar.html')
+
+    
+
+def eliminarFormulario(request, id):
+    registro_visita = get_object_or_404(RegistroVisita, id_registro=id)
+    registro_visita.delete()
+    return redirect('registroED')
