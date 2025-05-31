@@ -1,40 +1,51 @@
+<form class="needs-validation g-3" novalidate name="formulario" id="formulario" method="POST" action="{% url 'lista_registros' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Campo: Cantidad de personas -->
+    <div class="col-12 col-md-6 mb-3">
+        <div class="form-floating">
+            <!-- 
+                Input para el número de personas en el grupo
+                - id/name: numPersonas
+                - placeholder: Texto guía
+                - required: Campo obligatorio
+                - min="1": Valor mínimo permitido
+            -->
+            <input type="number" class="form-control" id="numPersonas" name="numPersonas" placeholder="Ingresa el numero de personas" required min="1">
+            <label for="numPersonas">Cantidad de personas</label>
+            <!-- Mensaje de validación -->
+            <div class="invalid-feedback">Ingresa un número válido (mínimo 1)</div>
+        </div>
+    </div>
 
-        <form class="needs-validation g-3" novalidate name="formulario" id="formulario" method="POST" action="{% url 'lista_registros' %}" enctype="multipart/form-data">
-          {% csrf_token %}
-          
-            <div class="col-12 col-md-6 mb-3">
-              <div class="form-floating">
-                <input type="number" class="form-control" id="numPersonas" name="numPersonas" placeholder="Ingresa el numero de personas" required min="1">
-                <label for="numPersonas">Cantidad de personas</label>
-                <div class="invalid-feedback">Ingresa un número válido (mínimo 1)</div>
-              </div>
-            </div>
-
-  
-  
-              
-              
-            <div class="col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center">
-              <label class="form-label mb-2">Extranjeros</label>
-              <div class="d-flex justify-content-center gap-3">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="esExtranjero" id="gridRadios1" value="si" checked>
-                  <label class="form-check-label" for="gridRadios1">
+    <!-- Grupo: ¿Son extranjeros? -->
+    <div class="col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center">
+        <label class="form-label mb-2">Extranjeros</label>
+        <div class="d-flex justify-content-center gap-3">
+            <!-- Opción: Sí -->
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="esExtranjero" id="gridRadios1" value="si" checked>
+                <label class="form-check-label" for="gridRadios1">
                     Sí
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="esExtranjero" id="gridRadios2" value="no">
-                  <label class="form-check-label" for="gridRadios2">
-                    No
-                  </label>
-                </div>
-              </div>
+                </label>
             </div>
-                <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important">
-                    <label class="form-label" for="pais">País</label>
-                    <select class="form-select" id="pais" name="pais" >
-                      <option selected disabled value="">Elige un país...</option>
+            <!-- Opción: No -->
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="esExtranjero" id="gridRadios2" value="no">
+                <label class="form-check-label" for="gridRadios2">
+                    No
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Selector: País de origen -->
+    <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important">
+        <label class="form-label" for="pais">País</label>
+        <select class="form-select" id="pais" name="pais">
+            <!-- Opción inicial deshabilitada como placeholder -->
+            <option selected disabled value="">Elige un país...</option>
+            <!-- Lista completa de países (abreviada en el ejemplo) -->
                       <option value="Afghanistan">Afghanistan</option>
                       <option value="Albania">Albania</option>
                       <option value="Algeria">Algeria</option>
@@ -285,62 +296,138 @@
                       <option value="Zimbabwe">Zimbabwe</option>
                       <option value="Åland Islands">Åland Islands</option>
                     </select>
-                    <div class="invalid-feedback">
-                      Selecciona una opción
+        <div class="invalid-feedback">
+            Selecciona una opción
+        </div>
+    </div>
+
+    <!-- Campo: Procedencia (Estado o región) -->
+    <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important">
+        <label for="procedencia" class="form-label">Procedencia (Estado o región)</label>
+        <input type="text" class="form-control" id="procedencia" name="procedencia" placeholder="Ej. Ciudad de México" maxlength="25">
+        <div class="invalid-feedback">Este campo es obligatorio.</div>
+    </div>
+
+    <!-- Selector: Tipo de transporte -->
+    <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important">
+        <label for="transporte" class="form-label">Tipo de transporte</label>
+        <select class="form-select" id="transporte" name="transporte">
+            <option selected disabled value="">Elige una opción...</option>
+            <option>Automovil</option>
+            <option>Autobus</option>
+            <option>Avion</option>
+            <option>Otro</option>
+        </select>
+        <div class="invalid-feedback">Campo requerido.</div>
+    </div>
+
+    <!-- Selector: Motivo de la visita -->
+    <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important">
+        <label for="motivo" class="form-label">Motivo de la visita</label>
+        <select class="form-select" id="motivo" name="motivo">
+            <option selected disabled value="">Selecciona motivo</option>
+            <option>Turismo</option>
+            <option>Trabajo</option>
+            <option>Estudios</option>
+            <option>Evento</option>
+            <option>Otro</option>
+        </select>
+        <div class="invalid-feedback">Campo requerido.</div>
+    </div>
+
+    <!-- Campo: Estancia esperada (días) -->
+    <div class="form-floating col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5" !important>
+        <input type="number" class="form-control" id="numDias" name="numDias" placeholder="Ingresa el numero de días" min="1" max="100" required>
+        <label for="numDias">Estancia esperada (días)</label>
+        <div class="invalid-feedback">
+            Ingresa un número válido (mínimo 1)
+        </div>
+    </div>
+
+    <!-- Campo: Número de visitas -->
+    <div class="form-floating col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5" !important>
+        <input type="number" class="form-control" id="numVisitas" name="numVisitas" placeholder="Ingresa el numero de visitas" min="0" max="100">
+        <label for="numVisitas">Numero de visitas</label>
+        <div class="invalid-feedback">
+            Ingresa un número válido (mínimo 1)
+        </div>
+    </div>
+    
+    <!-- Botón de envío del formulario -->
+    <input type="submit" class="btn boton bt-body mt-5" value="Guardar">
+    
+    <!-- Contenedor para campos dinámicos de personas -->
+    <div id="camposPersonas" class="mt-4"></div>
+
+    <!-- Script para manejo dinámico de campos de personas -->
+    <script>
+        /**
+         * FUNCIÓN: generarCamposPersonas
+         * Propósito: Genera campos de edad y género dinámicamente según el número de personas
+         * Parámetros:
+         *   num - Número de personas (entero)
+         *   personasData - Datos opcionales para precargar (array de objetos)
+         */
+        function generarCamposPersonas(num, personasData = []) {
+            const container = document.getElementById('camposPersonas');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= num; i++) {
+                // Obtener datos para esta persona si existen
+                const persona = personasData[i-1] || {};
+                
+                // Plantilla HTML para cada persona
+                container.innerHTML += `
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h5>Persona ${i}</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <!-- 
+                                    Campo Edad:
+                                    - name: edad1, edad2, ... 
+                                    - value: Precarga datos si existen
+                                    - Validación: min 1, max 120, requerido
+                                -->
+                                <input type="number" class="form-control" id="edad${i}" name="edad${i}" 
+                                       placeholder="Edad" min="1" max="120" required 
+                                       value="${persona.edad || ''}">
+                                <label for="edad${i}">Edad</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <!-- 
+                                    Selector Género:
+                                    - name: genero1, genero2, ...
+                                    - Precarga selección usando atributo 'selected'
+                                -->
+                                <select class="form-select" id="genero${i}" name="genero${i}" required>
+                                    <option value="">Selecciona género</option>
+                                    <option value="Hombre" ${persona.sexo === 'Hombre' ? 'selected' : ''}>Hombre</option>
+                                    <option value="Mujer" ${persona.sexo === 'Mujer' ? 'selected' : ''}>Mujer</option>
+                                    <option value="Otro" ${persona.sexo === 'Otro' ? 'selected' : ''}>Otro</option>
+                                </select>
+                                <label for="genero${i}">Género</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                `;
+            }
+        }
 
-                                <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important">
-                                    <label for="procedencia" class="form-label">Procedencia (Estado o región)</label>
-                                    <input type="text" class="form-control" id="procedencia" name="procedencia" placeholder="Ej. Ciudad de México" maxlength="25">
-                                    <div class="invalid-feedback">Este campo es obligatorio.</div>
-                                </div>
+        // EVENTO: Cambio en el campo número de personas
+        // Propósito: Genera campos dinámicos al cambiar el valor
+        document.getElementById('numPersonas').addEventListener('change', function() {
+            const num = parseInt(this.value) || 0;
+            generarCamposPersonas(num);
+        });
 
-
-                                    <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important">
-                                        <label for="transporte" class="form-label">Tipo de transporte</label>
-                                        <select class="form-select" id="transporte" name="transporte" >
-                                            <option selected disabled value="">Elige una opción...</option>
-                                            <option>Automovil</option>
-                                            <option>Autobus</option>
-                                            <option>Avion</option>
-                                            <option>Otro</option>
-                                        </select>
-                                        <div class="invalid-feedback">Campo requerido.</div>
-                                    </div>
-
-                                    <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important">
-                                        <label for="motivo" class="form-label">Motivo de la visita</label>
-                                        <select class="form-select" id="motivo" name="motivo" >
-                                            <option selected disabled value="">Selecciona motivo</option>
-                                            <option>Turismo</option>
-                                            <option>Trabajo</option>
-                                            <option>Estudios</option>
-                                            <option>Evento</option>
-                                            <option>Otro</option>
-                                        </select>
-                                        <div class="invalid-feedback">Campo requerido.</div>
-                                    </div>
-
-                                   
-
-
-                              <div class="form-floating col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5" !important>
-                                <input type="number" class="form-control" id="numDias" name="numDias" placeholder="Ingresa el numero de días" min="1" max="100" required>
-                                <label for="numPersonas">Estancia esperada (días)</label>
-                                <div class="invalid-feedback">
-                                  Ingresa un número válido (mínimo 1)
-                                </div>
-                              </div>
-
-               <div class="form-floating col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5" !important>
-                  <input type="number" class="form-control " id="numVisitas" name="numVisitas" placeholder="Ingresa el numero de visitas"  min="0" max="100">
-                  <label for="numPersonas">Numero de visitas</label>
-                  <div class="invalid-feedback">
-                    Ingresa un número válido (mínimo 1)
-                </div>
-              </div>
-              <div id="personasContainer"></div>
-              <input type="submit" class="btn boton bt-body mt-5" value="Guardar">
-            </div>
-          </form>
+        // EVENTO: Carga inicial del documento
+        // Propósito: Inicializar con campos vacíos
+        document.addEventListener('DOMContentLoaded', function() {
+            generarCamposPersonas(0); // Iniciar vacío
+        });
+    </script>
+</form>
