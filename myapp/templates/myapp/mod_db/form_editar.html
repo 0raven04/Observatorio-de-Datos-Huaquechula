@@ -1,0 +1,71 @@
+{% load crispy_forms_tags %}
+
+<div class="row p-3">
+    <!-- Información básica -->
+    <div class="col-md-4">
+        {{ formulario.fecha|as_crispy_field }}
+    </div>
+    <div class="col-md-4">
+        {{ formulario.tamanio_grupo|as_crispy_field }}
+    </div>
+    <div class="col-md-4">
+        {{ formulario.es_extranjero|as_crispy_field }}
+    </div>
+
+    <!-- Campos condicionales para extranjeros -->
+    <div class="col-md-6" id="pais-origen-group" style="display: {% if formulario.instance.es_extranjero %}block{% else %}none{% endif %};">
+        {{ formulario.pais_origen|as_crispy_field }}
+    </div>
+    
+    <!-- Información de procedencia y transporte -->
+    <div class="col-md-6">
+        {{ formulario.procedencia|as_crispy_field }}
+    </div>
+    <div class="col-md-6">
+        {{ formulario.tipo_transporte|as_crispy_field }}
+    </div>
+    
+    <!-- Motivo de visita -->
+    <div class="col-md-6">
+        {{ formulario.motivo_visita|as_crispy_field }}
+    </div>
+    
+    <!-- Duración de la visita -->
+    <div class="col-md-3">
+        {{ formulario.estancia_dias|as_crispy_field }}
+    </div>
+    <div class="col-md-3">
+        {{ formulario.numero_visitas|as_crispy_field }}
+    </div>
+    
+    <!-- Sección para personas del grupo -->
+    <div class="col-12 mt-4">
+        <h5>Datos de las personas en el grupo</h5>
+        <div id="personas-container">
+            {% for persona in personas %}
+            <div class="row persona-row mb-3">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Edad</label>
+                        <input type="number" name="edad{{ forloop.counter }}" value="{{ persona.edad }}" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select name="sexo{{ forloop.counter }}" class="form-select" required>
+                            <option value="Hombre" {% if persona.sexo == 'Hombre' %}selected{% endif %}>Hombre</option>
+                            <option value="Mujer" {% if persona.sexo == 'Mujer' %}selected{% endif %}>Mujer</option>
+                            <option value="Otro" {% if persona.sexo == 'Otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Campos ocultos -->
+    <input type="hidden" name="id_registro" value="{{ id_registro }}">
+</div>
+
