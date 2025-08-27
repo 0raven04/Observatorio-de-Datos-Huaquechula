@@ -18,5 +18,6 @@ urlpatterns = [
     path('visitas/eliminar/<int:id_registro>/', views.eliminar_registro, name='eliminar_registro'),
     # URL para eliminar múltiples registros seleccionados
     path('visitas/eliminar-seleccionados/', eliminar_seleccionados, name='eliminar_seleccionados'),
-    
+    path('inicio/', views.vista_inicio, name='vista_inicio'),
+
 ]

@@ -42,7 +42,7 @@ CREATE TABLE Encuestador(
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE Propietario(S
+CREATE TABLE Propietario(
     id_usuario INT PRIMARY KEY,
     clave_propietario VARCHAR(50) UNIQUE,
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
@@ -54,7 +54,7 @@ CREATE TABLE Documento(
     fecha_carga DATETIME DEFAULT CURRENT_TIMESTAMP,
     descripcion MEDIUMTEXT,
     url MEDIUMTEXT NOT NULL,
-    fecha_actualizacion DATETIME,S
+    fecha_actualizacion DATETIME,
     clasificacion ENUM('publico', 'privado', 'confidencial'),
     id_admin INT,
     FOREIGN KEY (id_admin) REFERENCES Administrador(id_usuario)
