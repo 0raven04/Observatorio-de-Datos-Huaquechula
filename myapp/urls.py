@@ -19,5 +19,6 @@ urlpatterns = [
     # URL para eliminar múltiples registros seleccionados
     path('visitas/eliminar-seleccionados/', eliminar_seleccionados, name='eliminar_seleccionados'),
     path('inicio/', views.vista_inicio, name='vista_inicio'),
+    path('vista_graficas/', views.vista_graficas, name='vista_graficas')
 
 ]
