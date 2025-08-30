@@ -3,6 +3,10 @@ body{
     background-color: #f8f9fa;
     height: 100vh;
 }
+
+#paisSelector.hidden {
+    display: none !important;
+}
 .caja{
     box-shadow: 10px 10px 8px 10px #888888;
     width: 90%;

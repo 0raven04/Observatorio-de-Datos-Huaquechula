@@ -13,9 +13,9 @@
     </div>
 
     <!-- Campos condicionales para extranjeros -->
-    <div class="col-md-6" id="pais-origen-group" style="display: {% if formulario.instance.es_extranjero %}block{% else %}none{% endif %};">
-        {{ formulario.pais_origen|as_crispy_field }}
-    </div>
+   <div class="col-md-6{% if not formulario.instance.es_extranjero %} d-none{% endif %}" id="pais-origen-group">
+    {{ formulario.pais_origen|as_crispy_field }}
+</div>
     
     <!-- Información de procedencia y transporte -->
     <div class="col-md-6">
