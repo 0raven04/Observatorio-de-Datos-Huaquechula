@@ -162,12 +162,14 @@ document.getElementById('numPersonas').addEventListener('change', function () {
 // EVENTO: Carga inicial del documento
 // Propósito: Inicializar con campos vacíos
 document.addEventListener('DOMContentLoaded', function () {
-    generarCamposPersonas(0); // Iniciar vacío
+    const num = parseInt(document.getElementById('numPersonas').value) || 0;
+    generarCamposPersonas(num);
 });
+
 
 const numInput = document.getElementById('numPersonas');
 numInput.addEventListener("keypress", soloNumeros);
-const container = document.getElementById('personasContainer');
+const container = document.getElementById('camposPersonas');
 const pais= document.getElementById('pais');
 const procedencia= document.getElementById('procedencia');
 procedencia.addEventListener("keypress", soloLetras);

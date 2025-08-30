@@ -35,14 +35,21 @@ def registro_visita(request):
         * Muestra la plantilla con los registros
     """
     
-    # 1. Verificar que el usuario es un encuestador
-    try:
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)
-        if usuario.tipo != 'encuestador':
-            return HttpResponseForbidden("No tienes permiso. Solo los encuestadores pueden acceder.")
-        encuestador = Encuestador.objects.get(id_usuario=usuario)
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):
-        return HttpResponse('Encuestador no encontrado.', status=404)
+    #1.- Verificar que el usuario es un administrador  
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso. Solo los administradores pueden acceder.")  
+
+        if usuario.tipo == 'encuestador':  
+            encuestador = Encuestador.objects.get(id_usuario=usuario)  
+        else:  # admin  
+            encuestador, created = Encuestador.objects.get_or_create(  
+                clave_encuestador=f'ADMIN_{usuario.id_usuario}',  
+                defaults={'id_usuario': usuario}  
+        )  
+    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
+        return HttpResponse('Usuario no encontrado.', status=404)
 
     # 2. Procesar solicitudes POST (creación de nuevo registro)
     if request.method == 'POST':
@@ -210,24 +217,33 @@ def backup_database(request):
         # Manejar errores y devolver mensaje detallado
         return HttpResponse(f"Error al generar el respaldo: {str(e)}", status=500)
     
-
-def eliminar_registro(request, id_registro):
-    """
-    Vista para eliminar un registro individual:
-    - Busca el registro por ID
-    - Intenta eliminarlo
-    - Devuelve mensaje de éxito o error
-    """
-    registro = get_object_or_404(RegistroVisita, pk=id_registro)
-    try:
-        registro.delete()
-        mensaje = f'Registro {id_registro} eliminado correctamente'
-    except Exception as e:
-        mensaje = f'Error al eliminar registro {id_registro}: {str(e)}'
-    
-    # Redirigir con mensaje de estado
+@login_required  
+def eliminar_registro(request, id_registro):  
+    """  
+    Vista para eliminar un registro individual:  
+    - Verifica permisos de usuario  
+    - Busca el registro por ID  
+    - Intenta eliminarlo  
+    - Devuelve mensaje de éxito o error  
+    """  
+    # Verificar permisos  
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso para eliminar registros.")  
+    except Usuario.DoesNotExist:  
+        return HttpResponse('Usuario no encontrado.', status=404)  
+      
+    registro = get_object_or_404(RegistroVisita, pk=id_registro)  
+      
+    try:  
+        registro.delete()  
+        mensaje = f'Registro {id_registro} eliminado correctamente'  
+    except Exception as e:  
+        mensaje = f'Error al eliminar registro {id_registro}: {str(e)}'  
+      
+    # Redirigir con mensaje de estado  
     return redirect(f'/visitas/?mensaje={mensaje}')
-
 
 def obtener_registro(request, id_registro):
     """
@@ -278,13 +294,19 @@ def editar_registro(request, id_registro):
     - Maneja conversión de tipos de datos
     - Actualiza todos los campos del registro
     """
-    try:
-        # Verificar permisos
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)
-        if usuario.tipo != 'encuestador':
-            return HttpResponseForbidden("No tienes permiso para editar registros.")
-        encuestador = Encuestador.objects.get(id_usuario=usuario)
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso para editar registros.")  
+        
+        if usuario.tipo == 'encuestador':  
+            encuestador = Encuestador.objects.get(id_usuario=usuario)  
+        else:  # admin  
+            encuestador, created = Encuestador.objects.get_or_create(  
+                clave_encuestador=f'ADMIN_{usuario.id_usuario}',  
+                defaults={'id_usuario': usuario}  
+            )  
+    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
         return HttpResponse('Encuestador no encontrado.', status=404)
 
     # Obtener registro a editar
@@ -339,30 +361,122 @@ def editar_registro(request, id_registro):
 
 
 # Vista para eliminación múltiple de registros
-@login_required
-def eliminar_seleccionados(request):
-    """
-    Elimina múltiples registros seleccionados:
-    - Recibe IDs como parámetro GET (?ids=1,2,3)
-    - Valida que se hayan seleccionado registros
-    - Maneja errores durante la eliminación
-    """
-    ids_str = request.GET.get('ids', '')
-    if not ids_str:
-        return HttpResponse("No se seleccionaron registros para eliminar", status=400)
-    
-    try:
-        # Convertir string de IDs a lista de enteros
-        ids = [int(id) for id in ids_str.split(',')]
-        
-        # Eliminar registros
-        RegistroVisita.objects.filter(id_registro__in=ids).delete()
-        mensaje = f'Se eliminaron {len(ids)} registros correctamente'
-    except Exception as e:
-        mensaje = f'Error al eliminar registros: {str(e)}'
-    
-    # Redirigir con mensaje de estado
+@login_required  
+def eliminar_seleccionados(request):  
+    """  
+    Elimina múltiples registros seleccionados:  
+    - Recibe IDs como parámetro GET (?ids=1,2,3)  
+    - Valida que se hayan seleccionado registros  
+    - Maneja errores durante la eliminación  
+    """  
+    ids_str = request.GET.get('ids', '')  
+    if not ids_str:  
+        return HttpResponse("No se seleccionaron registros para eliminar", status=400)  
+      
+    try:    
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)    
+        if usuario.tipo not in ['encuestador', 'admin']:    
+            return HttpResponseForbidden("No tienes permiso para eliminar registros.")    
+    except Usuario.DoesNotExist:    
+        return HttpResponse('Usuario no encontrado.', status=404)  
+      
+    try:  
+        # Convertir string de IDs a lista de enteros  
+        ids = [int(id) for id in ids_str.split(',')]  
+          
+        # Eliminar registros  
+        RegistroVisita.objects.filter(id_registro__in=ids).delete()  
+        mensaje = f'Se eliminaron {len(ids)} registros correctamente'  
+    except Exception as e:  
+        mensaje = f'Error al eliminar registros: {str(e)}'  
+      
+    # Redirigir con mensaje de estado  
     return redirect(f'/visitas/?mensaje={mensaje}')
 
 def vista_graficas(request):
     return render(request, 'myapp/charts.html')
+
+@login_required  
+def redirigir_por_tipo_usuario(request):  
+    """  
+    Vista que redirige a los usuarios según su tipo después del login  
+    """  
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+          
+        if usuario.tipo == 'encuestador':  
+            # Redirigir al formulario de registro para encuestadores  
+            return redirect('formulario')  # o la URL específica del formulario  
+        
+        elif usuario.tipo == 'admin':  
+            # Redirigir al CRUD para administradores  
+            return redirect('lista_registros')  
+        elif usuario.tipo == 'propietario':  
+            # Redirigir a una página específica para propietarios  
+            return redirect('vista_inicio')  # o donde corresponda  
+        else:  
+            # Tipo de usuario no reconocido  
+            return redirect('login')  
+              
+    except Usuario.DoesNotExist:  
+        return redirect('login')
+    
+
+
+@login_required  
+@transaction.atomic  
+def formulario(request):  
+    """  
+    Vista específica para que encuestadores puedan crear registros  
+    """  
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo != 'encuestador':  
+            return HttpResponseForbidden("No tienes permiso. Solo los encuestadores pueden acceder.")  
+          
+        encuestador = Encuestador.objects.get(id_usuario=usuario)  
+    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
+        return HttpResponse('Encuestador no encontrado.', status=404)  
+  
+    if request.method == 'POST':  
+        # Usar el mismo código de procesamiento que registro_visita  
+        def to_int(value, default=None):  
+            try:  
+                return int(value)  
+            except (TypeError, ValueError):  
+                return default  
+  
+        es_extranjero = request.POST.get('esExtranjero') == 'si'  
+        tamanio_grupo = to_int(request.POST.get('numPersonas'), default=1)  
+        estancia_dias = to_int(request.POST.get('numDias'), default=1)  
+        numero_visitas = to_int(request.POST.get('numVisitas'), default=1)  
+        motivo_visita = request.POST.get('motivo') or None  
+        tipo_transporte = request.POST.get('transporte') or None  
+  
+        # Crear registro  
+        registro = RegistroVisita.objects.create(  
+            tamanio_grupo=tamanio_grupo,  
+            es_extranjero=es_extranjero,  
+            pais_origen=request.POST.get('pais') if es_extranjero else None,  
+            procedencia=request.POST.get('procedencia'),  
+            tipo_transporte=tipo_transporte,  
+            motivo_visita=motivo_visita,  
+            estancia_dias=estancia_dias,  
+            numero_visitas=numero_visitas,  
+            id_encuestador=encuestador  
+        )  
+          
+        # Crear personas  
+        personas = []  
+        for i in range(1, tamanio_grupo + 1):  
+            edad = to_int(request.POST.get(f'edad{i}'))  
+            sexo = request.POST.get(f'genero{i}')  
+            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:  
+                personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))  
+  
+        if personas:  
+            PersonaVisita.objects.bulk_create(personas)  
+
+        return redirect('formulario')  
+
+    return render(request, 'myapp/formulario.html')

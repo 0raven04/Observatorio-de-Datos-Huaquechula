@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-)xzi6t)9&hsqo5&lzrx3vb(!7=@&h2eyaq9^a)2onl-#5dik%^
 DEBUG = True
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/visitas/'
+LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
 ALLOWED_HOSTS = []
 
