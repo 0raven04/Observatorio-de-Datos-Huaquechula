@@ -1,5 +1,5 @@
 from django.contrib.auth.hashers import make_password
-from myapp.models import Usuario  # Reemplaza 'yourapp' por el nombre real de tu app
+from myapp.models import Usuario  
 
 def crear_usuario(nombre, ap, am, nombre_usuario, email, password_plano, tipo):
     """

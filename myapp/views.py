@@ -364,5 +364,5 @@ def eliminar_seleccionados(request):
     # Redirigir con mensaje de estado
     return redirect(f'/visitas/?mensaje={mensaje}')
 
-def vista_graficas(request):  
-    return render(request, 'myapp/templates/myapp/charts.html')
+def vista_graficas(request):
+    return render(request, 'myapp/charts.html')
