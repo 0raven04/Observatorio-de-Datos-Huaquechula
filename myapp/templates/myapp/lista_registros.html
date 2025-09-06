@@ -25,32 +25,65 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
     <!-- JavaScript personalizado de la aplicación -->
     <script src="{% static 'myapp/JAV/js_lista_regsitro.js' %}" defer></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   </head>
   <body>
     <!-- Barra de navegación superior -->
-    <nav
-      class="navbar sticky-bottom"
-      style="background-color: #d35400"
-      data-bs-theme="light"
-    >
-      <div class="container-fluid">
+   <nav class="navbar sticky-top navbar-expand-lg navbar-custom" data-bs-theme="light">
+    <div class="container-fluid">
         <!-- Logo y título de la aplicación -->
-        <a class="navbar-brand d-flex align-items-center" href="#">
-          <img
-            src="{% static 'myapp/image/logo.png' %}"
-            alt="Logo"
-            class="img-fluid logo me-2"
-          />
-          <h2 class="text-white mb-0">Control de visitas</h2>
+        <a class="navbar-brand" href="#">
+            <img
+                src="{% static 'myapp/image/logo.png' %}"
+                alt="Logo Huaquechula"
+                class="logo me-2"
+            />
+            <span class="navbar-title">Control de Visitas</span>
         </a>
 
-        <!-- Formulario para cerrar sesión -->
-        <form action="{% url 'logout' %}" method="post">
-          {% csrf_token %}
-          <button class="btn boton" type="submit">Cerrar sesión</button>
-        </form>
-      </div>
-    </nav>
+        <!-- Botón para menú responsive -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Contenido colapsable -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-flex justify-content-evenly w-100">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-users"></i> Visitantes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-cog"></i> Configuración
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Formulario para cerrar sesión -->
+            <form action="{% url 'logout' %}" method="post" class="d-flex">
+                {% csrf_token %}
+                <button class="btn btn-logout" type="submit">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
 
     <!-- Contenido principal de la página -->
     <main class="container mt-3">
@@ -91,108 +124,119 @@
       </div>
       {% endif %}
 
-      <!-- Tarjeta contenedora de la tabla de registros -->
-      <div class="card shadow-sm mb-4">
-        <!-- Encabezado de la tarjeta -->
-        <div
-          class="card-header py-3 text-center"
-          style="background-color: #d35400"
-        >
-          <h5 class="mb-0 text-white">Registros de Visitantes</h5>
-        </div>
-
-        <!-- Formulario oculto para eliminación múltiple -->
-        <form
-          id="formEliminarSeleccionados"
-          method="POST"
-          action="{% url 'eliminar_seleccionados' %}"
-        >
-          {% csrf_token %}
-          <input type="hidden" name="ids" id="idsSeleccionados" />
-        </form>
 
         <!-- Cuerpo de la tarjeta con la tabla de registros -->
-        <div class="card-body p-0">
-          <div class="table-responsive">
+      <div class="card shadow-sm mb-4">
+    <!-- Encabezado de la tarjeta -->
+    <div class="card-header py-3 text-center" style="background-color: #4A4A4A">
+        <h5 class="mb-0 text-white"><i class="fas fa-users me-2"></i>Registros de Visitantes</h5>
+    </div>
+
+    <!-- Formulario oculto para eliminación múltiple -->
+    <form
+        id="formEliminarSeleccionados"
+        method="POST"
+        action="{% url 'eliminar_seleccionados' %}"
+    >
+        {% csrf_token %}
+        <input type="hidden" name="ids" id="idsSeleccionados" />
+    </form>
+
+    <!-- Cuerpo de la tarjeta con la tabla de registros -->
+    <div class="card-body p-0">
+        <div class="table-responsive">
             <table class="table table-hover table-bordered mb-0">
-              <!-- Encabezados de la tabla -->
-              <thead class="text-white" style="background-color: #d35400">
-                <tr>
-                  <th scope="col" width="50">Sel.</th>
-                  <th scope="col" width="80">ID</th>
-                  <th scope="col" width="100">Fecha</th>
-                  <th scope="col" width="120">Tamaño Grupo</th>
-                  <th scope="col" width="100">Extranjero</th>
-                  <th scope="col" width="120">País Origen</th>
-                  <th scope="col" width="120">Procedencia</th>
-                  <th scope="col" width="120">Transporte</th>
-                  <th scope="col" width="150">Motivo</th>
-                  <th scope="col" width="100">Estancia</th>
-                  <th scope="col" width="100">N° Visitas</th>
-                  <th scope="col" width="120">Encuestador</th>
-                  <th scope="col" width="180">Acciones</th>
-                </tr>
-              </thead>
+                <!-- Encabezados de la tabla -->
+                <thead class="text-white" style="background-color: #4A4A4A">
+                    <tr>
+                        <th scope="col" width="50">Sel.</th>
+                        <th scope="col" width="80">ID</th>
+                        <th scope="col" width="100">Fecha</th>
+                        <th scope="col" width="120">Tamaño Grupo</th>
+                        <th scope="col" width="100">Extranjero</th>
+                        <th scope="col" width="120">País Origen</th>
+                        <th scope="col" width="120">Procedencia</th>
+                        <th scope="col" width="120">Transporte</th>
+                        <th scope="col" width="150">Motivo</th>
+                        <th scope="col" width="100">Estancia</th>
+                        <th scope="col" width="100">N° Visitas</th>
+                        <th scope="col" width="120">Encuestador</th>
+                        <th scope="col" width="180">Acciones</th>
+                    </tr>
+                </thead>
 
-              <!-- Cuerpo de la tabla con datos dinámicos -->
-              <tbody>
-                {% for r in registros %}
-                <tr class="align-middle">
-                  <!-- Checkbox para selección múltiple -->
-                  <td>
-                    <div class="form-check d-flex justify-content-center">
-                      <input
-                        class="form-check-input checkbox-seleccion"
-                        type="checkbox"
-                        value="{{ r.id_registro }}"
-                      />
-                    </div>
-                  </td>
+                <!-- Cuerpo de la tabla con datos dinámicos -->
+                <tbody>
+                    {% for r in registros %}
+                    <tr class="align-middle">
+                        <!-- Checkbox para selección múltiple -->
+                        <td>
+                            <div class="form-check d-flex justify-content-center">
+                                <input
+                                    class="form-check-input checkbox-seleccion"
+                                    type="checkbox"
+                                    value="{{ r.id_registro }}"
+                                    style="width: 18px; height: 18px;"
+                                />
+                            </div>
+                        </td>
 
-                  <!-- Datos del registro -->
-                  <td>
-                    <span class="badge bg-secondary">{{ r.id_registro }}</span>
-                  </td>
-                  <td>{{ r.fecha }}</td>
-                  <td>{{ r.tamanio_grupo }}</td>
-                  <td>{{ r.es_extranjero|yesno:"Sí,No" }}</td>
-                  <td>{{ r.pais_origen|default:"-" }}</td>
-                  <td>{{ r.procedencia|default:"-" }}</td>
-                  <td>{{ r.tipo_transporte }}</td>
-                  <td>{{ r.motivo_visita }}</td>
-                  <td>{{ r.estancia_dias }}</td>
-                  <td>{{ r.numero_visitas }}</td>
-                  <td>
-                    <span class="badge bg-dark">{{ r.id_encuestador }}</span>
-                  </td>
+                        <!-- Datos del registro -->
+                        <td>
+                            <span class="badge rounded-pill" style="background-color: #4A4A4A">{{ r.id_registro }}</span>
+                        </td>
+                        <td>{{ r.fecha }}</td>
+                        <td>{{ r.tamanio_grupo }}</td>
+                        <td>
+                            {% if r.es_extranjero %}
+                            <span class="badge rounded-pill" style="background-color: #4A4A4A; color: white;">
+                                Sí
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill" style="background-color: #D6CEAA; color: #4A4A4A;">
+                                No
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ r.pais_origen|default:"-" }}</td>
+                        <td>{{ r.procedencia|default:"-" }}</td>
+                        <td>{{ r.tipo_transporte }}</td>
+                        <td>{{ r.motivo_visita }}</td>
+                        <td>{{ r.estancia_dias }}</td>
+                        <td>{{ r.numero_visitas }}</td>
+                        <td>
+                            <span class="badge rounded-pill" style="background-color: #4A4A4A">{{ r.id_encuestador }}</span>
+                        </td>
 
-                  <!-- Botones de acciones -->
-                  <td>
-                    <div class="d-flex gap-2">
-                      <!-- Botón para eliminar registro individual -->
-                      <button
-                        class="btn btn-danger btn-sm btn-eliminar"
-                        data-id="{{ r.id_registro }}"
-                      >
-                        Eliminar
-                      </button>
+                        <!-- Botones de acciones -->
+                        <td>
+                            <div class="d-flex gap-2">
+                                <!-- Botón para eliminar registro individual -->
+                                <button
+                                    class="btn btn-sm btn-eliminar"
+                                    data-id="{{ r.id_registro }}"
+                                    style="background-color: #e74c3c; border: none; color: white;"
+                                >
+                                    <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
 
-                      <!-- Botón para editar registro -->
-                      <button
-                        class="btn btn-warning btn-sm btn-editar"
-                        data-id="{{ r.id_registro }}"
-                      >
-                        Editar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
+                                <!-- Botón para editar registro -->
+                                <button
+                                    class="btn btn-sm btn-editar"
+                                    data-id="{{ r.id_registro }}"
+                                    style="background-color: #D6CEAA; border: none; color: #4A4A4A;"
+                                >
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
-          </div>
         </div>
-      </div>
+    </div>
+</div>
 
       <!-- Botón para respaldo de datos -->
       <div class="offcanvas-body">

@@ -1,64 +1,87 @@
-.centrado
-{
+:root {
+    --color-gris-oscuro: #4A4A4A;
+    --color-arena-claro: #EDEBE3;
+    --color-arena-oscuro: #D6CEAA;
+    --color-beige: #B3B3B3;
+}
+
+.centrado {
     display: flex;
     justify-content: center;
     align-items: center;
 }
-.completo
-{
+
+.completo {
     height: 100vh;
 }
 
-
- /* Estilo para el encabezado */
-  thead th {
-    background-color: #D35400;
+/* Estilo para el encabezado */
+thead th {
+    background-color: var(--color-gris-oscuro);
     color: white;
     text-align: center;
     vertical-align: middle;
-  }
+}
 
-  /* Estilo para filas alternas */
-  tbody tr:nth-child(odd) {
-    background-color: #FFF8DC; /* un amarillo muy claro compatible con #FFC300 */
-  }
+/* Estilo para filas alternas */
+tbody tr:nth-child(odd) {
+    background-color: var(--color-arena-claro);
+}
 
-  /* Bordes redondeados y sombra */
-  .custom-table {
+/* Bordes redondeados y sombra */
+.custom-table {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
+    border: 1px solid var(--color-beige);
+}
 
-  /* Ajustes de celdas */
-  .custom-table td,
-  .custom-table th {
+/* Ajustes de celdas */
+.custom-table td,
+.custom-table th {
     vertical-align: middle;
     text-align: center;
     padding: 8px;
-  }
+    border-color: var(--color-beige);
+}
 
-  /* Botón eliminar: naranja fuerte */
-  .btn-danger {
-    background-color: #D35400;
-    border-color: #D35400;
-  }
+/* Botón eliminar: arena oscuro */
+.btn-danger {
+    background-color: var(--color-arena-oscuro);
+    border-color: var(--color-arena-oscuro);
+    color: var(--color-gris-oscuro);
+}
 
-  .btn-danger:hover {
-    background-color: #b84300;
-    border-color: #b84300;
-  }
+.btn-danger:hover {
+    background-color: #c4b897;
+    border-color: #c4b897;
+    color: var(--color-gris-oscuro);
+}
 
-  /* Botón editar: amarillo dorado */
-  .btn-info {
-    background-color: #FFC300;
-    border-color: #FFC300;
-    color: black;
-  }
+/* Botón editar: gris oscuro */
+.btn-info {
+    background-color: var(--color-gris-oscuro);
+    border-color: var(--color-gris-oscuro);
+    color: white;
+}
 
-  .btn-info:hover {
-    background-color: #e6b000;
-    border-color: #e6b000;
-    color: black;
-  }
+.btn-info:hover {
+    background-color: #3a3a3a;
+    border-color: #3a3a3a;
+    color: white;
+}
 
+/* Estilos adicionales para otros elementos */
+body {
+    background-color: var(--color-arena-claro);
+    color: var(--color-gris-oscuro);
+}
+
+.card {
+    background-color: var(--color-arena-claro);
+    border: 1px solid var(--color-beige);
+}
+
+.navbar {
+    background-color: var(--color-gris-oscuro);
+}
