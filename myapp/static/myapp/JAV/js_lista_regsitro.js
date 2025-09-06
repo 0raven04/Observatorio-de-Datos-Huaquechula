@@ -80,29 +80,6 @@ document.getElementById('botonEliminar').addEventListener('click', function () {
     }
 });
 
-
-// Evento para extranjero
-document.addEventListener('DOMContentLoaded', function() {
-    const radioSi = document.getElementById('gridRadios1');
-    const radioNo = document.getElementById('gridRadios2');
-    const paisSelector = document.getElementById('paisSelector');
-
-    function toggleSelectorPais() {
-        if (radioSi.checked) {
-            paisSelector.classList.remove('hidden');
-        } else {
-            paisSelector.classList.add('hidden');
-        }
-    }
-
-    toggleSelectorPais();
-    radioSi.addEventListener('change', toggleSelectorPais);
-    radioNo.addEventListener('change', toggleSelectorPais);
-});
-
-
-
-
 // ===== PREPARACIÓN DE NUEVO REGISTRO =====
 // Evento para el botón de nuevo registro
 document.getElementById('btnNuevoRegistro').addEventListener('click', function () {
@@ -185,10 +162,8 @@ document.getElementById('numPersonas').addEventListener('change', function () {
 // EVENTO: Carga inicial del documento
 // Propósito: Inicializar con campos vacíos
 document.addEventListener('DOMContentLoaded', function () {
-    const num = parseInt(document.getElementById('numPersonas').value) || 0;
-    generarCamposPersonas(num);
+    generarCamposPersonas(0); // Iniciar vacío
 });
-
 
 const numInput = document.getElementById('numPersonas');
 numInput.addEventListener("keypress", soloNumeros);
@@ -237,7 +212,7 @@ function soloLetras(event) {
 function soloNumeros(event) {
     let caja = event.target;
     caja.value = caja.value.replace(/[^0-9]/g, "");
-}
+}zz
 
 
 
