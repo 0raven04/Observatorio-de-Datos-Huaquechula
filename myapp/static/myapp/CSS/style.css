@@ -557,3 +557,12 @@ tr:nth-child(even) {
 tr:nth-child(odd) {
     background-color: transparent;
 }
+
+
+.h5, .modal-title {
+    color: white !important;
+}
+
+.btn.btn-warning {
+    background-color: var(--color-arena-oscuro) !important;
+}
