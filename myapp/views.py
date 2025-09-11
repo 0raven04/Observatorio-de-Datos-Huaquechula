@@ -364,5 +364,12 @@ def eliminar_seleccionados(request):
     # Redirigir con mensaje de estado
     return redirect(f'/visitas/?mensaje={mensaje}')
 
+@login_required
+def mapa(request):
+    """
+    Vista para mostrar el mapa de Huaquechula.
+    """
+    return render(request, 'myapp/mapa.html')
+
 def vista_graficas(request):
     return render(request, 'myapp/charts.html')

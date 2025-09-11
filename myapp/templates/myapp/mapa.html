@@ -1,0 +1,21 @@
+{% extends 'myapp/base.html' %}
+{% load static %}
+
+{% block title %}Mapa de Huaquechula{% endblock %}
+
+{% block content %}
+<!-- Cuerpo de la tarjeta con el mapa -->
+<div class="card shadow-sm mb-4">
+  <!-- Encabezado de la tarjeta -->
+  <div class="card-header py-3 text-center" style="background-color: #4A4A4A">
+      <h5 class="mb-0 text-white"><i class="fas fa-map-marked-alt me-2"></i>Mapa de Huaquechula</h5>
+  </div>
+
+  <!-- Cuerpo de la tarjeta con el mapa -->
+  <div class="card-body p-0">
+      <div id="map-placeholder" style="height: 600px; background-color: #e9e9e9; display: flex; align-items: center; justify-content: center;">
+          <p style="color: #666; font-size: 1.2rem;">Aquí se mostrará el mapa de Huaquechula.</p>
+      </div>
+  </div>
+</div>
+{% endblock %}
