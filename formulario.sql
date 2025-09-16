@@ -40,7 +40,7 @@ CREATE TABLE Registro_visita(
     edad TINYINT,
     sexo ENUM('Hombre','Mujer'), 
     tamanio_grupo TINYINT,
-    numero_visitas TINYINT, -- AUTOCALCULADO
+    numero_visitas TINYINT, 
     estancia_esperada ENUM('1','2-3','3-5','5 o mas'),  
     motivo_visita ENUM('vacacion','ocio','trabajo','visita familiar', 'otro'), 
     tipo_transporte ENUM('publico','privado'),
