@@ -80,29 +80,6 @@ document.getElementById('botonEliminar').addEventListener('click', function () {
     }
 });
 
-
-// Evento para extranjero
-document.addEventListener('DOMContentLoaded', function() {
-    const radioSi = document.getElementById('gridRadios1');
-    const radioNo = document.getElementById('gridRadios2');
-    const paisSelector = document.getElementById('paisSelector');
-
-    function toggleSelectorPais() {
-        if (radioSi.checked) {
-            paisSelector.classList.remove('hidden');
-        } else {
-            paisSelector.classList.add('hidden');
-        }
-    }
-
-    toggleSelectorPais();
-    radioSi.addEventListener('change', toggleSelectorPais);
-    radioNo.addEventListener('change', toggleSelectorPais);
-});
-
-
-
-
 // ===== PREPARACIÓN DE NUEVO REGISTRO =====
 // Evento para el botón de nuevo registro
 document.getElementById('btnNuevoRegistro').addEventListener('click', function () {
@@ -190,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const numInput = document.getElementById('numPersonas');
 numInput.addEventListener("keypress", soloNumeros);
-const container = document.getElementById('personasContainer');
+const container = document.getElementById('camposPersonas');
 const pais= document.getElementById('pais');
 const procedencia= document.getElementById('procedencia');
 procedencia.addEventListener("keypress", soloLetras);
@@ -235,7 +212,7 @@ function soloLetras(event) {
 function soloNumeros(event) {
     let caja = event.target;
     caja.value = caja.value.replace(/[^0-9]/g, "");
-}
+}zz
 
 
 

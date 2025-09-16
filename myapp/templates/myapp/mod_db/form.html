@@ -1,13 +1,5 @@
-
-<form
-  class="needs-validation g-3"
-  novalidate
-  name="formulario"
-  id="formulario"
-  method="POST"
-  action="{% url 'lista_registros' %}"
-  enctype="multipart/form-data"
->
+<form class="needs-validation g-3" novalidate name="formulario" id="formulario" method="POST"
+  action="{% url 'lista_registros' %}" enctype="multipart/form-data">
   {% csrf_token %}
 
   <!-- Campo: Cantidad de personas -->
@@ -20,15 +12,8 @@
                 - required: Campo obligatorio
                 - min="1": Valor mínimo permitido
             -->
-      <input
-        type="number"
-        class="form-control"
-        id="numPersonas"
-        name="numPersonas"
-        placeholder="Ingresa el numero de personas"
-        required
-        min="1"
-      />
+      <input type="number" class="form-control" id="numPersonas" name="numPersonas"
+        placeholder="Ingresa el numero de personas" required min="1" />
       <label for="numPersonas">Cantidad de personas</label>
       <!-- Mensaje de validación -->
       <div class="invalid-feedback">Ingresa un número válido (mínimo 1)</div>
@@ -36,40 +21,25 @@
   </div>
 
   <!-- Grupo: ¿Son extranjeros? -->
-  <div
-    class="col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center"
-  >
+  <div class="col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center">
     <label class="form-label mb-2">Extranjeros</label>
     <div class="d-flex justify-content-center gap-3">
       <!-- Opción: Sí -->
       <div class="form-check">
-        <input
-          class="form-check-input"
-          type="radio"
-          name="esExtranjero"
-          id="gridRadios1"
-          value="si"
-          
-        />
+        <input class="form-check-input" type="radio" name="esExtranjero" id="gridRadios1" value="si" />
         <label class="form-check-label" for="gridRadios1"> Sí </label>
       </div>
       <!-- Opción: No -->
       <div class="form-check">
-        <input
-          class="form-check-input"
-          type="radio"
-          name="esExtranjero"
-          id="gridRadios2"
-          value="no"
-          checked
-        />
+        <input class="form-check-input" type="radio" name="esExtranjero" id="gridRadios2" value="no" checked />
         <label class="form-check-label" for="gridRadios2"> No </label>
       </div>
     </div>
   </div>
 
   <!-- Selector: País de origen -->
-  <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important" id="paisSelector">
+  <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important"
+    id="paisSelector">
 
     <label class="form-label" for="pais">País</label>
     <select class="form-select" id="pais" name="pais">
@@ -374,27 +344,15 @@
   </div>
 
   <!-- Campo: Procedencia (Estado o región) -->
-  <div
-    class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important"
-  >
-    <label for="procedencia" class="form-label"
-      >Procedencia (Estado o región)</label
-    >
-    <input
-      type="text"
-      class="form-control"
-      id="procedencia"
-      name="procedencia"
-      placeholder="Ej. Ciudad de México"
-      maxlength="25"
-    />
+  <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-4 !important">
+    <label for="procedencia" class="form-label">Procedencia (Estado o región)</label>
+    <input type="text" class="form-control" id="procedencia" name="procedencia" placeholder="Ej. Ciudad de México"
+      maxlength="25" />
     <div class="invalid-feedback">Este campo es obligatorio.</div>
   </div>
 
   <!-- Selector: Tipo de transporte -->
-  <div
-    class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important"
-  >
+  <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important">
     <label for="transporte" class="form-label">Tipo de transporte</label>
     <select class="form-select" id="transporte" name="transporte">
       <option selected disabled value="">Elige una opción...</option>
@@ -407,9 +365,7 @@
   </div>
 
   <!-- Selector: Motivo de la visita -->
-  <div
-    class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important"
-  >
+  <div class="col-12 col-sm-6 col-md-6 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5 !important">
     <label for="motivo" class="form-label">Motivo de la visita</label>
     <select class="form-select" id="motivo" name="motivo">
       <option selected disabled value="">Selecciona motivo</option>
@@ -425,18 +381,9 @@
   <!-- Campo: Estancia esperada (días) -->
   <div
     class="form-floating col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5"
-    !important
-  >
-    <input
-      type="number"
-      class="form-control"
-      id="numDias"
-      name="numDias"
-      placeholder="Ingresa el numero de días"
-      min="1"
-      max="100"
-      required
-    />
+    !important>
+    <input type="number" class="form-control" id="numDias" name="numDias" placeholder="Ingresa el numero de días"
+      min="1" max="100" required />
     <label for="numDias">Estancia esperada (días)</label>
     <div class="invalid-feedback">Ingresa un número válido (mínimo 1)</div>
   </div>
@@ -444,17 +391,9 @@
   <!-- Campo: Número de visitas -->
   <div
     class="form-floating col-12 col-sm-6 col-md-5 mb-3 mb-md-0 d-flex flex-column align-items-center text-center mt-5"
-    !important
-  >
-    <input
-      type="number"
-      class="form-control"
-      id="numVisitas"
-      name="numVisitas"
-      placeholder="Ingresa el numero de visitas"
-      min="0"
-      max="100"
-    />
+    !important>
+    <input type="number" class="form-control" id="numVisitas" name="numVisitas"
+      placeholder="Ingresa el numero de visitas" min="0" max="100" />
     <label for="numVisitas">Numero de visitas</label>
     <div class="invalid-feedback">Ingresa un número válido (mínimo 1)</div>
   </div>
