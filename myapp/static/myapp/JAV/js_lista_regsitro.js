@@ -212,7 +212,7 @@ function soloLetras(event) {
 function soloNumeros(event) {
     let caja = event.target;
     caja.value = caja.value.replace(/[^0-9]/g, "");
-}zz
+}
 
 
 

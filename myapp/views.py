@@ -10,6 +10,7 @@ import subprocess
 from django.conf import settings
 from datetime import datetime
 import os
+from .models import Lugar
 
 # Vista principal para el registro de visitas
 # - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
@@ -480,3 +481,8 @@ def formulario(request):
         return redirect('formulario')  
 
     return render(request, 'myapp/formulario.html')
+
+
+
+def mapa(request):
+    return render(request, "myapp/mapa.html")

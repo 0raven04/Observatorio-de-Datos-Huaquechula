@@ -4,6 +4,7 @@ from myapp.views import backup_database
 from . import views
 from .views import obtener_registro, editar_registro, eliminar_seleccionados
 
+
 # Definición de patrones URL para la aplicación
 urlpatterns = [
     # URL para realizar respaldo de la base de datos
@@ -23,8 +24,6 @@ urlpatterns = [
     path('redirigir/', views.redirigir_por_tipo_usuario, name='redirigir_usuario'),
     path('formulario/', views.formulario, name='formulario'),
     path('registro/', views.formulario, name='registro'),
-    
-
-
+    path("mapa/", views.mapa, name="mapa"),
 
 ]

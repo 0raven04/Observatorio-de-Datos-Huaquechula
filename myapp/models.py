@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
 
-
 class Usuario(models.Model):
     id_usuario = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=50)
@@ -138,3 +137,11 @@ class UsuarioBackend(BaseBackend):
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+        
+class Lugar(models.Model):
+    nombre = models.CharField(max_length=100)
+    latitud = models.FloatField()
+    longitud = models.FloatField()
+
+    def __str__(self):
+        return self.nombre
