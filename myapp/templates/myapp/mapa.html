@@ -7,12 +7,13 @@
     <title>Pueblo Huaquechula, Puebla</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/css_mapa.css' %}" />
-    <!-- Añadir Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
 </head>
 <body>
-    <!-- NAVBAR DEBE ESTAR FUERA DEL CONTAINER -->
     <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top bg-dark">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <!-- Logo -->
@@ -25,7 +26,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Menú offcanvas (solo móvil) -->
+            <!-- Menú offcanvas -->
             <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
@@ -41,7 +42,7 @@
                 </div>
             </div>
 
-            <!-- Menú horizontal (solo escritorio) -->
+            <!-- Menú horizontal -->
             <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
                 <ul class="navbar-nav d-flex justify-content-around w-75">
                     <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
@@ -53,7 +54,7 @@
         </div>
     </nav>
 
-    <!-- CONTENIDO PRINCIPAL CON PADDING TOP PARA EL NAVBAR FIXED -->
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="container" style="margin-top: 100px;">
         <header>
             <h1>Pueblo Huaquechula</h1>
@@ -97,9 +98,5 @@
     <footer>
         <p>Mapa interactivo de Huaquechula, Puebla | © OpenStreetMap contributors</p>
     </footer>
-
-    <!-- SCRIPTS AL FINAL -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
 </html>
