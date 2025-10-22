@@ -76,8 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-
-// ...existing code...
 document.addEventListener('DOMContentLoaded', function () {
     // Comprueba Chart y Leaflet antes de usarlos
     if (typeof Chart === 'undefined') {
@@ -137,4 +135,3 @@ document.addEventListener('DOMContentLoaded', function () {
     map.fitBounds(huaquechulaBounds);
     setTimeout(() => map.invalidateSize(), 300);
 });
-// ...existing code...
