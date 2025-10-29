@@ -672,3 +672,6 @@ def obtener_documentos_categoria(request, categoria_id):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def repositorio(request):
+    return render(request, 'myapp/repositorio.html')
