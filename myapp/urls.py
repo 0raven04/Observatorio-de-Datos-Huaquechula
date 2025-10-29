@@ -9,6 +9,8 @@ from django.conf.urls.static import static
 
 # Definición de patrones URL para la aplicación
 urlpatterns = [
+    # URL para acceder a la vista de gráficos e indicadores turísticos
+    path('graficos_indicadores/', views.graficos_indicadores, name='graficos_indicadores'),
     # URL para realizar respaldo de la base de datos
     path('backup/', views.backup_database, name='backup_database'),
     # URL principal para el listado de registros de visitas

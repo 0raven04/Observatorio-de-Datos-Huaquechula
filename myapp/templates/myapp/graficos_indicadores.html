@@ -1,0 +1,441 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Indicadores de Bienestar y Desarrollo Humano</title>
+    <script
+      src="{% static 'myapp/JAV/script_graficos_indicadores.js' %}"
+      defer
+    ></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Incluir Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="{% static 'myapp/CSS/estilo_graficos_indicadores.css' %}"
+    />
+  </head>
+  <body>
+    <!-- Botón para mostrar/ocultar menú en móviles -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+
+    <!-- Overlay para cerrar menú en móviles -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Menú lateral -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">Indicadores de Bienestar</div>
+      <ul class="tree-menu" id="treeMenu">
+        <!-- Indicadores de bienestar y desarrollo humano -->
+        <li class="has-children">
+          <a href="#">Indicadores de bienestar y desarrollo humano</a>
+          <ul>
+            <!-- Salud -->
+            <li class="has-children">
+              <a href="#">Salud</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="esperanza-vida"
+                    >Esperanza de vida al nacer</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="salud-auto-reportada"
+                    >Salud auto reportada</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="obesidad">Tasa de obesidad</a>
+                </li>
+                <li>
+                  <a href="#" data-indicator="mortalidad">Tasa de mortalidad</a>
+                </li>
+                <li>
+                  <a href="#" data-indicator="mortalidad-materna"
+                    >Razón de mortalidad materna</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Accesibilidad de servicios -->
+            <li class="has-children">
+              <a href="#">Accesibilidad de servicios</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="acceso-salud"
+                    >Acceso a servicios de salud</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="acceso-banda-ancha"
+                    >Acceso a los servicios de banda ancha</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="vivienda-servicios"
+                    >Vivienda con acceso de servicios básicos</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Educación -->
+            <li class="has-children">
+              <a href="#">Educación</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="niveles-educacion"
+                    >Niveles de educación</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="desercion-escolar"
+                    >Deserción escolar</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="anios-escolaridad"
+                    >Años promedio de escolaridad</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Vivienda -->
+            <li class="has-children">
+              <a href="#">Vivienda</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="habitaciones-persona"
+                    >Habitaciones por persona</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="techos-resistentes"
+                    >Viviendas con techos de materiales resistentes</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Ingresos -->
+            <li class="has-children">
+              <a href="#">Ingresos</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="gini-ingreso"
+                    >Gini del ingreso disponible de los hogares per cápita</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="ingreso-disponible"
+                    >Ingreso equivalente disponible de los hogares</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="pobreza">Población en pobreza</a>
+                </li>
+                <li>
+                  <a href="#" data-indicator="pobreza-extrema"
+                    >Población en pobreza extrema</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Empleo -->
+            <li class="has-children">
+              <a href="#">Empleo</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="condiciones-criticas"
+                    >Tasa de condiciones críticas de ocupación</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="informalidad"
+                    >Informalidad laboral</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="desocupacion"
+                    >Tasa de desocupación</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="participacion-economica"
+                    >Participación económica</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Seguridad -->
+            <li class="has-children">
+              <a href="#">Seguridad</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="homicidios">Tasa de homicidios</a>
+                </li>
+                <li>
+                  <a href="#" data-indicator="confianza-policia"
+                    >Confianza policía</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="inseguridad"
+                    >Percepción de inseguridad</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="incidencia-delictiva"
+                    >Incidencia delictiva</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Medio ambiente -->
+            <li class="has-children">
+              <a href="#">Medio ambiente</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="contaminacion-aire"
+                    >Contaminación del aire</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="residuos"
+                    >Disposición de residuos</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="gestion-ambiental"
+                    >Alternativas de gestión comunitaria de medio ambiente</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Migración -->
+            <li class="has-children">
+              <a href="#">Migración</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="intensidad-migratoria"
+                    >Índice de intensidad migratoria</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Indicadores de la dimensión tradición-patrimonio -->
+        <li class="has-children">
+          <a href="#">Indicadores de la dimensión tradición-patrimonio</a>
+          <ul>
+            <!-- Tensión sobre la comunidad y el PCI -->
+            <li class="has-children">
+              <a href="#"
+                >Tensión sobre la comunidad y el Patrimonio Cultural Inmaterial
+                (PCI)</a
+              >
+              <ul>
+                <li>
+                  <a href="#" data-indicator="tension-poblacion"
+                    >Tensión sobre la población local</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="acceso-servicios-tradicion"
+                    >Acceso de la población a los servicios públicos durante la
+                    tradición</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="tensiones-tradicion"
+                    >Tensiones físicas y simbólicas sobre la tradición</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <!-- Salvaguardia -->
+            <li class="has-children">
+              <a href="#">Salvaguardia</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="procesos-salvaguardia"
+                    >Procesos de salvaguardia del Patrimonio</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="seguimiento-salvaguardia"
+                    >Seguimiento de salvaguardia</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="difusion-pci">Difusión de PCI</a>
+                </li>
+                <li>
+                  <a href="#" data-indicator="relacion-comunidad-pci"
+                    >Relación comunidad - PCI</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Indicadores de la dimensión de TBC -->
+        <li class="has-children">
+          <a href="#">Indicadores de la dimensión de TBC</a>
+          <ul>
+            <!-- Participación y gobernanza en el turismo -->
+            <li class="has-children">
+              <a href="#">Participación y gobernanza en el turismo</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="participacion-comunidad"
+                    >Participación de la comunidad en la toma de decisiones</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="capacitacion-informacion"
+                    >Capacitación, información y comunicación</a
+                  >
+                </li>
+                <li><a href="#" data-indicator="regulacion">Regulación</a></li>
+              </ul>
+            </li>
+
+            <!-- Gestión del turismo -->
+            <li class="has-children">
+              <a href="#">Gestión del turismo</a>
+              <ul>
+                <li>
+                  <a href="#" data-indicator="herramientas-gestion"
+                    >Herramientas de gestión</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="proyectos-turisticos"
+                    >Proyectos turísticos</a
+                  >
+                </li>
+                <li>
+                  <a href="#" data-indicator="integracion-turistica"
+                    >Integración turística territorial</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+      <div class="content-header">
+        <h1>Sistema de Indicadores de Bienestar</h1>
+        <p>
+          Seleccione un indicador del menú lateral para visualizar su
+          información
+        </p>
+      </div>
+
+      <div id="indicator-content">
+        <!-- Vista de dashboard similar a la imagen -->
+        <div class="dashboard-section">
+          <h2 class="section-title">Estacionalidad Turística</h2>
+          <div class="dashboard-grid">
+            <div class="dashboard-card">
+              <div class="card-icon">📊</div>
+              <h3>
+                Llegada de turistas por mercado y por clasificación hotelera
+                2025
+              </h3>
+              <div class="card-value">245,678</div>
+              <div class="card-trend positive">+12.5%</div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-icon">🗺️</div>
+              <h3>Llegada de turistas por destino 2025</h3>
+              <div class="card-value">187,432</div>
+              <div class="card-trend positive">+8.3%</div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-icon">🏛️</div>
+              <h3>Llegada mensual de visitantes a zonas arqueológicas 2025</h3>
+              <div class="card-value">89,456</div>
+              <div class="card-trend positive">+15.2%</div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-icon">🏨</div>
+              <h3>Porcentaje de ocupación hotelera 2025</h3>
+              <div class="card-value">78.5%</div>
+              <div class="card-trend positive">+5.7%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-section">
+          <h2 class="section-title">Empleo</h2>
+          <div class="dashboard-grid">
+            <div class="dashboard-card full-width">
+              <div class="card-icon">💼</div>
+              <h3>Beneficios Económicos del Destino</h3>
+              <div class="card-value">$12.8M</div>
+              <div class="card-trend positive">+18.3%</div>
+              <div class="card-subtitle">Acumulados 2022-2024</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-section">
+          <h2 class="section-title">Indicadores Destacados</h2>
+          <div class="dashboard-grid">
+            <div class="dashboard-card">
+              <div class="card-icon">❤️</div>
+              <h3>Esperanza de Vida</h3>
+              <div class="card-value">77.1 años</div>
+              <div class="card-trend positive">+2.6%</div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-icon">🎓</div>
+              <h3>Años de Escolaridad</h3>
+              <div class="card-value">10.2 años</div>
+              <div class="card-trend positive">+4.1%</div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-icon">💰</div>
+              <h3>Ingreso Disponible</h3>
+              <div class="card-value">$24,580</div>
+              <div class="card-trend positive">+7.8%</div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-icon">🏠</div>
+              <h3>Acceso a Servicios Básicos</h3>
+              <div class="card-value">92%</div>
+              <div class="card-trend positive">+3.2%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
