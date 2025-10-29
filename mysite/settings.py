@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'observatorio_de_datos',
         'USER': 'root',
-        'PASSWORD': '1234',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '',  
         'OPTIONS': {
@@ -149,3 +149,25 @@ AUTHENTICATION_BACKENDS = [
     'myapp.authentication_backend.UsuarioBackend',  # ruta a tu backend corregido
     'django.contrib.auth.backends.ModelBackend',    # para mantener el backend default (opcional)
 ]
+
+#prueba 
+
+# settings.py
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Configuración para tipos de archivos permitidos
+ALLOWED_EXTENSIONS = {
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+    'jpg', 'jpeg', 'png', 'gif',
+    'mp4', 'avi', 'mov', 'wmv'
+}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Asegúrate de que INSTALLED_APPS incluya tu app

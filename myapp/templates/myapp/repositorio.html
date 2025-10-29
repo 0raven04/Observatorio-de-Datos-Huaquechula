@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repositorio de Documentos - Observatorio Turístico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --color-gris-oscuro: #6A6A6A;
+            --color-arena-claro: #F5F3F0;
+            --color-arena-oscuro: #D6CEAA;
+            --color-beige: #C8C8C8;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--color-arena-claro);
+            color: var(--color-gris-oscuro);
+            padding-top: 110px;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8) !important;
+            transition: background 0.3s ease, padding 0.3s ease;
+            padding: 1rem 0;
+        }
+
+        .navbar.scrolled {
+            background-color: var(--color-arena-claro) !important;
+            padding: 8px 0;
+            border-bottom: 2px solid var(--color-arena-oscuro);
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            transition: color 0.3s ease;
+        }
+
+        .navbar.scrolled .nav-link {
+            color: var(--color-gris-oscuro) !important;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+
+        .repository-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #7A7A7A 100%);
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .category-item {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .category-item:hover {
+            background-color: var(--color-arena-claro);
+        }
+
+        .category-item.active {
+            background-color: var(--color-arena-oscuro);
+            color: var(--color-gris-oscuro);
+            font-weight: 600;
+        }
+
+        .category-item i {
+            margin-right: 8px;
+            width: 18px;
+            text-align: center;
+        }
+
+        .document-card {
+            border: 1px solid var(--color-beige);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            background-color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .document-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            border-color: var(--color-arena-oscuro);
+        }
+
+        .document-icon {
+            font-size: 22px;
+            margin-right: 12px;
+            color: var(--color-gris-oscuro);
+            min-width: 30px;
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+
+        .document-meta {
+            font-size: 11px;
+            color: var(--color-beige);
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-download {
+            background-color: var(--color-arena-oscuro);
+            color: var(--color-gris-oscuro);
+        }
+
+        .btn-download:hover {
+            background-color: var(--color-gris-oscuro);
+            color: white;
+        }
+
+        .btn-view {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--color-arena-oscuro);
+            border: none;
+            color: var(--color-gris-oscuro);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: var(--color-gris-oscuro);
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--color-beige);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--color-arena-oscuro);
+            background-color: rgba(214, 206, 170, 0.1);
+        }
+
+        .upload-area i {
+            font-size: 36px;
+            color: var(--color-beige);
+            margin-bottom: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-beige);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header-custom {
+            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #7A7A7A 100%);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .document-actions {
+                flex-direction: column;
+            }
+
+            body {
+                padding-top: 100px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="myapp/static/myapp/image/logo.png" alt="Logo" style="height: 70px;">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/mapa">Mapa</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/modelado">Modelado</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/repositorio">Repositorio</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Header -->
+        <div class="page-header mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h2 class="mb-0"><i class="fas fa-folder me-2"></i>Repositorio de Documentos</h2>
+                <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <i class="fas fa-upload me-2"></i>Subir Documento
+                </button>
+            </div>
+            <p class="text-muted mt-2">Organiza y gestiona todos tus documentos por categorías</p>
+        </div>
+
+        <div class="row">
+            <!-- Sidebar de categorías -->
+            <div class="col-lg-3 mb-3">
+                <div class="repository-card">
+                    <div class="card-header">
+                        <i class="fas fa-tags me-2"></i>Categorías
+                    </div>
+                    <div class="card-body">
+                        <div class="category-item active" data-category="all">
+                            <i class="fas fa-folder"></i>
+                            <span class="ms-2">Todos los documentos</span>
+                        </div>
+                        <div class="category-item" data-category="videos">
+                            <i class="fas fa-video"></i>
+                            <span class="ms-2">Galería de videos</span>
+                        </div>
+                        <div class="category-item" data-category="reportes">
+                            <i class="fas fa-chart-bar"></i>
+                            <span class="ms-2">Reportes</span>
+                        </div>
+                        <div class="category-item" data-category="historicos">
+                            <i class="fas fa-archive"></i>
+                            <span class="ms-2">Documentos históricos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área principal de documentos -->
+            <div class="col-lg-9 mb-3">
+                <div class="repository-card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                        <span id="category-title"><i class="fas fa-file me-2"></i>Todos los documentos</span>
+                        <div class="d-flex mt-2 mt-md-0">
+                            <input type="text" id="searchInput" class="form-control form-control-sm me-2"
+                                placeholder="Buscar documento..." style="width: 200px;">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="documents-container">
+                            <!-- Documentos de ejemplo -->
+                            <div class="document-card" data-category="reportes">
+                                <i class="document-icon fas fa-file-pdf"></i>
+                                <div class="document-info">
+                                    <div class="document-title">Reporte Mensual Turismo 2024</div>
+                                    <div class="document-meta">2.5 MB • 15/10/2024 • Análisis de datos turísticos del
+                                        mes</div>
+                                </div>
+                                <div class="document-actions">
+                                    <button class="btn-action btn-view" onclick="alert('Función de visualización')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="alert('Función de descarga')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="eliminarDocumento(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="document-card" data-category="videos">
+                                <i class="document-icon fas fa-file-video"></i>
+                                <div class="document-info">
+                                    <div class="document-title">Promocional Destino Turístico</div>
+                                    <div class="document-meta">45.8 MB • 12/10/2024 • Video promocional</div>
+                                </div>
+                                <div class="document-actions">
+                                    <button class="btn-action btn-view" onclick="alert('Función de visualización')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="alert('Función de descarga')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="eliminarDocumento(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="document-card" data-category="historicos">
+                                <i class="document-icon fas fa-file-word"></i>
+                                <div class="document-info">
+                                    <div class="document-title">Historia del Turismo Regional</div>
+                                    <div class="document-meta">1.2 MB • 08/10/2024 • Documento histórico</div>
+                                </div>
+                                <div class="document-actions">
+                                    <button class="btn-action btn-view" onclick="alert('Función de visualización')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="alert('Función de descarga')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="eliminarDocumento(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="document-card" data-category="reportes">
+                                <i class="document-icon fas fa-file-excel"></i>
+                                <div class="document-info">
+                                    <div class="document-title">Estadísticas Anuales 2023</div>
+                                    <div class="document-meta">3.8 MB • 05/10/2024 • Datos estadísticos</div>
+                                </div>
+                                <div class="document-actions">
+                                    <button class="btn-action btn-view" onclick="alert('Función de visualización')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="alert('Función de descarga')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="eliminarDocumento(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="document-card" data-category="videos">
+                                <i class="document-icon fas fa-file-video"></i>
+                                <div class="document-info">
+                                    <div class="document-title">Entrevista Sector Hotelero</div>
+                                    <div class="document-meta">28.3 MB • 01/10/2024 • Video entrevista</div>
+                                </div>
+                                <div class="document-actions">
+                                    <button class="btn-action btn-view" onclick="alert('Función de visualización')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="alert('Función de descarga')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="eliminarDocumento(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para subir documentos -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header modal-header-custom">
+                    <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Subir Documento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm">
+                        <div class="upload-area" id="uploadDropZone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h5>Arrastra tus archivos aquí o haz clic para seleccionar</h5>
+                            <p class="text-muted">Formatos: PDF, DOC, XLS, PPT, JPG, PNG, MP4, AVI, MOV</p>
+                            <p class="text-muted">Tamaño máximo: 10 MB</p>
+                            <input type="file" id="fileInput" name="archivo" style="display: none;"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.wmv">
+                            <button type="button" class="btn btn-primary-custom mt-2"
+                                onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-folder-open me-2"></i>Seleccionar Archivo
+                            </button>
+                            <div id="fileInfo" class="mt-3" style="display: none;">
+                                <p><strong>Archivo:</strong> <span id="fileName"></span></p>
+                                <p><strong>Tamaño:</strong> <span id="fileSize"></span></p>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label for="documentName" class="form-label">Nombre del documento *</label>
+                            <input type="text" class="form-control" id="documentName" name="titulo" required>
+                        </div>
+
+                        <div class="mt-2">
+                            <label for="documentCategory" class="form-label">Categoría *</label>
+                            <select class="form-select" id="documentCategory" name="categoria" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option value="videos">Galería de videos</option>
+                                <option value="reportes">Reportes</option>
+                                <option value="historicos">Documentos históricos</option>
+                            </select>
+                        </div>
+
+                        <div class="mt-2">
+                            <label for="documentDescription" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" id="documentDescription" name="descripcion"
+                                rows="2"></textarea>
+                        </div>
+
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="makePublic" name="es_publico" checked>
+                            <label class="form-check-label" for="makePublic">
+                                Hacer público este documento
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary-custom" id="submitUpload">
+                        Subir Documento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para visualización -->
+    <div class="modal fade" id="viewerModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header modal-header-custom">
+                    <h5 class="modal-title" id="viewerModalLabel">Visualizador</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewerContent">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Formatear tamaño de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Manejo de archivo seleccionado
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                document.getElementById('fileInfo').style.display = 'block';
+
+                // Autocompletar nombre si está vacío
+                if (!document.getElementById('documentName').value) {
+                    document.getElementById('documentName').value = file.name.replace(/\.[^/.]+$/, "");
+                }
+            }
+        });
+
+        // Drag and drop
+        const dropZone = document.getElementById('uploadDropZone');
+
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--color-arena-oscuro)';
+            this.style.backgroundColor = 'rgba(214, 206, 170, 0.1)';
+        });
+
+        dropZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--color-beige)';
+            this.style.backgroundColor = '';
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--color-beige)';
+            this.style.backgroundColor = '';
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                document.getElementById('fileInput').dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Subir documento (demo)
+        document.getElementById('submitUpload').addEventListener('click', function () {
+            const fileInput = document.getElementById('fileInput');
+            const documentName = document.getElementById('documentName').value;
+            const category = document.getElementById('documentCategory').value;
+
+            if (!fileInput.files[0]) {
+                alert('Por favor selecciona un archivo');
+                return;
+            }
+
+            if (!documentName) {
+                alert('Por favor ingresa un nombre para el documento');
+                return;
+            }
+
+            if (!category) {
+                alert('Por favor selecciona una categoría');
+                return;
+            }
+
+            alert('En la versión con Django, aquí se subiría el documento al servidor.\n\nDatos del documento:\n- Nombre: ' + documentName + '\n- Categoría: ' + category + '\n- Archivo: ' + fileInput.files[0].name);
+
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+            document.getElementById('uploadForm').reset();
+            document.getElementById('fileInfo').style.display = 'none';
+        });
+
+        // Filtrar por categoría
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', function () {
+                document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+
+                const category = this.getAttribute('data-category');
+                const categoryName = this.textContent.trim();
+
+                document.getElementById('category-title').innerHTML =
+                    `<i class="fas fa-file me-2"></i>${categoryName}`;
+
+                // Filtrar documentos
+                const documentCards = document.querySelectorAll('.document-card');
+                documentCards.forEach(card => {
+                    if (category === 'all' || card.getAttribute('data-category') === category) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Buscar documentos
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const documentCards = document.querySelectorAll('.document-card');
+
+            documentCards.forEach(card => {
+                const title = card.querySelector('.document-title').textContent.toLowerCase();
+                const meta = card.querySelector('.document-meta').textContent.toLowerCase();
+
+                if (title.includes(searchTerm) || meta.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Eliminar documento
+        function eliminarDocumento(button) {
+            const card = button.closest('.document-card');
+            const title = card.querySelector('.document-title').textContent;
+
+            if (confirm(`¿Estás seguro de que deseas eliminar "${title}"?`)) {
+                card.remove();
+                alert('Documento eliminado (en la versión Django se eliminaría del servidor)');
+            }
+        }
+
+        // Efecto scroll navbar
+        window.addEventListener('scroll', function () {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Resetear formulario al cerrar modal
+        document.getElementById('uploadModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('uploadForm').reset();
+            document.getElementById('fileInfo').style.display = 'none';
+        });
+    </script>
+</body>
+
+</html>

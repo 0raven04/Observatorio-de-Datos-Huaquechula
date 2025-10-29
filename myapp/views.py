@@ -486,3 +486,189 @@ def formulario(request):
 
 def mapa(request):
     return render(request, "myapp/mapa.html")
+
+#prueba
+
+# views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse, FileResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from .models import Documento, Categoria
+import os
+from django.conf import settings
+from django.db.models import Q
+
+def repositorio(request):
+    """Vista principal del repositorio"""
+    categoria_id = request.GET.get('categoria', None)
+    busqueda = request.GET.get('q', '')
+    
+    # Filtrar documentos
+    documentos = Documento.objects.filter(es_publico=True)
+    
+    if categoria_id:
+        documentos = documentos.filter(categoria_id=categoria_id)
+    
+    if busqueda:
+        documentos = documentos.filter(
+            Q(titulo__icontains=busqueda) | 
+            Q(descripcion__icontains=busqueda)
+        )
+    
+    categorias = Categoria.objects.all()
+    
+    context = {
+        'documentos': documentos,
+        'categorias': categorias,
+        'categoria_actual': categoria_id,
+        'busqueda': busqueda,
+    }
+    return render(request, 'myapp/repositorio.html', context)
+
+@require_http_methods(["POST"])
+def subir_documento(request):
+    """Vista para subir documentos"""
+    try:
+        # Validar que venga el archivo
+        if 'archivo' not in request.FILES:
+            return JsonResponse({'error': 'No se recibió ningún archivo'}, status=400)
+        
+        archivo = request.FILES['archivo']
+        titulo = request.POST.get('titulo', '')
+        categoria_id = request.POST.get('categoria', '')
+        descripcion = request.POST.get('descripcion', '')
+        es_publico = request.POST.get('es_publico', 'on') == 'on'
+        
+        # Validaciones
+        if not titulo:
+            return JsonResponse({'error': 'El título es obligatorio'}, status=400)
+        
+        if not categoria_id:
+            return JsonResponse({'error': 'Debes seleccionar una categoría'}, status=400)
+        
+        # Validar tipo de archivo
+        extension = archivo.name.split('.')[-1].lower()
+        if extension not in settings.ALLOWED_EXTENSIONS:
+            return JsonResponse({
+                'error': f'Tipo de archivo no permitido. Extensiones permitidas: {", ".join(settings.ALLOWED_EXTENSIONS)}'
+            }, status=400)
+        
+        # Validar tamaño
+        if archivo.size > settings.MAX_FILE_SIZE:
+            max_size_mb = settings.MAX_FILE_SIZE / (1024 * 1024)
+            return JsonResponse({
+                'error': f'El archivo es demasiado grande. Tamaño máximo: {max_size_mb}MB'
+            }, status=400)
+        
+        # Obtener categoría
+        try:
+            categoria = Categoria.objects.get(id=categoria_id)
+        except Categoria.DoesNotExist:
+            return JsonResponse({'error': 'Categoría no válida'}, status=400)
+        
+        # Crear documento
+        documento = Documento(
+            titulo=titulo,
+            descripcion=descripcion,
+            archivo=archivo,
+            categoria=categoria,
+            es_publico=es_publico
+        )
+        documento.save()
+        
+        return JsonResponse({
+            'mensaje': 'Documento subido correctamente',
+            'documento_id': documento.id,
+            'titulo': documento.titulo,
+            'url': documento.archivo.url
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error al subir el documento: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def descargar_documento(request, documento_id):
+    """Vista para descargar documentos"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Incrementar contador de descargas
+        documento.descargas += 1
+        documento.save(update_fields=['descargas'])
+        
+        # Verificar que el archivo existe
+        if not os.path.exists(documento.archivo.path):
+            return JsonResponse({'error': 'Archivo no encontrado en el servidor'}, status=404)
+        
+        # Servir el archivo
+        response = FileResponse(
+            open(documento.archivo.path, 'rb'),
+            as_attachment=True,
+            filename=os.path.basename(documento.archivo.name)
+        )
+        return response
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Error al descargar: {str(e)}'}, status=500)
+
+@require_http_methods(["POST"])
+def eliminar_documento(request, documento_id):
+    """Vista para eliminar documentos"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Guardar información antes de eliminar
+        titulo = documento.titulo
+        
+        # Eliminar archivo físico
+        if documento.archivo:
+            try:
+                if os.path.isfile(documento.archivo.path):
+                    os.remove(documento.archivo.path)
+            except Exception as e:
+                print(f"Error al eliminar archivo físico: {e}")
+        
+        # Eliminar registro de la base de datos
+        documento.delete()
+        
+        return JsonResponse({
+            'mensaje': f'Documento "{titulo}" eliminado correctamente'
+        })
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Error al eliminar: {str(e)}'}, status=500)
+
+def obtener_documentos_categoria(request, categoria_id):
+    """API para obtener documentos de una categoría específica"""
+    try:
+        if categoria_id == 'all':
+            documentos = Documento.objects.filter(es_publico=True)
+        else:
+            documentos = Documento.objects.filter(
+                categoria_id=categoria_id,
+                es_publico=True
+            )
+        
+        documentos_data = [{
+            'id': doc.id,
+            'titulo': doc.titulo,
+            'descripcion': doc.descripcion,
+            'url': doc.archivo.url,
+            'tipo': doc.tipo_archivo,
+            'tamaño': doc.tamaño_formateado(),
+            'fecha': doc.fecha_subida.strftime('%d/%m/%Y'),
+            'icono': doc.icono_archivo(),
+            'es_video': doc.es_video(),
+            'es_imagen': doc.es_imagen(),
+            'es_pdf': doc.es_pdf(),
+        } for doc in documentos]
+        
+        return JsonResponse({'documentos': documentos_data})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

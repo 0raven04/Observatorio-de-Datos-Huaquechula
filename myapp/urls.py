@@ -3,6 +3,8 @@ from .views import registro_visita
 from myapp.views import backup_database
 from . import views
 from .views import obtener_registro, editar_registro, eliminar_seleccionados
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 # Definición de patrones URL para la aplicación
@@ -25,5 +27,12 @@ urlpatterns = [
     path('formulario/', views.formulario, name='formulario'),
     path('registro/', views.formulario, name='registro'),
     path("mapa/", views.mapa, name="mapa"),
+    path('', views.vista_inicio, name='vista_inicio'),
+    path('subir-documento/', views.subir_documento, name='subir_documento'),
+    path('descargar/<int:documento_id>/', views.descargar_documento, name='descargar_documento'),
+    path('eliminar/<int:documento_id>/', views.eliminar_documento, name='eliminar_documento'),
+    path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),
+    path('repositorio/', views.repositorio, name='repositorio'),
+    
 
 ]
