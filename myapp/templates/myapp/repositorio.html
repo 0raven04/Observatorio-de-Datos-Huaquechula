@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -5,315 +6,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Repositorio de Documentos - Observatorio Turístico</title>
+
+    <!-- CSS: Leaflet primero si lo usas, luego tu CSS combinado -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/repositorio_css.css' %}" />
+
+    <!-- Bootstrap y Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --color-gris-oscuro: #6A6A6A;
-            --color-arena-claro: #F5F3F0;
-            --color-arena-oscuro: #D6CEAA;
-            --color-beige: #C8C8C8;
-        }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--color-arena-claro);
-            color: var(--color-gris-oscuro);
-            padding-top: 110px;
-            min-height: 100vh;
-        }
-
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.8) !important;
-            transition: background 0.3s ease, padding 0.3s ease;
-            padding: 1rem 0;
-        }
-
-        .navbar.scrolled {
-            background-color: var(--color-arena-claro) !important;
-            padding: 8px 0;
-            border-bottom: 2px solid var(--color-arena-oscuro);
-        }
-
-        .navbar-nav .nav-link {
-            color: white !important;
-            transition: color 0.3s ease;
-        }
-
-        .navbar.scrolled .nav-link {
-            color: var(--color-gris-oscuro) !important;
-        }
-
-        .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px 15px;
-        }
-
-        .repository-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #7A7A7A 100%);
-            color: white;
-            padding: 12px 15px;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .category-item {
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-        }
-
-        .category-item:hover {
-            background-color: var(--color-arena-claro);
-        }
-
-        .category-item.active {
-            background-color: var(--color-arena-oscuro);
-            color: var(--color-gris-oscuro);
-            font-weight: 600;
-        }
-
-        .category-item i {
-            margin-right: 8px;
-            width: 18px;
-            text-align: center;
-        }
-
-        .document-card {
-            border: 1px solid var(--color-beige);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-            background-color: white;
-            display: flex;
-            align-items: center;
-        }
-
-        .document-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-            border-color: var(--color-arena-oscuro);
-        }
-
-        .document-icon {
-            font-size: 22px;
-            margin-right: 12px;
-            color: var(--color-gris-oscuro);
-            min-width: 30px;
-        }
-
-        .document-info {
-            flex: 1;
-        }
-
-        .document-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-            font-size: 0.95rem;
-        }
-
-        .document-meta {
-            font-size: 11px;
-            color: var(--color-beige);
-        }
-
-        .document-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-action {
-            padding: 6px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-download {
-            background-color: var(--color-arena-oscuro);
-            color: var(--color-gris-oscuro);
-        }
-
-        .btn-download:hover {
-            background-color: var(--color-gris-oscuro);
-            color: white;
-        }
-
-        .btn-view {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .btn-view:hover {
-            background-color: #2980b9;
-        }
-
-        .btn-delete {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background-color: #c0392b;
-        }
-
-        .btn-primary-custom {
-            background-color: var(--color-arena-oscuro);
-            border: none;
-            color: var(--color-gris-oscuro);
-            font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary-custom:hover {
-            background-color: var(--color-gris-oscuro);
-            color: white;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--color-beige);
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .upload-area:hover {
-            border-color: var(--color-arena-oscuro);
-            background-color: rgba(214, 206, 170, 0.1);
-        }
-
-        .upload-area i {
-            font-size: 36px;
-            color: var(--color-beige);
-            margin-bottom: 10px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--color-beige);
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        .modal-header-custom {
-            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #7A7A7A 100%);
-            color: white;
-        }
-
-        @media (max-width: 768px) {
-            .document-actions {
-                flex-direction: column;
-            }
-
-            body {
-                padding-top: 100px;
-            }
-        }
-    </style>
+    <!-- Scripts: librerías necesarias antes de tu java.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <!-- Tu script al final (usa defer) -->
+    <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
 </head>
 
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <img src="myapp/static/myapp/image/logo.png" alt="Logo" style="height: 70px;">
+<body class="repo-page">
+
+<nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <!-- Logo -->
+            <a class="navbar-brand" href="{% url 'vista_inicio' %}">
+                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo" style="height: 70px; width: auto;">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="offcanvas" 
+                    data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/mapa">Mapa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/modelado">Modelado</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/repositorio">Repositorio</a></li>
+
+            <!-- Menú offcanvas (solo móvil) -->
+            <div class="offcanvas offcanvas-end text-bg-dark d-md-none" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                        <ul class="submenu">
+                                <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
+                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta</a></li>
+                            </ul>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Menú horizontal (solo escritorio) -->
+            <div class="collapse navbar-collapse justify-content-center d-none d-md-flex" id="navbarSupportedContent">
+                <ul class="navbar-nav d-flex justify-content-around w-75">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                    <!-- Encuesta con submenú personalizado para escritorio -->
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link submenu-toggle" href="#">
+                            Encuesta <span class="submenu-arrow">▼</span>
+                        </a>
+                        <ul class="submenu">
+                            <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta </a></li>
+                            <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
     <div class="main-container">
-        <!-- Header -->
-        <div class="page-header mb-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <h2 class="mb-0"><i class="fas fa-folder me-2"></i>Repositorio de Documentos</h2>
-                <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                    <i class="fas fa-upload me-2"></i>Subir Documento
-                </button>
-            </div>
-            <p class="text-muted mt-2">Organiza y gestiona todos tus documentos por categorías</p>
+    <!-- Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h2 class="mb-0"><i class="fas fa-folder me-2"></i>Repositorio de Documentos</h2>
+            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="fas fa-upload me-2"></i>Subir Documento
+            </button>
         </div>
+        <p class="text-muted mt-2">Organiza y gestiona todos tus documentos por categorías</p>
+    </div>
 
-        <div class="row">
-            <!-- Sidebar de categorías -->
-            <div class="col-lg-3 mb-3">
-                <div class="repository-card">
-                    <div class="card-header">
-                        <i class="fas fa-tags me-2"></i>Categorías
+         <div class="repository-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-container">
+            <div class="repository-card">
+                <div class="card-header">
+                    <i class="fas fa-tags me-2"></i>Categorías
+                </div>
+                <div class="card-body">
+                    <div class="category-item active" data-category="all">
+                        <i class="fas fa-folder"></i>
+                        <span class="ms-2">Todos los documentos</span>
                     </div>
-                    <div class="card-body">
-                        <div class="category-item active" data-category="all">
-                            <i class="fas fa-folder"></i>
-                            <span class="ms-2">Todos los documentos</span>
-                        </div>
-                        <div class="category-item" data-category="videos">
-                            <i class="fas fa-video"></i>
-                            <span class="ms-2">Galería de videos</span>
-                        </div>
-                        <div class="category-item" data-category="reportes">
-                            <i class="fas fa-chart-bar"></i>
-                            <span class="ms-2">Reportes</span>
-                        </div>
-                        <div class="category-item" data-category="historicos">
-                            <i class="fas fa-archive"></i>
-                            <span class="ms-2">Documentos históricos</span>
-                        </div>
+                    <div class="category-item" data-category="videos">
+                        <i class="fas fa-video"></i>
+                        <span class="ms-2">Galería de videos</span>
+                    </div>
+                    <div class="category-item" data-category="reportes">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="ms-2">Reportes</span>
+                    </div>
+                    <div class="category-item" data-category="historicos">
+                        <i class="fas fa-archive"></i>
+                        <span class="ms-2">Documentos históricos</span>
                     </div>
                 </div>
             </div>
+        </div>
+
 
             <!-- Área principal de documentos -->
-            <div class="col-lg-9 mb-3">
-                <div class="repository-card">
-                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                        <span id="category-title"><i class="fas fa-file me-2"></i>Todos los documentos</span>
-                        <div class="d-flex mt-2 mt-md-0">
-                            <input type="text" id="searchInput" class="form-control form-control-sm me-2"
-                                placeholder="Buscar documento..." style="width: 200px;">
-                        </div>
+             <div class="main-content">
+            <div class="repository-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span id="category-title"><i class="fas fa-file me-2"></i>Todos los documentos</span>
+                    <div class="d-flex">
+                        <input type="text" id="searchInput" class="form-control form-control-sm" 
+                               placeholder="Buscar documento..." style="width: 200px;">
                     </div>
-                    <div class="card-body">
-                        <div id="documents-container">
+                </div>
+                <div class="card-body">
+                    <div id="documents-container">
                             <!-- Documentos de ejemplo -->
                             <div class="document-card" data-category="reportes">
                                 <i class="document-icon fas fa-file-pdf"></i>
@@ -497,156 +314,6 @@
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Formatear tamaño de archivo
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Manejo de archivo seleccionado
-        document.getElementById('fileInput').addEventListener('change', function (e) {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                document.getElementById('fileName').textContent = file.name;
-                document.getElementById('fileSize').textContent = formatFileSize(file.size);
-                document.getElementById('fileInfo').style.display = 'block';
-
-                // Autocompletar nombre si está vacío
-                if (!document.getElementById('documentName').value) {
-                    document.getElementById('documentName').value = file.name.replace(/\.[^/.]+$/, "");
-                }
-            }
-        });
-
-        // Drag and drop
-        const dropZone = document.getElementById('uploadDropZone');
-
-        dropZone.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            this.style.borderColor = 'var(--color-arena-oscuro)';
-            this.style.backgroundColor = 'rgba(214, 206, 170, 0.1)';
-        });
-
-        dropZone.addEventListener('dragleave', function (e) {
-            e.preventDefault();
-            this.style.borderColor = 'var(--color-beige)';
-            this.style.backgroundColor = '';
-        });
-
-        dropZone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            this.style.borderColor = 'var(--color-beige)';
-            this.style.backgroundColor = '';
-
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                document.getElementById('fileInput').files = e.dataTransfer.files;
-                document.getElementById('fileInput').dispatchEvent(new Event('change'));
-            }
-        });
-
-        // Subir documento (demo)
-        document.getElementById('submitUpload').addEventListener('click', function () {
-            const fileInput = document.getElementById('fileInput');
-            const documentName = document.getElementById('documentName').value;
-            const category = document.getElementById('documentCategory').value;
-
-            if (!fileInput.files[0]) {
-                alert('Por favor selecciona un archivo');
-                return;
-            }
-
-            if (!documentName) {
-                alert('Por favor ingresa un nombre para el documento');
-                return;
-            }
-
-            if (!category) {
-                alert('Por favor selecciona una categoría');
-                return;
-            }
-
-            alert('En la versión con Django, aquí se subiría el documento al servidor.\n\nDatos del documento:\n- Nombre: ' + documentName + '\n- Categoría: ' + category + '\n- Archivo: ' + fileInput.files[0].name);
-
-            // Cerrar modal
-            bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
-            document.getElementById('uploadForm').reset();
-            document.getElementById('fileInfo').style.display = 'none';
-        });
-
-        // Filtrar por categoría
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.addEventListener('click', function () {
-                document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-
-                const category = this.getAttribute('data-category');
-                const categoryName = this.textContent.trim();
-
-                document.getElementById('category-title').innerHTML =
-                    `<i class="fas fa-file me-2"></i>${categoryName}`;
-
-                // Filtrar documentos
-                const documentCards = document.querySelectorAll('.document-card');
-                documentCards.forEach(card => {
-                    if (category === 'all' || card.getAttribute('data-category') === category) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-        });
-
-        // Buscar documentos
-        document.getElementById('searchInput').addEventListener('input', function () {
-            const searchTerm = this.value.toLowerCase();
-            const documentCards = document.querySelectorAll('.document-card');
-
-            documentCards.forEach(card => {
-                const title = card.querySelector('.document-title').textContent.toLowerCase();
-                const meta = card.querySelector('.document-meta').textContent.toLowerCase();
-
-                if (title.includes(searchTerm) || meta.includes(searchTerm)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-
-        // Eliminar documento
-        function eliminarDocumento(button) {
-            const card = button.closest('.document-card');
-            const title = card.querySelector('.document-title').textContent;
-
-            if (confirm(`¿Estás seguro de que deseas eliminar "${title}"?`)) {
-                card.remove();
-                alert('Documento eliminado (en la versión Django se eliminaría del servidor)');
-            }
-        }
-
-        // Efecto scroll navbar
-        window.addEventListener('scroll', function () {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-
-        // Resetear formulario al cerrar modal
-        document.getElementById('uploadModal').addEventListener('hidden.bs.modal', function () {
-            document.getElementById('uploadForm').reset();
-            document.getElementById('fileInfo').style.display = 'none';
-        });
-    </script>
 </body>
 
 </html>
