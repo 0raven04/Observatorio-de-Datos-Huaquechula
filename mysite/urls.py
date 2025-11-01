@@ -41,7 +41,9 @@ urlpatterns = [
     # - Llama a la vista backup_database definida en myapp/views.py
     # - Nombre de la ruta: 'backup_database'
     path('backup/', backup_database, name='backup_database'),
-    
+
+    # URL para acceder a la vista de gráficos e indicadores turísticos
+    path('graficos_indicadores/', views.graficos_indicadores, name='graficos_indicadores'),
     # URL raíz que incluye las URLs de la aplicación 'myapp'
     # - Todas las URLs definidas en myapp.urls estarán bajo la raíz del proyecto
     # - Ejemplo: la ruta 'visitas/' de myapp será accesible como '/visitas/'

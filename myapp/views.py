@@ -160,6 +160,11 @@ def cerrar_sesion(request):
     messages.success(request, "Sesión cerrada correctamente.")
     return redirect('login')  
 
+def graficos_indicadores(request):  
+    """  
+    Vista con menu lateral para graficos e indicadores turisticos
+    """  
+    return render(request, 'myapp/graficos_indicadores.html')
 
 def vista_inicio(request):
     """
