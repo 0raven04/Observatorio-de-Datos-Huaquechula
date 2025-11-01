@@ -32,7 +32,11 @@ DEBUG = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "observatorio-de-datos-huaquechula-production.up.railway.app",
+]
 
 
 # Application definition
