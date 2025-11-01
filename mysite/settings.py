@@ -93,22 +93,24 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-import os
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv("MYSQLDATABASE"),
-        'USER': os.getenv("MYSQLUSER"),
-        'PASSWORD': os.getenv("MYSQLPASSWORD"),
-        'HOST': os.getenv("RAILWAY_PRIVATE_DOMAIN") or os.getenv("MYSQLHOST"),
-        'PORT': os.getenv("MYSQLPORT", "3306"),
-    },
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("MYSQLDATABASE"),
+        "USER": os.getenv("MYSQLUSER"),
+        "PASSWORD": os.getenv("MYSQLPASSWORD"),
+        "HOST": os.getenv("MYSQLHOST"),
+        "PORT": os.getenv("MYSQLPORT"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "isolation_level": "read committed",
+        },
         'TEST': {
             'CHARSET': 'utf8mb4',
             'COLLATION': 'utf8mb4_general_ci',
         }
     }
+}
 
 
 
