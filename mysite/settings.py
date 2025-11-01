@@ -62,6 +62,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://observatorio-de-datos-huaquechula-production.up.railway.app",
+]
+
 ROOT_URLCONF = 'mysite.urls'
 
 import os
