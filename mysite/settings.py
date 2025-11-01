@@ -94,23 +94,29 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQLDATABASE"),
-        "USER": os.getenv("MYSQLUSER"),
-        "PASSWORD": os.getenv("MYSQLPASSWORD"),
-        "HOST": os.getenv("MYSQLHOST"),
-        "PORT": os.getenv("MYSQLPORT"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-            "isolation_level": "read committed",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv("MYSQLDATABASE"),
+        'USER': os.getenv("MYSQLUSER"),
+        'PASSWORD': os.getenv("MYSQLPASSWORD"),
+        'HOST': os.getenv("MYSQLHOST"),
+        'PORT': os.getenv("MYSQLPORT"),
+
+        # -------- FIX TIMEOUTS / KEEP ALIVE -------
+        'CONN_MAX_AGE': 60,  # Mantiene conexión viva 60s
+
+        'OPTIONS': {
+            'connect_timeout': 20,
+            "ssl": {
+                "ssl-mode": "REQUIRED",   # railway requiere SSL
+            },},
         },
         'TEST': {
             'CHARSET': 'utf8mb4',
             'COLLATION': 'utf8mb4_general_ci',
         }
     }
-}
+
 
 
 
