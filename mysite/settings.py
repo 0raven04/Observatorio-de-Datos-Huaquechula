@@ -9,8 +9,13 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import os
+import os  
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+import pymysql
+pymysql.install_as_MySQLdb()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +32,21 @@ DEBUG = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = []
+# ... (Esto es lo que ya tenías)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+AZURE_HOSTNAME = os.getenv('WEBSITE_HOSTNAME')
+if AZURE_HOSTNAME:
+    ALLOWED_HOSTS.append(AZURE_HOSTNAME)
+
+# --- ¡AÑADE ESTAS LÍNEAS NUEVAS! ---
+# Configuración de Orígenes Confiables para CSRF
+CSRF_TRUSTED_ORIGINS = []
+if AZURE_HOSTNAME:
+    # El error muestra que la conexión es 'https', por lo que es VITAL agregarlo.
+    CSRF_TRUSTED_ORIGINS.append(f"https://{AZURE_HOSTNAME}")
+
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -44,12 +63,17 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://observatorio-de-datos-huaquechula-production.up.railway.app",
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -80,22 +104,19 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'observatorio_de_datos',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '',  
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES', innodb_strict_mode=1",
-            'charset': 'utf8mb4',
-            'isolation_level': 'read committed',
+    "default": {
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.mysql"),
+        "NAME": os.getenv("DB_NAME", "observatorio_de_datos"),
+        "USER": os.getenv("DB_USER", "admin_observatorio"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "observatoriodatos.mysql.database.azure.com"),
+        "PORT": os.getenv("DB_PORT", "3306"),
+        "CONN_MAX_AGE": None,
+        "OPTIONS": {
+            "connect_timeout": 20,
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
         },
-        'TEST': {
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_general_ci',
-        }
     }
 }
 
@@ -126,24 +147,25 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'myapp/static')]
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'myapp/templates')]
+
 
 AUTHENTICATION_BACKENDS = [
     'myapp.authentication_backend.UsuarioBackend',  # ruta a tu backend corregido

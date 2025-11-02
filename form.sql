@@ -27,7 +27,7 @@ CREATE TABLE Propietario(
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
---ya hereda de Usuario
+-- ya hereda de Usuario
 CREATE TABLE Administrador(
     id_usuario INT,
     clave_admin VARCHAR(50) PRIMARY KEY,
