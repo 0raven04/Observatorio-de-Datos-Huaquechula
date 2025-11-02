@@ -35,8 +35,12 @@ LOGOUT_REDIRECT_URL = '/login/'
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "observatoriohuaquechula-c5h9h6gchsb0eahc.mexicocentral-01.azurewebsites.net",
+    "observatoriohuaquechula-c5h9h6gchsb0eahc.mexicocentral-01.azurewebsites.net", 
 ]
+
+AZURE_HOSTNAME = os.getenv('WEBSITE_HOSTNAME')
+if AZURE_HOSTNAME:
+    ALLOWED_HOSTS.append(AZURE_HOSTNAME)
 
 
 # Application definition
