@@ -35,7 +35,7 @@ LOGOUT_REDIRECT_URL = '/login/'
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "observatorio-de-datos-huaquechula-production.up.railway.app",
+    "observatoriohuaquechula-c5h9h6gchsb0eahc.mexicocentral-01.azurewebsites.net",
 ]
 
 
