@@ -32,19 +32,19 @@ DEBUG = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "observatoriohuaquechula-c5h9h6gchsb0eahc.mexicocentral-01.azurewebsites.net", 
-]
-
+# ... (Esto es lo que ya tenías)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 AZURE_HOSTNAME = os.getenv('WEBSITE_HOSTNAME')
 if AZURE_HOSTNAME:
     ALLOWED_HOSTS.append(AZURE_HOSTNAME)
 
+# --- ¡AÑADE ESTAS LÍNEAS NUEVAS! ---
+# Configuración de Orígenes Confiables para CSRF
 CSRF_TRUSTED_ORIGINS = []
 if AZURE_HOSTNAME:
+    # El error muestra que la conexión es 'https', por lo que es VITAL agregarlo.
     CSRF_TRUSTED_ORIGINS.append(f"https://{AZURE_HOSTNAME}")
+# --- FIN DE LO NUEVO ---
 
 
 # Application definition
