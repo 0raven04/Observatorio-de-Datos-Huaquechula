@@ -27,7 +27,7 @@ SET time_zone = "+00:00";
 -- Estructura de tabla para la tabla `auth_group`
 --
 
-CREATE TABLE `auth_group` (
+CREATE TABLE IF NOT EXISTS `auth_group` (
   `id` int(11) NOT NULL,
   `name` varchar(150) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -38,7 +38,7 @@ CREATE TABLE `auth_group` (
 -- Estructura de tabla para la tabla `auth_group_permissions`
 --
 
-CREATE TABLE `auth_group_permissions` (
+CREATE TABLE IF NOT EXISTS `auth_group_permissions` (
   `id` bigint(20) NOT NULL,
   `group_id` int(11) NOT NULL,
   `permission_id` int(11) NOT NULL
@@ -50,7 +50,7 @@ CREATE TABLE `auth_group_permissions` (
 -- Estructura de tabla para la tabla `auth_permission`
 --
 
-CREATE TABLE `auth_permission` (
+CREATE TABLE IF NOT EXISTS `auth_permission` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `content_type_id` int(11) NOT NULL,
@@ -109,7 +109,7 @@ INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALU
 -- Estructura de tabla para la tabla `auth_user`
 --
 
-CREATE TABLE `auth_user` (
+CREATE TABLE IF NOT EXISTS `auth_user` (
   `id` int(11) NOT NULL,
   `password` varchar(128) NOT NULL,
   `last_login` datetime(6) DEFAULT NULL,
@@ -138,7 +138,7 @@ INSERT INTO `auth_user` (`id`, `password`, `last_login`, `is_superuser`, `userna
 -- Estructura de tabla para la tabla `auth_user_groups`
 --
 
-CREATE TABLE `auth_user_groups` (
+CREATE TABLE IF NOT EXISTS `auth_user_groups` (
   `id` bigint(20) NOT NULL,
   `user_id` int(11) NOT NULL,
   `group_id` int(11) NOT NULL
@@ -150,7 +150,7 @@ CREATE TABLE `auth_user_groups` (
 -- Estructura de tabla para la tabla `auth_user_user_permissions`
 --
 
-CREATE TABLE `auth_user_user_permissions` (
+CREATE TABLE IF NOT EXISTS `auth_user_user_permissions` (
   `id` bigint(20) NOT NULL,
   `user_id` int(11) NOT NULL,
   `permission_id` int(11) NOT NULL
@@ -162,7 +162,7 @@ CREATE TABLE `auth_user_user_permissions` (
 -- Estructura de tabla para la tabla `django_admin_log`
 --
 
-CREATE TABLE `django_admin_log` (
+CREATE TABLE IF NOT EXISTS `django_admin_log` (
   `id` int(11) NOT NULL,
   `action_time` datetime(6) NOT NULL,
   `object_id` longtext DEFAULT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE `django_admin_log` (
 -- Estructura de tabla para la tabla `django_content_type`
 --
 
-CREATE TABLE `django_content_type` (
+CREATE TABLE IF NOT EXISTS `django_content_type` (
   `id` int(11) NOT NULL,
   `app_label` varchar(100) NOT NULL,
   `model` varchar(100) NOT NULL
@@ -207,7 +207,7 @@ INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
 -- Estructura de tabla para la tabla `django_migrations`
 --
 
-CREATE TABLE `django_migrations` (
+CREATE TABLE IF NOT EXISTS `django_migrations` (
   `id` bigint(20) NOT NULL,
   `app` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -246,7 +246,7 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 -- Estructura de tabla para la tabla `django_session`
 --
 
-CREATE TABLE `django_session` (
+CREATE TABLE IF NOT EXISTS `django_session` (
   `session_key` varchar(40) NOT NULL,
   `session_data` longtext NOT NULL,
   `expire_date` datetime(6) NOT NULL
@@ -269,7 +269,7 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 -- Estructura de tabla para la tabla `encuestador`
 --
 
-CREATE TABLE `encuestador` (
+CREATE TABLE IF NOT EXISTS `encuestador` (
   `clave_encuestador` varchar(50) NOT NULL,
   `id_usuario` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -288,8 +288,7 @@ INSERT INTO `encuestador` (`clave_encuestador`, `id_usuario`) VALUES
 --
 -- Estructura de tabla para la tabla `persona_visita`
 --
-
-CREATE TABLE `persona_visita` (
+CREATE TABLE IF NOT EXISTS `persona_visita` (
   `id_persona` int(11) NOT NULL,
   `edad` enum('0-15','16-30','31-45','46-60','61-75','75+') DEFAULT NULL,
   `sexo` varchar(10) NOT NULL,
@@ -313,7 +312,7 @@ INSERT INTO `persona_visita` (`id_persona`, `edad`, `sexo`, `id_registro`) VALUE
 -- Estructura de tabla para la tabla `registro_visita`
 --
 
-CREATE TABLE `registro_visita` (
+CREATE TABLE IF NOT EXISTS `registro_visita` (
   `id_registro` int(11) NOT NULL,
   `fecha` date NOT NULL,
   `tamanio_grupo` smallint(5) UNSIGNED NOT NULL CHECK (`tamanio_grupo` >= 0),
@@ -353,7 +352,7 @@ INSERT INTO `registro_visita` (`id_registro`, `fecha`, `tamanio_grupo`, `es_extr
 -- Estructura de tabla para la tabla `usuario`
 --
 
-CREATE TABLE `usuario` (
+CREATE TABLE IF NOT EXISTS `usuario` (
   `id_usuario` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
   `ap` varchar(50) NOT NULL,
@@ -476,7 +475,7 @@ ALTER TABLE `registro_visita`
 -- Indices de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`id_usuario`),
+  ADD 3PRIMARY KEY (`id_usuario`),
   ADD UNIQUE KEY `nombre_usuario` (`nombre_usuario`),
   ADD UNIQUE KEY `email` (`email`);
 
