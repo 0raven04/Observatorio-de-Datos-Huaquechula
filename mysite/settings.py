@@ -44,7 +44,9 @@ CSRF_TRUSTED_ORIGINS = []
 if AZURE_HOSTNAME:
     # El error muestra que la conexión es 'https', por lo que es VITAL agregarlo.
     CSRF_TRUSTED_ORIGINS.append(f"https://{AZURE_HOSTNAME}")
-# --- FIN DE LO NUEVO ---
+
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
