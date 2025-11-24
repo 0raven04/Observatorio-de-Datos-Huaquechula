@@ -39,12 +39,38 @@ class Encuestador(models.Model):
         db_column='id_usuario',   
         related_name='encuestador'
     )
-
     def __str__(self):
         return f"{self.clave_encuestador}"
     
     class Meta:
         db_table = 'Encuestador'
+
+
+class Propietario(models.Model):
+    id_usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        db_column='id_usuario'  # 👈 importante!
+    )
+    clave_propietario = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        db_table = 'Propietario'
+
+
+class Administrador(models.Model):
+    id_usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        db_column='id_usuario'  # 👈 también importante
+    )
+    clave_admin = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        db_table = 'Administrador'
+
 
 class RegistroVisita(models.Model):
     id_registro = models.AutoField(primary_key=True)

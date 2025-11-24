@@ -1,85 +1,24 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Indicadores de Bienestar y Desarrollo Humano</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    
-    <!-- FontAwesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Tus estilos -->
-    <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}"/>
-    <link rel="stylesheet" href="{% static 'myapp/CSS/estilo_graficos_indicadores.css' %}"/>
-</head>
-<body>
-    <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <!-- Logo -->
-            <a class="navbar-brand" href="#">
-                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo" style="height: 70px; width: auto;">
-            </a>
+{% block title %}Indicadores de Bienestar y Desarrollo Humano{% endblock %}
 
-            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="offcanvas"
-                    data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'myapp/CSS/estilo_graficos_indicadores.css' %}"/>
+<style>
+    .content-wrapper {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+</style>
+{% endblock %}
 
-            <!-- Menú offcanvas -->
-            <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                </div>
-                <div class="offcanvas-body">
-                    <ul class="navbar-nav">
-                        <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
-                        <ul class="submenu">
-                                <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta</a></li>
-                            </ul>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Menú horizontal -->
-            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-                <ul class="navbar-nav d-flex justify-content-around w-75">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
-                    <!-- Encuesta con submenú personalizado para escritorio -->
-                      <li class="nav-item has-submenu">
-                          <a class="nav-link submenu-toggle" href="#">
-                              Encuesta <span class="submenu-arrow">▼</span>
-                          </a>
-                          <ul class="submenu">
-                              <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta </a></li>
-                              <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                          </ul>
-                      </li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-
+{% block content %}
+<div class="contenido-pagina">
     <!-- Botón de toggle para móviles -->
-<button class="menu-toggle" style="display: none;">
-    ☰
-</button>
+    <button class="menu-toggle" style="display: none;" aria-expanded="false" aria-label="Abrir menú">☰</button>
 
-<!-- Overlay para móviles -->
-<div class="overlay" style="display: none;"></div>
+    <!-- Overlay para móviles -->
+    <div class="overlay" style="display: none;" aria-hidden="true"></div>
 
     <div class="main-container">
         <!-- Menú lateral -->
@@ -238,102 +177,100 @@
               </li>
           </ul>
       </div>
+
         <!-- Contenido principal -->
-        <main class="main-content">
-            <div class="content-header">
+        <main class="main-content" role="main">
+            <header class="content-header">
                 <h1>Sistema de Indicadores de Bienestar</h1>
                 <p>Seleccione un indicador del menú lateral para visualizar su información</p>
-            </div>
+            </header>
 
-            <div id="indicator-content">
+            <section id="indicator-content">
                 <!-- Vista de dashboard similar a la imagen -->
-                <div class="dashboard-section">
-                    <h2 class="section-title">Estacionalidad Turística</h2>
+                <section class="dashboard-section" aria-labelledby="estacionalidad-title">
+                    <h2 id="estacionalidad-title" class="section-title">Estacionalidad Turística</h2>
                     <div class="dashboard-grid">
-                        <div class="dashboard-card">
-                            <div class="card-icon">📊</div>
+                        <article class="dashboard-card" role="group" aria-label="Llegada de turistas por mercado y por clasificación hotelera 2025">
+                            <div class="card-icon" aria-hidden="true">📊</div>
                             <h3>Llegada de turistas por mercado y por clasificación hotelera 2025</h3>
                             <div class="card-value">245,678</div>
                             <div class="card-trend positive">+12.5%</div>
-                        </div>
+                        </article>
 
-                        <div class="dashboard-card">
-                            <div class="card-icon">🗺️</div>
+                        <article class="dashboard-card" role="group" aria-label="Llegada de turistas por destino 2025">
+                            <div class="card-icon" aria-hidden="true">🗺️</div>
                             <h3>Llegada de turistas por destino 2025</h3>
                             <div class="card-value">187,432</div>
                             <div class="card-trend positive">+8.3%</div>
-                        </div>
+                        </article>
 
-                        <div class="dashboard-card">
-                            <div class="card-icon">🏛️</div>
+                        <article class="dashboard-card" role="group" aria-label="Llegada mensual de visitantes a zonas arqueológicas 2025">
+                            <div class="card-icon" aria-hidden="true">🏛️</div>
                             <h3>Llegada mensual de visitantes a zonas arqueológicas 2025</h3>
                             <div class="card-value">89,456</div>
                             <div class="card-trend positive">+15.2%</div>
-                        </div>
+                        </article>
 
-                        <div class="dashboard-card">
-                            <div class="card-icon">🏨</div>
+                        <article class="dashboard-card" role="group" aria-label="Porcentaje de ocupación hotelera 2025">
+                            <div class="card-icon" aria-hidden="true">🏨</div>
                             <h3>Porcentaje de ocupación hotelera 2025</h3>
                             <div class="card-value">78.5%</div>
                             <div class="card-trend positive">+5.7%</div>
-                        </div>
+                        </article>
                     </div>
-                </div>
+                </section>
 
-                <div class="dashboard-section">
-                    <h2 class="section-title">Empleo</h2>
+                <section class="dashboard-section" aria-labelledby="empleo-title">
+                    <h2 id="empleo-title" class="section-title">Empleo</h2>
                     <div class="dashboard-grid">
-                        <div class="dashboard-card full-width">
-                            <div class="card-icon">💼</div>
+                        <article class="dashboard-card full-width" role="group" aria-label="Beneficios Económicos del Destino">
+                            <div class="card-icon" aria-hidden="true">💼</div>
                             <h3>Beneficios Económicos del Destino</h3>
                             <div class="card-value">$12.8M</div>
                             <div class="card-trend positive">+18.3%</div>
                             <div class="card-subtitle">Acumulados 2022-2024</div>
-                        </div>
+                        </article>
                     </div>
-                </div>
+                </section>
 
-                <div class="dashboard-section">
-                    <h2 class="section-title">Indicadores Destacados</h2>
+                <section class="dashboard-section" aria-labelledby="indicadores-destacados-title">
+                    <h2 id="indicadores-destacados-title" class="section-title">Indicadores Destacados</h2>
                     <div class="dashboard-grid">
-                        <div class="dashboard-card">
-                            <div class="card-icon">❤️</div>
+                        <article class="dashboard-card" role="group" aria-label="Esperanza de Vida">
+                            <div class="card-icon" aria-hidden="true">❤️</div>
                             <h3>Esperanza de Vida</h3>
                             <div class="card-value">77.1 años</div>
                             <div class="card-trend positive">+2.6%</div>
-                        </div>
+                        </article>
 
-                        <div class="dashboard-card">
-                            <div class="card-icon">🎓</div>
+                        <article class="dashboard-card" role="group" aria-label="Años de Escolaridad">
+                            <div class="card-icon" aria-hidden="true">🎓</div>
                             <h3>Años de Escolaridad</h3>
                             <div class="card-value">10.2 años</div>
                             <div class="card-trend positive">+4.1%</div>
-                        </div>
+                        </article>
 
-                        <div class="dashboard-card">
-                            <div class="card-icon">💰</div>
+                        <article class="dashboard-card" role="group" aria-label="Ingreso Disponible">
+                            <div class="card-icon" aria-hidden="true">💰</div>
                             <h3>Ingreso Disponible</h3>
                             <div class="card-value">$24,580</div>
                             <div class="card-trend positive">+7.8%</div>
-                        </div>
+                        </article>
 
-                        <div class="dashboard-card">
-                            <div class="card-icon">🏠</div>
+                        <article class="dashboard-card" role="group" aria-label="Acceso a Servicios Básicos">
+                            <div class="card-icon" aria-hidden="true">🏠</div>
                             <h3>Acceso a Servicios Básicos</h3>
                             <div class="card-value">92%</div>
                             <div class="card-trend positive">+3.2%</div>
-                        </div>
+                        </article>
                     </div>
-                </div>
-            </div>
+                </section>
+            </section>
         </main>
     </div>
+</div>
+{% endblock %}
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Tus scripts -->
-    <script src="{% static 'myapp/JAV/java.js' %}"></script>
-    <script src="{% static 'myapp/JAV/script_graficos_indicadores.js' %}" defer></script>
-</body>
-</html>
+{% block extra_js %}
+<script src="{% static 'myapp/JAV/script_graficos_indicadores.js' %}" defer></script>
+{% endblock %}

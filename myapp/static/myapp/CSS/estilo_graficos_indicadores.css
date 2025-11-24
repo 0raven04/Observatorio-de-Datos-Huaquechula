@@ -1,3 +1,12 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+main {
+    flex-grow: 1;
+}
 .main-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -5,6 +14,9 @@
     margin-top: 120px; 
     display: flex;
     gap: 20px; 
+}
+body {
+    padding-top: 0px;
 }
 
 /* Estilos para el menú lateral */
@@ -228,7 +240,6 @@
 .chart-container {
     margin-top: 20px;
     position: relative;
-    height: 400px;
     width: 100%;
 }
 
@@ -250,7 +261,7 @@
 .menu-toggle {
     display: none;
     position: fixed;
-    top: 100px; /* Ajustado para estar debajo del navbar */
+    top: 100px;
     left: 15px;
     z-index: 1000;
     background-color: var(--color-gris-oscuro);
@@ -265,8 +276,9 @@
 /* Estilos responsive */
 @media (max-width: 768px) {
     .main-container {
-        flex-direction: column; /* Cambia a columna en móviles */
-        gap: 10px;
+        max-width: 100%;
+        margin: 0;
+        padding: 20px;
     }
     
     .sidebar {
@@ -324,6 +336,11 @@
         font-size: 1.8rem;
     }
 }
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 250px;
+    }
+}
 
 @media (max-width: 480px) {
     .main-content {
@@ -373,4 +390,8 @@
 .offcanvas-body .dropdown-item {
     padding-left: 30px;
     color: rgba(255, 255, 255, 0.8);
+}
+
+body, .main-content {
+    margin-bottom: 0 !important;
 }
