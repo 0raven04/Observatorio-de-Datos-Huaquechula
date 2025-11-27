@@ -34,4 +34,6 @@ urlpatterns = [
     path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),
     path('repositorio/', views.repositorio, name='repositorio'),
     path('estadistica/', views.graficos_indicadores, name='estadistica'),
+    path('documentos/', views.lista_documentos, name='lista_documentos'),
+    path('documentos/editar/<int:documento_id>/', views.editar_documento_view, name='editar_documento'),
 ]

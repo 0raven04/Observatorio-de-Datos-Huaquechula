@@ -30,67 +30,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Categoria',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nombre', models.CharField(max_length=100)),
-                ('icono', models.CharField(default='fas fa-folder', max_length=50)),
-                ('orden', models.IntegerField(default=0)),
-            ],
-            options={
-                'verbose_name_plural': 'Categorías',
-                'ordering': ['orden', 'nombre'],
-            },
-        ),
-        migrations.CreateModel(
-            name='Lugar',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nombre', models.CharField(max_length=100)),
-                ('latitud', models.FloatField()),
-                ('longitud', models.FloatField()),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Administrador',
-            fields=[
-                ('id_usuario', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='myapp.usuario')),
-                ('clave_admin', models.CharField(max_length=50, unique=True)),
-            ],
-            options={
-                'db_table': 'Administrador',
-            },
-        ),
-        migrations.CreateModel(
-            name='Propietario',
-            fields=[
-                ('id_usuario', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='myapp.usuario')),
-                ('clave_propietario', models.CharField(max_length=50, unique=True)),
-            ],
-            options={
-                'db_table': 'Propietario',
-            },
-        ),
-        migrations.CreateModel(
-            name='Documento',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('titulo', models.CharField(max_length=255)),
-                ('descripcion', models.TextField(blank=True, null=True)),
-                ('archivo', models.FileField(upload_to='documentos/%Y/%m/')),
-                ('fecha_subida', models.DateTimeField(default=django.utils.timezone.now)),
-                ('tamaño', models.IntegerField(default=0)),
-                ('tipo_archivo', models.CharField(blank=True, max_length=10)),
-                ('es_publico', models.BooleanField(default=True)),
-                ('descargas', models.IntegerField(default=0)),
-                ('categoria', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documentos', to='myapp.categoria')),
-            ],
-            options={
-                'verbose_name_plural': 'Documentos',
-                'ordering': ['-fecha_subida'],
-            },
-        ),
-        migrations.CreateModel(
             name='Encuestador',
             fields=[
                 ('clave_encuestador', models.CharField(db_column='clave_encuestador', max_length=50, primary_key=True, serialize=False)),

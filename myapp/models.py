@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User 
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
+from django.utils import timezone
 
 class Usuario(models.Model):
     id_usuario = models.AutoField(primary_key=True)
@@ -171,11 +172,6 @@ class Lugar(models.Model):
 
     def __str__(self):
         return self.nombre
-    
-#prueba 
-# models.py
-from django.db import models
-from django.utils import timezone
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100)

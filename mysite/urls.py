@@ -16,6 +16,8 @@ from django.contrib.auth.views import LogoutView
 from django.shortcuts import redirect
 from myapp import views
 from myapp.views import backup_database
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # URL para la página de inicio de sesión
@@ -49,6 +51,9 @@ urlpatterns = [
     # - Ejemplo: la ruta 'visitas/' de myapp será accesible como '/visitas/'
     path('', include('myapp.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Recomendaciones importantes:
 # 1. Eliminar la definición duplicada de 'logout/' (línea 30)

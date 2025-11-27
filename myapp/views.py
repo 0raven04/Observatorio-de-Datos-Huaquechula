@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
-from .models import RegistroVisita, PersonaVisita, Encuestador, Usuario
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, FileResponse
+from .models import RegistroVisita, PersonaVisita, Encuestador, Usuario, Documento, Categoria, Lugar
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.contrib.auth import logout
@@ -10,7 +10,9 @@ import subprocess
 from django.conf import settings
 from datetime import datetime
 import os
-from .models import Lugar
+import sys
+from django.db.models import Q
+from django.views.decorators.http import require_http_methods
 
 # Vista principal para el registro de visitas
 # - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
@@ -492,18 +494,6 @@ def formulario(request):
 def mapa(request):
     return render(request, "myapp/mapa.html")
 
-#prueba
-
-# views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse, FileResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from .models import Documento, Categoria
-import os
-from django.conf import settings
-from django.db.models import Q
-
 def repositorio(request):
     """Vista principal del repositorio"""
     categoria_id = request.GET.get('categoria', None)
@@ -534,16 +524,25 @@ def repositorio(request):
 @require_http_methods(["POST"])
 def subir_documento(request):
     """Vista para subir documentos"""
+    sys.stderr.write(f"DEBUG: Entering subir_documento view\n")
+    sys.stderr.write(f"DEBUG: POST data keys: {list(request.POST.keys())}\n")
+    sys.stderr.write(f"DEBUG: FILES data keys: {list(request.FILES.keys())}\n")
+    
     try:
         # Validar que venga el archivo
         if 'archivo' not in request.FILES:
+            sys.stderr.write("DEBUG: No 'archivo' in request.FILES\n")
             return JsonResponse({'error': 'No se recibió ningún archivo'}, status=400)
         
         archivo = request.FILES['archivo']
+        sys.stderr.write(f"DEBUG: File received: {archivo.name}, size: {archivo.size}\n")
+        
         titulo = request.POST.get('titulo', '')
         categoria_id = request.POST.get('categoria', '')
         descripcion = request.POST.get('descripcion', '')
         es_publico = request.POST.get('es_publico', 'on') == 'on'
+        
+        sys.stderr.write(f"DEBUG: Form data - Title: {titulo}, Category: {categoria_id}\n")
         
         # Validaciones
         if not titulo:
@@ -581,6 +580,7 @@ def subir_documento(request):
             es_publico=es_publico
         )
         documento.save()
+        sys.stderr.write(f"DEBUG: Document saved successfully: {documento.id}\n")
         
         return JsonResponse({
             'mensaje': 'Documento subido correctamente',
@@ -590,6 +590,7 @@ def subir_documento(request):
         })
         
     except Exception as e:
+        sys.stderr.write(f"DEBUG: Exception in subir_documento: {str(e)}\n")
         return JsonResponse({'error': f'Error al subir el documento: {str(e)}'}, status=500)
 
 @require_http_methods(["GET"])
@@ -677,6 +678,55 @@ def obtener_documentos_categoria(request, categoria_id):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def lista_documentos(request):
+    """
+    Vista para el CRUD de documentos (tabla de gestión)
+    """
+    documentos = Documento.objects.all().order_by('-fecha_subida')
+    categorias = Categoria.objects.all()
     
-def repositorio(request):
-    return render(request, 'myapp/repositorio.html')
+    return render(request, 'myapp/lista_documentos.html', {
+        'documentos': documentos,
+        'categorias': categorias
+    })
+
+@login_required
+def editar_documento_view(request, documento_id):
+    """
+    Vista para editar un documento:
+    - GET: Retorna el formulario HTML parcial
+    - POST: Procesa la actualización
+    """
+    documento = get_object_or_404(Documento, id=documento_id)
+    
+    if request.method == 'POST':
+        try:
+            titulo = request.POST.get('titulo')
+            categoria_id = request.POST.get('categoria')
+            descripcion = request.POST.get('descripcion')
+            es_publico = request.POST.get('es_publico') == 'on'
+            
+            if not titulo or not categoria_id:
+                return JsonResponse({'success': False, 'error': 'Faltan campos requeridos'})
+            
+            categoria = Categoria.objects.get(id=categoria_id)
+            
+            documento.titulo = titulo
+            documento.categoria = categoria
+            documento.descripcion = descripcion
+            documento.es_publico = es_publico
+            documento.save()
+            
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    # GET request
+    categorias = Categoria.objects.all()
+    return render(request, 'myapp/editar_documento.html', {
+        'documento': documento,
+        'categorias': categorias
+    })

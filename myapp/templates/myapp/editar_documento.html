@@ -1,0 +1,61 @@
+<form id="editForm" onsubmit="guardarEdicion(event)">
+    {% csrf_token %}
+    <input type="hidden" name="documento_id" value="{{ documento.id }}">
+
+    <div class="mb-3">
+        <label class="form-label">Título</label>
+        <input type="text" class="form-control" name="titulo" value="{{ documento.titulo }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Categoría</label>
+        <select class="form-select" name="categoria" required>
+            {% for cat in categorias %}
+            <option value="{{ cat.id }}" {% if cat.id==documento.categoria.id %}selected{% endif %}>
+                {{ cat.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-control" name="descripcion" rows="3">{{ documento.descripcion }}</textarea>
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="es_publico" id="editEsPublico" {% if documento.es_publico
+            %}checked{% endif %}>
+        <label class="form-check-label" for="editEsPublico">Hacer público</label>
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn boton bt-body">Guardar Cambios</button>
+    </div>
+</form>
+
+<script>
+    function guardarEdicion(e) {
+        e.preventDefault();
+        const form = document.getElementById('editForm');
+        const formData = new FormData(form);
+        const id = formData.get('documento_id');
+
+        fetch(`/documentos/editar/${id}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => alert('Error al guardar cambios'));
+    }
+</script>
