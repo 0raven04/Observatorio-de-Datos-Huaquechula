@@ -82,6 +82,108 @@ body {
     border: 1px solid var(--color-beige);
 }
 
-.navbar {
-    background-color: var(--color-gris-oscuro);
+
+.modal-scrollable {
+    max-height: 60vh; /* Ajusta esta altura según necesites */
+    overflow-y: auto;
+    padding: 1rem;
 }
+
+/* Asegura que el contenido del modal use tu paleta de colores */
+.modal-content {
+    background-color:white;
+    color: var(--color-gris-oscuro);
+    border: 1px solid var(--color-beige);
+    border-radius: 10px;
+}
+
+/* Estilo para el encabezado del modal */
+.custom-modal-header {
+    background-color: var(--color-gris-oscuro);
+    color: white;
+    border-bottom: 1px solid var(--color-beige);
+}
+
+/* Estilo para el pie del modal */
+.custom-modal-footer {
+    background-color: var(--color-arena-claro);
+    border-top: 1px solid var(--color-beige);
+    padding: 1rem;
+}
+
+/* Botón cancelar con tu paleta */
+.custom-modal-footer .btn-warning {
+    background-color: var(--color-arena-oscuro);
+    border-color: var(--color-arena-oscuro);
+    color: var(--color-gris-oscuro);
+}
+
+.custom-modal-footer .btn-warning:hover {
+    background-color: #c4b897;
+    border-color: #c4b897;
+    color: var(--color-gris-oscuro);
+}
+
+/* Ajuste para botones dentro del formulario del modal */
+.modal-body .btn {
+    margin-top: 10px;
+}
+
+/* Estilo para inputs dentro del modal */
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+    background-color: white;
+    border: 1px solid var(--color-beige);
+    border-radius: 5px;
+    color: var(--color-gris-oscuro);
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+    background-color: white;
+    border-color: var(--color-gris-oscuro);
+    box-shadow: 0 0 0 0.25rem rgba(74, 74, 74, 0.25);
+    color: var(--color-gris-oscuro);
+}
+
+/* Estilo para labels */
+.modal-body label {
+    color: var(--color-gris-oscuro);
+    font-weight: 500;
+}
+
+.slug-input {
+    background-color: #e9ecef;
+    color: #495057;
+    font-family: monospace;
+    font-size: 0.9rem;
+    cursor: not-allowed;
+}
+
+/* Estilo para íconos en los botones */
+.btn i {
+    margin-right: 5px;
+}
+
+/* Ajustes para inputs dentro del modal de categoría */
+#categoriaModal .form-control {
+    background-color: white;
+    border: 1px solid var(--color-beige);
+    border-radius: 5px;
+    color: var(--color-gris-oscuro);
+}
+
+#categoriaModal .form-control:focus {
+    background-color: white;
+    border-color: var(--color-gris-oscuro);
+    box-shadow: 0 0 0 0.25rem rgba(74, 74, 74, 0.25);
+    color: var(--color-gris-oscuro);
+}
+
+/* Para que el modal de categoría sea más estrecho */
+#categoriaModal .modal-dialog {
+    max-width: 500px;
+}
+

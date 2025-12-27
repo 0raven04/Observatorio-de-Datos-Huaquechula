@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="patrimonio_religioso" id="patrimonio_religioso">
+	<SimpleField name="Nombre" type="string"></SimpleField>
+	<SimpleField name="Número" type="float"></SimpleField>
+</Schema>
+<Folder><name>patrimonio_religioso</name>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#patrimonio_religioso">
+		<SimpleData name="Nombre">Ex Convento de San Francisco</SimpleData>
+		<SimpleData name="Número">1</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-98.5411344883816,18.7701734861758</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#patrimonio_religioso">
+		<SimpleData name="Nombre">Capilla de San José</SimpleData>
+		<SimpleData name="Número">2</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-98.5413950086567,18.7684812273018</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#patrimonio_religioso">
+		<SimpleData name="Nombre">Parroquia de San Martín Obisco de Tours</SimpleData>
+		<SimpleData name="Número">3</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-98.5425519146723,18.7701834126501</coordinates></Point>
+  </Placemark>
+</Folder>
+</Document></kml>

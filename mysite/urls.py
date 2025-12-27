@@ -55,13 +55,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Recomendaciones importantes:
-# 1. Eliminar la definición duplicada de 'logout/' (línea 30)
-# 2. El orden de las URLs es importante - Django procesa los patrones en orden
-# 3. Las URLs más específicas deberían definirse primero
-# 4. La inclusión de 'myapp.urls' con path('', ...) hace que las URLs de la app sean accesibles desde la raíz
 
-# Estructura final recomendada sin la redundancia:
 """
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),

@@ -1,0 +1,358 @@
+<!-- myapp/templates/myapp/detalle_documento.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ documento.titulo }} - Detalles{% endblock %}
+
+{% block extra_css %}
+<style>
+    .documento-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-left: 5px solid #D6CEAA;
+    }
+    
+    .badge-clasificacion {
+        font-size: 0.9rem;
+        padding: 5px 15px;
+        border-radius: 20px;
+    }
+    
+    .badge-publico {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .badge-privado {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .badge-confidencial {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .info-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        color: #212529;
+    }
+    
+    .btn-action {
+        min-width: 120px;
+    }
+    
+    .documento-actions {
+        position: sticky;
+        top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Botón de regreso -->
+    <div class="mb-4">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Información principal -->
+        <div class="col-lg-8">
+            <div class="documento-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h1 class="h3 mb-2">{{ documento.titulo }}</h1>
+                        <span class="badge badge-clasificacion badge-{{ documento.clasificacion }}">
+                            {{ documento.nombre_clasificacion }}
+                        </span>
+                    </div>
+                    <div>
+                        <i class="{{ documento.icono_archivo }} fa-2x" style="color: #D6CEAA;"></i>
+                    </div>
+                </div>
+                
+                {% if documento.descripcion %}
+                <div class="mt-3">
+                    <h6 class="text-muted mb-2">Descripción:</h6>
+                    <p class="mb-0">{{ documento.descripcion|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Información detallada -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-link me-2"></i>URL del documento
+                        </div>
+                        <div class="info-value">
+                            {% if documento.url %}
+                            <a href="{{ documento.url }}" target="_blank" class="text-truncate d-block" 
+                               style="max-width: 300px;">
+                                {{ documento.url|truncatechars:50 }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">No disponible</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+               <div class="mb-3">
+                    <label class="form-label">Administrador responsable</label>
+                    <select class="form-select" name="clave_admin">
+                        <option value="">Sin asignar</option>
+                        
+                        {% for admin in administradores %}
+                            <option value="{{ admin.clave_admin }}" 
+                                {% if documento.clave_admin and documento.clave_admin.clave_admin == admin.clave_admin %}selected{% endif %}>
+                                
+                                {{ admin.id_usuario.nombre }} {{ admin.id_usuario.ap }} ({{ admin.id_usuario.nombre_usuario }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-calendar-plus me-2"></i>Fecha de carga
+                        </div>
+                        <div class="info-value">
+                            {{ documento.fecha_carga|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-sync-alt me-2"></i>Última actualización
+                        </div>
+                        <div class="info-value">
+                            {% if documento.fecha_actualizacion %}
+                                {{ documento.fecha_actualizacion|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">No actualizado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-12">
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-id-card me-2"></i>ID del documento
+                        </div>
+                        <div class="info-value">
+                            <code>{{ documento.id_documento }}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vista previa si es una imagen o PDF -->
+            {% if documento.url and documento.url|lower|slice:'-4:' in '.jpg,.jpeg,.png,.gif,.pdf' %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Vista previa</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if documento.url|lower|slice:'-4:' in '.jpg,.jpeg,.png,.gif' %}
+                    <img src="{{ documento.url }}" alt="Vista previa de {{ documento.titulo }}" 
+                         class="img-fluid rounded" style="max-height: 400px;">
+                    {% elif documento.url|lower|slice:'-4:' == '.pdf' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-file-pdf fa-2x mb-3"></i>
+                        <p class="mb-0">Para ver el documento PDF, haz clic en el botón "Ver Documento"</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Panel de acciones -->
+        <div class="col-lg-4">
+            <div class="card documento-actions">
+                <div class="card-header">
+                    <h6 class="mb-0">Acciones</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <!-- Ver documento -->
+                        {% if documento.url %}
+                        <a href="{{ documento.url }}" target="_blank" class="btn btn-primary btn-action">
+                            <i class="fas fa-external-link-alt me-2"></i>Ver Documento
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Descargar -->
+                        {% if documento.url and documento.id_documento %}
+                        <a href="{% url 'descargar_documento' documento.id_documento %}" 
+                           class="btn btn-success btn-action">
+                            <i class="fas fa-download me-2"></i>Descargar
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Editar (solo para administradores) -->
+                        {% if user.is_staff or user.is_superuser %}
+                        <button type="button" class="btn btn-warning btn-action" 
+                                onclick="editarDocumento('{{ documento.id_documento }}')">
+                            <i class="fas fa-edit me-2"></i>Editar
+                        </button>
+                        
+                        <!-- Eliminar -->
+                        <button type="button" class="btn btn-danger btn-action"
+                                onclick="confirmarEliminacion('{{ documento.id_documento }}', '{{ documento.titulo }}')">
+                            <i class="fas fa-trash me-2"></i>Eliminar
+                        </button>
+                        {% endif %}
+                        
+                        <!-- Compartir -->
+                        <button type="button" class="btn btn-info btn-action" onclick="compartirDocumento()">
+                            <i class="fas fa-share-alt me-2"></i>Compartir
+                        </button>
+                        
+                        <!-- Volver al listado -->
+                        <a href="{% url 'repositorio' %}" class="btn btn-outline-secondary btn-action">
+                            <i class="fas fa-list me-2"></i>Ver Todos
+                        </a>
+                    </div>
+                    
+                    <!-- Información de permisos -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="text-muted mb-2">Permisos de acceso:</h6>
+                        <ul class="list-unstyled small">
+                            <li class="mb-1">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>Público:</strong> Todos los usuarios
+                            </li>
+                            <li class="mb-1">
+                                <i class="fas fa-user-check text-warning me-2"></i>
+                                <strong>Privado:</strong> Usuarios registrados
+                            </li>
+                            <li>
+                                <i class="fas fa-lock text-danger me-2"></i>
+                                <strong>Confidencial:</strong> Solo administradores
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para edición (se carga dinámicamente) -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Documento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="editModalBody">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Función para editar documento
+    function editarDocumento(docId) {
+        fetch(`/documentos/editar/${docId}/`)
+            .then(response => {
+                if (!response.ok) throw new Error('Error al cargar el formulario');
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById('editModalBody').innerHTML = html;
+                const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                editModal.show();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error al cargar el formulario de edición');
+            });
+    }
+    
+    // Función para confirmar eliminación
+    function confirmarEliminacion(docId, docTitulo) {
+        if (confirm(`¿Estás seguro de eliminar el documento "${docTitulo}"? Esta acción no se puede deshacer.`)) {
+            fetch(`/documentos/eliminar/${docId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = "{% url 'repositorio' %}";
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error de conexión');
+            });
+        }
+    }
+    
+    // Función para compartir documento
+    function compartirDocumento() {
+        const url = window.location.href;
+        const titulo = "{{ documento.titulo }}";
+        
+        if (navigator.share) {
+            navigator.share({
+                title: titulo,
+                text: 'Mira este documento: ' + titulo,
+                url: url
+            })
+            .catch(console.error);
+        } else {
+            // Fallback para navegadores que no soportan Web Share API
+            navigator.clipboard.writeText(url)
+                .then(() => {
+                    alert('Enlace copiado al portapapeles');
+                })
+                .catch(err => {
+                    prompt('Copia este enlace:', url);
+                });
+        }
+    }
+    
+    // Inicializar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

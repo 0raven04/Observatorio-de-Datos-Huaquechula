@@ -1,10 +1,10 @@
 from django.core.management.base import BaseCommand
-from django.contrib.auth.hashers import make_password
+from django.db import transaction
 from getpass import getpass
 from myapp.models import Usuario, Encuestador, Propietario, Administrador
 
 class Command(BaseCommand):
-    help = 'Crea un nuevo usuario en el sistema'
+    help = 'Crea un nuevo usuario en el sistema con las relaciones correctas'
 
     def add_arguments(self, parser):
         parser.add_argument('--nombre', type=str, help='Nombre del usuario')
@@ -18,58 +18,57 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("\n=== CREACIÓN DE NUEVO USUARIO ===\n")
 
+        # Recolección de datos
         nombre = options['nombre'] or input("Nombre: ")
         ap = options['ap'] or input("Apellido paterno: ")
-        am = options['am'] or input("Apellido materno: ")
+        am = options['am'] or input("Apellido materno (Enter si no tiene): ")
         nombre_usuario = options['nombre_usuario'] or input("Nombre de usuario: ")
         email = options['email'] or input("Email: ")
         password_plano = options['password'] or getpass("Contraseña: ")
         tipo = options['tipo'] or input("Tipo (admin/encuestador/propietario): ").lower()
 
-        # Validaciones
+        # Validaciones previas
         if Usuario.objects.filter(nombre_usuario=nombre_usuario).exists():
-            return self.stdout.write(self.style.ERROR(' El nombre de usuario ya existe'))
+            return self.stdout.write(self.style.ERROR('Error: El nombre de usuario ya existe.'))
 
         if Usuario.objects.filter(email=email).exists():
-            return self.stdout.write(self.style.ERROR(' El email ya está registrado'))
+            return self.stdout.write(self.style.ERROR('Error: El email ya está registrado.'))
 
-        # Crear usuario
+        if tipo not in ['admin', 'encuestador', 'propietario']:
+             return self.stdout.write(self.style.ERROR('Error: Tipo de usuario inválido.'))
+
         try:
-            usuario = Usuario.objects.create(
-                nombre=nombre,
-                ap=ap,
-                am=am,
-                nombre_usuario=nombre_usuario,
-                email=email,
-                contrasenia=make_password(password_plano),
-                tipo=tipo
-            )
+            # Usamos transaction.atomic para asegurar que se creen AMBOS (usuario y perfil) o NINGUNO
+            with transaction.atomic():
+                
+                # 1. Crear el Usuario usando el Manager (automáticamente encripta password)
+                # Nota: create_user viene del UsuarioManager que definimos antes
+                usuario = Usuario.objects.create_user(
+                    nombre_usuario=nombre_usuario,
+                    email=email,
+                    password=password_plano,
+                    # Campos extra
+                    nombre=nombre,
+                    ap=ap,
+                    am=am,
+                    tipo=tipo
+                )
 
-            if tipo == 'encuestador':
-                clave = input("Clave de encuestador: ")
-                if Encuestador.objects.filter(clave_encuestador=clave).exists():
-                    usuario.delete()
-                    return self.stdout.write(self.style.ERROR(' La clave de encuestador ya existe'))
+                # 2. Crear el perfil asociado según el tipo
+                # NOTA: No pedimos 'clave' porque son AutoField (se generan solas)
+                if tipo == 'encuestador':
+                    Encuestador.objects.create(id_usuario=usuario)
+                    self.stdout.write(f"Perfil de Encuestador creado automáticamente.")
 
-                Encuestador.objects.create(id_usuario=usuario, clave_encuestador=clave)
+                elif tipo == 'propietario':
+                    Propietario.objects.create(id_usuario=usuario)
+                    self.stdout.write(f"Perfil de Propietario creado automáticamente.")
 
-            elif tipo == 'propietario':
-                clave = input("Clave de propietario: ")
-                if Propietario.objects.filter(clave_propietario=clave).exists():
-                    usuario.delete()
-                    return self.stdout.write(self.style.ERROR(' La clave de propietario ya existe'))
+                elif tipo == 'admin':
+                    Administrador.objects.create(id_usuario=usuario)
+                    self.stdout.write(f"Perfil de Administrador creado automáticamente.")
 
-                Propietario.objects.create(id_usuario=usuario, clave_propietario=clave)
-
-            elif tipo == 'admin':
-                clave = input("Clave de administrador: ")
-                if Administrador.objects.filter(clave_admin=clave).exists():
-                    usuario.delete()
-                    return self.stdout.write(self.style.ERROR(' La clave de administrador ya existe'))
-
-                Administrador.objects.create(id_usuario=usuario, clave_admin=clave)
-
-            self.stdout.write(self.style.SUCCESS(f' Usuario "{nombre_usuario}" creado correctamente como {tipo}'))
+                self.stdout.write(self.style.SUCCESS(f'\n¡ÉXITO! Usuario "{nombre_usuario}" creado correctamente como "{tipo}".'))
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error al crear usuario: {str(e)}'))

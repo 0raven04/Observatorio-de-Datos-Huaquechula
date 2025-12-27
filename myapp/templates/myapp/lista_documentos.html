@@ -1,84 +1,45 @@
+{% extends "base_usuarios.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
 
-<head>
-    <meta charset="UTF-8" />
-    <title>Listado de Documentos</title>
+{% block title %}Listado de Documentos{% endblock %}
 
-    <!-- Enlaces a hojas de estilo -->
-    <link href="{% static 'myapp/CSS/style_crud.css' %}" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" />
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-
-<body>
-    <!-- Barra de navegación superior -->
-    <nav class="navbar sticky-top navbar-expand-lg navbar-custom" data-bs-theme="light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <img src="{% static 'myapp/image/logo.png' %}" alt="Logo Huaquechula" class="logo me-2" />
-                <span class="navbar-title">Control de Documentos</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-flex justify-content-evenly w-100">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'vista_inicio' %}">
-                            <i class="fas fa-home"></i> Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'repositorio' %}">
-                            <i class="fas fa-folder-open"></i> Repositorio Público
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">
-                            <i class="fas fa-file-alt"></i> Gestión Documentos
-                        </a>
-                    </li>
-                </ul>
-
-                <form action="{% url 'logout' %}" method="post" class="d-flex">
-                    {% csrf_token %}
-                    <button class="btn btn-logout" type="submit">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
-
-
+{% block content %}
     <main class="container mt-3">
         <!-- Sección de botones superiores -->
         <div class="row">
-            <div class="offset-9 col-md-3">
-                <div class="d-flex mb-3">
-                    <button type="button" class="btn boton bt-body me-2" data-bs-toggle="modal"
+            <div class="col-md-12 d-flex justify-content-between mb-3">
+                <!-- Filtro a la izquierda -->
+                <div class="col-md-3">
+                    <select class="form-select" id="filtroClasificacion" onchange="filtrarDocumentos()">
+                        <option value="">Todas las clasificaciones</option>
+                        <option value="publico" {% if clasificacion_filtro == 'publico' %}selected{% endif %}>Público</option>
+                        <option value="privado" {% if clasificacion_filtro == 'privado' %}selected{% endif %}>Privado</option>
+                        <option value="confidencial" {% if clasificacion_filtro == 'confidencial' %}selected{% endif %}>Confidencial</option>
+                    </select>
+                </div>
+                
+                <!-- Botón a la derecha -->
+                <div class="col-md-3 text-end">
+                    <button type="button" class="btn boton bt-body" data-bs-toggle="modal"
                         data-bs-target="#uploadModal">
-                        Nuevo Documento
+                        <i class="fas fa-plus me-1"></i> Nuevo Documento
                     </button>
                 </div>
             </div>
         </div>
 
-        {% if mensaje %}
-        <div class="alert alert-info alert-dismissible fade show">
-            {{ mensaje }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
         {% endif %}
-
 
         <div class="card shadow-sm mb-4">
             <div class="card-header py-3 text-center" style="background-color: #4A4A4A">
@@ -91,12 +52,21 @@
                         <thead class="text-white" style="background-color: #4A4A4A">
                             <tr>
                                 <th scope="col">ID</th>
-                                <th scope="col">Título</th>
-                                <th scope="col">Categoría</th>
-                                <th scope="col">Fecha</th>
-                                <th scope="col">Tamaño</th>
-                                <th scope="col">Público</th>
-                                <th scope="col">Descargas</th>
+                                <th scope="col">
+                                    <a href="?sort=titulo&order={% if sort_by == 'titulo' and order == 'asc' %}desc{% else %}asc{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}" 
+                                    class="text-white text-decoration-none">
+                                        Título {% if sort_by == 'titulo' %}<i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>{% endif %}
+                                    </a>
+                                </th>
+                                <th scope="col">Clasificación</th>
+                                <th scope="col">
+                                    <a href="?sort=fecha_carga&order={% if sort_by == 'fecha_carga' and order == 'asc' %}desc{% else %}asc{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}" 
+                                    class="text-white text-decoration-none">
+                                        Fecha {% if sort_by == 'fecha_carga' %}<i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>{% endif %}
+                                    </a>
+                                </th>
+                                <th scope="col">URL</th>
+                                <th scope="col">Administrador</th>
                                 <th scope="col">Acciones</th>
                             </tr>
                         </thead>
@@ -104,163 +74,425 @@
                             {% for doc in documentos %}
                             <tr class="align-middle">
                                 <td>
-                                    <span class="badge rounded-pill" style="background-color: #4A4A4A">{{ doc.id
-                                        }}</span>
+                                    <span class="badge rounded-pill">{{ doc.id_documento }}</span>
                                 </td>
                                 <td>{{ doc.titulo }}</td>
-                                <td>{{ doc.categoria.nombre }}</td>
-                                <td>{{ doc.fecha_subida|date:"d/m/Y" }}</td>
-                                <td>{{ doc.tamaño_formateado }}</td>
                                 <td>
-                                    {% if doc.es_publico %}
-                                    <span class="badge rounded-pill"
-                                        style="background-color: #4A4A4A; color: white;">Sí</span>
+                                    {% if doc.clasificacion == 'publico' %}
+                                    <span class="badge rounded-pill" style="background-color: #28a745; color: white;">Público</span>
+                                    {% elif doc.clasificacion == 'privado' %}
+                                    <span class="badge rounded-pill" style="background-color: #ffc107; color: #4A4A4A;">Privado</span>
                                     {% else %}
-                                    <span class="badge rounded-pill"
-                                        style="background-color: #D6CEAA; color: #4A4A4A;">No</span>
+                                    <span class="badge rounded-pill" style="background-color: #dc3545; color: white;">Confidencial</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ doc.descargas }}</td>
+                                <td>{{ doc.fecha_carga|date:"d/m/Y" }}</td>
                                 <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-eliminar"
-                                            onclick="eliminarDocumento('{{ doc.id }}', '{{ doc.titulo }}')"
-                                            style="background-color: #e74c3c; border: none; color: white;">
-                                            <i class="fas fa-trash me-1"></i> Eliminar
+                                    <a href="{{ doc.url }}" target="_blank" rel="noopener noreferrer" 
+                                    class="text-decoration-none" style="max-width: 200px; display: block;">
+                                        <small class="text-truncate d-block">
+                                            <i class="fas fa-link me-1"></i>
+                                            {{ doc.url|truncatechars:40 }}
+                                        </small>
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if doc.clave_admin %}
+                                        {{ doc.clave_admin.get_full_name|default:doc.clave_admin.nombre_usuario }}
+                                    {% else %}
+                                        <span class="text-muted">Sin asignar</span>
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle" style="height: 80px;">
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <!-- Botón Editar -->
+                                        <button class="btn p-0 d-flex flex-column align-items-center justify-content-center"
+                                                onclick="editarDocumento('{{ doc.id_documento }}')"
+                                                style="width: 60px; height: 55px; background-color: #D6CEAA; border: none; color: #4A4A4A;"
+                                                title="Editar documento">
+                                            <i class="fas fa-edit fs-6 mb-1"></i>
+                                            <small class="fs-xxs">Editar</small>
                                         </button>
 
-                                        <button class="btn btn-sm btn-editar" onclick="editarDocumento('{{ doc.id }}')"
-                                            style="background-color: #D6CEAA; border: none; color: #4A4A4A;">
-                                            <i class="fas fa-edit me-1"></i> Editar
-                                        </button>
-
-                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-sm"
-                                            style="background-color: #4A4A4A; color: white;">
-                                            <i class="fas fa-eye"></i>
+                                        <!-- Botón Ver -->
+                                        <a href="{{ doc.url }}" target="_blank" 
+                                        class="btn p-0 d-flex flex-column align-items-center justify-content-center"
+                                        style="width: 60px; height: 55px; background-color: #4A4A4A; color: white; border: none;" 
+                                        title="Ver documento" rel="noopener noreferrer">
+                                            <i class="fas fa-external-link-alt fs-6 mb-1"></i>
+                                            <small class="fs-xxs">Ver</small>
                                         </a>
+
+                                        <!-- Botón Eliminar -->
+                                        <button class="btn p-0 d-flex flex-column align-items-center justify-content-center"
+                                                onclick="eliminarDocumento('{{ doc.id_documento }}', '{{ doc.titulo }}')"
+                                                style="width: 60px; height: 55px; background-color: #e74c3c; border: none; color: white;"
+                                                title="Eliminar documento">
+                                            <i class="fas fa-trash fs-6 mb-1"></i>
+                                            <small class="fs-xxs">Eliminar</small>
+                                        </button>
                                     </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-folder-open fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">No hay documentos registrados</p>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                    
+                    {% if documentos.has_other_pages %}
+                    <div class="p-3">
+                        <nav aria-label="Paginación de documentos">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if documentos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ documentos.previous_page_number }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}">Anterior</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for i in documentos.paginator.page_range|slice:":5" %}
+                                <li class="page-item {% if documentos.number == i %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ i }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}">{{ i }}</a>
+                                </li>
+                                {% endfor %}
+                                
+                                {% if documentos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ documentos.next_page_number }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}">Siguiente</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Modal para subir documentos (Reutilizado/Adaptado) -->
         <div class="modal fade" id="uploadModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
+
                     <div class="modal-header custom-modal-header">
-                        <h5 class="modal-title w-100 text-center">Subir Nuevo Documento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title w-100 text-center">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Subir Nuevo Documento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <form id="uploadForm" enctype="multipart/form-data">
+
+                    <div class="modal-body p-4"> <form id="uploadForm" enctype="multipart/form-data" method="POST" action="{% url 'subir_documento' %}">
                             {% csrf_token %}
+
                             <div class="mb-3">
-                                <label class="form-label">Archivo</label>
-                                <input type="file" class="form-control" name="archivo" required>
+                                <label class="form-label fw-bold">Título <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="titulo" required maxlength="200" minlength="3">
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label">Título</label>
-                                <input type="text" class="form-control" name="titulo" required>
+                                <label class="form-label fw-bold">URL del documento <span class="text-danger">*</span></label>
+                                <input type="url" class="form-control" name="url" required placeholder="https://ejemplo.com/documento.pdf">
+                                <small class="form-text text-muted">Ingresa la URL donde se encuentra el documento</small>
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label">Categoría</label>
-                                <select class="form-select" name="categoria" required>
-                                    <option value="">Seleccione...</option>
-                                    {% for cat in categorias %}
-                                    <option value="{{ cat.id }}">{{ cat.nombre }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Descripción</label>
+                                <label class="form-label fw-bold">Descripción</label>
                                 <textarea class="form-control" name="descripcion" rows="3"></textarea>
                             </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="es_publico" id="esPublico"
-                                    checked>
-                                <label class="form-check-label" for="esPublico">Hacer público</label>
-                            </div>
-                            <div class="text-center">
-                                <button type="button" class="btn boton bt-body" id="btnGuardarUpload">Guardar</button>
+
+                            <div class="row">
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label fw-bold">Clasificación <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="clasificacion" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="publico">Público</option>
+                                        <option value="privado">Privado</option>
+                                        <option value="confidencial">Confidencial</option>
+                                    </select>
+                                </div>
+
                             </div>
                         </form>
+                        <button type="submit" form="uploadForm" class="btn boton bt-body">Guardar Documento</button>
                     </div>
+
+                    <div class="modal-footer custom-modal-footer">
+                        <button type="button" class="btn btn-warning me-2" data-bs-dismiss="modal">Cancelar</button>
+                        
+                    </div>
+
                 </div>
             </div>
         </div>
 
-        <!-- Modal para Editar (Dinámico) -->
         <div class="modal fade" id="editModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header custom-modal-header">
-                        <h5 class="modal-title w-100 text-center">Editar Documento</h5>
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content"> <div class="modal-header custom-modal-header">
+                        <h5 class="modal-title w-100 text-center">
+                            <i class="fas fa-edit me-2"></i>Editar Documento
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body" id="editModalBody">
-                        <!-- Aquí se cargará el formulario vía AJAX -->
+
+                    <div id="editModalBody">
                     </div>
+
                 </div>
             </div>
         </div>
 
     </main>
 
-    <script>
-        // Script para manejar subida y edición
-        document.getElementById('btnGuardarUpload').addEventListener('click', function () {
-            const form = document.getElementById('uploadForm');
-            const formData = new FormData(form);
+{% endblock %}
 
-            fetch('{% url "subir_documento" %}', {
+{% block extra_js %}
+    <script>
+    // Script para manejar subida del formulario tradicional
+    document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function(e) {
+                const url = this.querySelector('[name="url"]').value;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    e.preventDefault();
+                    alert('La URL debe comenzar con http:// o https://');
+                }
+            });
+        }
+    });
+
+    function eliminarDocumento(id, titulo) {
+        if (confirm(`¿Está seguro de eliminar "${titulo}"? Esta acción no se puede deshacer.`)) {
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+            btn.disabled = true;
+            
+            // CORRECCIÓN: Eliminar 'documentos:' del namespace
+            fetch(`{% url 'eliminar_documento' 0 %}`.slice(0, -2) + id + '/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Error en la respuesta del servidor');
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Feedback visual antes de recargar
+                    showToast('Documento eliminado correctamente', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    throw new Error(data.error || 'Error al eliminar');
+                }
+            })
+            .catch(err => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                showToast(err.message, 'error');
+            });
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = "2000"; // Asegura que se vea encima del modal
+            document.body.appendChild(toastContainer);
+        }
+
+        const toastId = 'toast-' + Date.now();
+        const bgColor = type === 'success' ? 'bg-success' : 
+                        type === 'error' ? 'bg-danger' : 'bg-info';
+        
+        const toastHTML = `
+            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header ${bgColor} text-white">
+                    <strong class="me-auto">${type === 'success' ? 'Éxito' : type === 'error' ? 'Error' : 'Información'}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        const toastEl = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+        
+        toastEl.addEventListener('hidden.bs.toast', function () {
+            toastEl.remove();
+        });
+    }
+
+    // --- 2. LÓGICA DE EDICIÓN (AJAX ROBUSTO) ---
+    
+    // Función para abrir el modal y cargar el formulario
+function abrirModalEdicion(id) {
+    fetch(`/panel/editar/${id}/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Servidor respondió con " + response.status);
+        }
+        return response.text();   // 👈 porque regresa HTML, no JSON
+    })
+    .then(html => {
+        document.getElementById("modalBodyEdicion").innerHTML = html;
+        new bootstrap.Modal(document.getElementById("modalEditar")).show();
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Error al obtener datos del servidor");
+    });
+}
+
+    // Listener GLOBAL para capturar el envío del formulario de edición
+    // Usamos delegación de eventos porque el formulario no existe al cargar la página
+
+    // --- 3. INICIALIZACIÓN DE TOOLTIPS (Opcional) ---
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    function editarDocumento(id) {
+        // Generación robusta de URL: Usamos un ID falso (999999) y lo reemplazamos
+        let url = "{% url 'editar_documento' 999999 %}".replace('999999', id);
+        
+        const modalBody = document.getElementById('editModalBody');
+        
+        // Loader visual
+        modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>';
+        
+        // Abrir modal (Bootstrap 5)
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("Error de conexión");
+                return response.text();
+            })
+            .then(html => {
+                modalBody.innerHTML = html;
+            })
+            .catch(error => {
+                modalBody.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+    }
+
+    // 2. Listener GLOBAL para GUARDAR cambios (Intercep el submit)
+    document.addEventListener('submit', function(e) {
+        // Verificamos si el evento viene de nuestro formulario de edición
+        if (e.target && e.target.id === 'editDocumentForm') {
+            e.preventDefault(); // Detener recarga
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            // Feedback visual en el botón
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            fetch(form.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                    } else {
-                        location.reload();
-                    }
-                })
-                .catch(err => alert('Error al subir'));
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cerrar modal
+                    const modalEl = document.getElementById('editModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    // Mostrar éxito y recargar
+                    showToast(data.message || 'Guardado correctamente', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Error: ' + data.error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error de conexión');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        }
+    });
+
+    function filtrarDocumentos() {
+        const filtro = document.getElementById('filtroClasificacion').value;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Mantener otros parámetros
+        const page = urlParams.get('page');
+        const sort = urlParams.get('sort');
+        const order = urlParams.get('order');
+        
+        // Construir nueva URL
+        let newUrl = '?';
+        if (filtro) newUrl += `clasificacion=${filtro}&`;
+        if (page) newUrl += `page=${page}&`;
+        if (sort) newUrl += `sort=${sort}&`;
+        if (order) newUrl += `order=${order}&`;
+        
+        // Remover el último & si existe
+        if (newUrl.endsWith('&')) newUrl = newUrl.slice(0, -1);
+        if (newUrl === '?') newUrl = '';
+        
+        window.location.href = window.location.pathname + newUrl;
+    }
+
+
+
+    // Inicializar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-
-        function eliminarDocumento(id, titulo) {
-            if (confirm('¿Eliminar documento: ' + titulo + '?')) {
-                fetch(`/eliminar/${id}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.mensaje) location.reload();
-                        else alert(data.error);
-                    });
-            }
-        }
-
-        function editarDocumento(id) {
-            // Cargar formulario de edición
-            fetch(`/documentos/editar/${id}/`)
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('editModalBody').innerHTML = html;
-                    new bootstrap.Modal(document.getElementById('editModal')).show();
-                });
-        }
+    });
     </script>
-</body>
-
-</html>
+{% endblock %}

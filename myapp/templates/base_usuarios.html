@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Observatorio{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link rel="stylesheet" href="{% static 'myapp/CSS/base_usuarios.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/sidebar_styles.css' %}" /> 
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
+    <script src="{% static 'myapp/JAV/js_lista_registro.js' %}" defer></script>
+    
+    {% block extra_css %}{% endblock %}
+    
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar custom-navbar navbar-expand-md fixed-top custom-navbar-bg" aria-label="Navegación principal">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <!-- Botón para abrir sidebar izquierdo -->
+                <button class="sidebar-hamburger" id="sidebarHamburger" type="button" aria-controls="sidebar" aria-expanded="false">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <a class="navbar-brand mx-auto" href="{% url 'vista_inicio' %}">
+                    <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo del Observatorio" class="img-fluid" style="height: 70px; width: auto;">
+                </a>
+
+                <!-- Solo mostrar enlaces de navegación en escritorio -->
+                <div class="collapse navbar-collapse d-none d-md-flex justify-content-center" id="navbarSupportedContent">
+                    <ul class="navbar-nav d-flex justify-content-around w-75">
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'lista_archivos' in request.resolver_match.url_name %}active{% endif %}"
+                                href="{% url 'lista_archivos' %}" aria-current="{% if 'lista_archivos' in request.resolver_match.url_name %}page{% else %}false{% endif %}">
+                                Archivos de localización
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'lista_registros' in request.resolver_match.url_name %}active{% endif %}"
+                                href="{% url 'lista_registros' %}" aria-current="{% if 'lista_registros' in request.resolver_match.url_name %}page{% else %}false{% endif %}">
+                                Registro de visitantes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'lista_documentos' in request.resolver_match.url_name %}active{% endif %}"
+                                href="{% url 'lista_documentos' %}" aria-current="{% if 'lista_documentos' in request.resolver_match.url_name %}page{% else %}false{% endif %}">
+                                Documentos
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Botón para menú móvil (ahora abre el sidebar izquierdo) -->
+                <button class="navbar-toggler custom-toggler ms-2 d-md-none" type="button" id="mobileMenuToggle">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" role="presentation"></div>
+
+    <!-- Sidebar izquierdo (visible en móvil y escritorio) -->
+    <aside class="sidebar" id="sidebar" aria-label="Panel de usuario con opciones de sistema">
+        <div class="sidebar-header text-center">
+            <h3 class="sidebar-title">
+                <i class="fas fa-user-circle me-2"></i>
+                Panel de Usuario
+            </h3>
+        </div>
+
+        <div class="user-info-sidebar text-center">
+            <strong>
+                <i class="fas fa-user me-2"></i>
+                {% if user.is_authenticated %}
+                    {{ user.username }}
+                {% else %}
+                    Invitado
+                {% endif %}
+            </strong>
+            {% if user.is_authenticated and user.email %}
+                <div class="user-email">{{ user.email }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Navegación principal en el sidebar para móviles -->
+        <div class="sidebar-nav d-md-none mb-3">
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-subtitle text-center">
+                <i class="fas fa-compass me-2"></i>
+                Navegación
+            </div>
+            <ul class="list-unstyled">
+                <li class="sidebar-item text-center">
+                    <a class="nav-link {% if 'lista_archivos' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'lista_archivos' %}">
+                        <i class="fas fa-map-marked-alt me-2"></i>
+                        Archivos de localización
+                    </a>
+                </li>
+                <li class="sidebar-item text-center">
+                    <a class="nav-link {% if 'lista_registros' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'lista_registros' %}">
+                        <i class="fas fa-users me-2"></i>
+                        Registro de visitantes
+                    </a>
+                </li>
+                <li class="sidebar-item text-center">
+                    <a class="nav-link {% if 'lista_documentos' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'lista_documentos' %}">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Documentos
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-buttons d-flex flex-column align-items-center">
+            <button
+              type="button"
+              class="btn boton bt-body mb-2 w-75"
+              href="/backup/"
+            >
+                <i class="fas fa-database"></i>
+                <span>Respaldo de Datos</span>
+            </button>
+
+            <form action="{% url 'logout' %}" method="post" class="w-75">
+                {% csrf_token %}
+                <button type="submit" class="btn boton bt-body w-100">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-subtitle text-center">
+            <i class="fas fa-info-circle me-2"></i>
+            Información de Sesión
+        </div>
+
+        <div class="user-info-sidebar text-center">
+            <small>
+                <i class="fas fa-clock me-2"></i>
+                Último acceso:
+                {% now "d/m/Y H:i" %}
+            </small>
+            <br>
+            <small>
+                <i class="fas fa-shield-alt me-2"></i>
+                Sesión segura activa
+            </small>
+        </div>
+    </aside>
+
+    <main class="main-content flex-grow-1" id="mainContent" role="main">
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer class="text-center p-4 text-white bg-dark mt-auto" role="contentinfo">
+        <div class="container">
+            <p class="mb-2 foter_leter">&copy; 2025 Observatorio Turístico de Huaquechula</p>
+            <p class="mb-0 foter_leter">Todos los derechos reservados | Gobierno de Resultados 2024-2027</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarHamburger = document.getElementById('sidebarHamburger');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const navbarCollapse = document.getElementById('navbarSupportedContent');
+
+            let isSidebarOpen = false;
+
+            function openSidebar() {
+                sidebar.classList.add('open');
+                sidebarOverlay.classList.add('active');
+                sidebarHamburger.setAttribute('aria-expanded', 'true');
+                isSidebarOpen = true;
+                
+                sidebarHamburger.innerHTML = '<i class="fas fa-times"></i>';
+                sidebarHamburger.style.transform = 'rotate(90deg)';
+                
+                // En móvil, ocultar el scroll del body
+                if (window.innerWidth < 768) {
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+                sidebarHamburger.setAttribute('aria-expanded', 'false');
+                isSidebarOpen = false;
+                
+                sidebarHamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                sidebarHamburger.style.transform = 'rotate(0deg)';
+                
+                // Restaurar scroll en móvil
+                if (window.innerWidth < 768) {
+                    document.body.style.overflow = '';
+                }
+            }
+
+            function toggleSidebar() {
+                if (isSidebarOpen) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            }
+
+            // Event listeners
+            sidebarHamburger.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+            
+            // El botón móvil ahora también abre el sidebar
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    // Si estamos en móvil, abrir el sidebar
+                    if (window.innerWidth < 768) {
+                        toggleSidebar();
+                    }
+                });
+            }
+
+            // Cerrar sidebar al hacer clic en enlaces/botones (en móvil)
+            document.querySelectorAll('.sidebar-nav .nav-link, .sidebar-buttons .btn').forEach(element => {
+                element.addEventListener('click', function() {
+                    if (window.innerWidth < 768) {
+                        setTimeout(closeSidebar, 300);
+                    }
+                });
+            });
+
+            // Cerrar sidebar con tecla ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isSidebarOpen) {
+                    closeSidebar();
+                }
+            });
+
+            // Manejar redimensionamiento
+            function handleResize() {
+                const isMobile = window.innerWidth < 768;
+                
+                // Si cambiamos de móvil a escritorio y el sidebar está abierto, cerrarlo
+                if (!isMobile && isSidebarOpen) {
+                    closeSidebar();
+                }
+                
+                // Ajustar overflow del body según sea necesario
+                if (isMobile && isSidebarOpen) {
+                    document.body.style.overflow = 'hidden';
+                } else if (!isSidebarOpen) {
+                    document.body.style.overflow = '';
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            
+            // Marcar enlace activo en navbar (solo para escritorio)
+            function setActiveNavLink() {
+                const currentPath = window.location.pathname;
+                document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+                    if (currentPath.includes(link.getAttribute('href'))) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+
+            // Inicializar
+            setActiveNavLink();
+            handleResize();
+        });
+    </script>
+
+    {% block extra_js %} {% endblock %}
+</body>
+
+</html>

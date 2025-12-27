@@ -1,0 +1,487 @@
+{% block extra_css %}
+<style>
+    /* --- Estilos para la Galería (Drag & Drop) --- */
+    .gallery-dropzone {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .gallery-dropzone:hover { 
+        border-color: var(--color-naranja, #e67e22); 
+        background: #fffdfa; 
+    }
+    
+    .gallery-dropzone i { 
+        font-size: 2.5rem; 
+        color: #6c757d; 
+        margin-bottom: 10px; 
+    }
+    
+    /* Previsualización de imágenes */
+    .preview-container {
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 10px; 
+        margin-top: 15px;
+    }
+    
+    .preview-item {
+        width: 100px; 
+        height: 100px;
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .preview-item img, .preview-item video {
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover;
+    }
+    
+    .preview-remove {
+        position: absolute; 
+        top: 2px; 
+        right: 2px;
+        background: rgba(220, 53, 69, 0.9); 
+        color: white;
+        border: none; 
+        width: 20px; 
+        height: 20px;
+        border-radius: 50%;
+        font-size: 12px; 
+        cursor: pointer;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    
+    .preview-remove:hover {
+        background: rgb(220, 53, 69);
+    }
+
+    /* Transición suave para secciones condicionales */
+    .conditional-section, .conditional-section-group {
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .custom-modal-header,
+    .custom-modal-footer {
+        position: static !important;
+        flex-shrink: 0;
+    }
+    .modal-content {
+    max-height: 90vh;
+}
+
+    .modal-body {
+        overflow-y: auto;
+    }
+      #archivoModal .modal-content {
+    max-height: 90vh;
+    height: 90vh;
+  }
+  
+  /* El modal-body debe hacer scroll */
+  #archivoModal .modal-body {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+  
+  /* Formulario ocupa toda la altura */
+  #urlForm {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  /* Header y footer fijos */
+  .custom-modal-header,
+  .custom-modal-footer {
+    flex-shrink: 0;
+  }
+  #archivoModal .modal-content {
+    padding: 0;
+}
+
+/* Header y footer a todo lo ancho */
+#archivoModal .modal-header,
+#archivoModal .modal-footer {
+    margin: 0;
+    border-radius: 0;
+    width: 100%;
+}
+
+/* Mantener el padding interno bonito */
+#archivoModal .modal-header,
+#archivoModal .modal-footer {
+    padding: 1rem 1.25rem;
+}
+
+/* El body sí debe tener padding */
+#archivoModal .modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="modal fade" id="archivoModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      
+      <!-- FORMULARIO FUERA del modal-body pero DENTRO del modal-content -->
+      <form id="urlForm" method="POST" enctype="multipart/form-data" action="{% url 'subir_desde_url' %}" class="d-flex flex-column h-100">
+        {% csrf_token %}
+        
+        <!-- Encabezado del modal -->
+        <div class="modal-header custom-modal-header">
+          <h5 class="modal-title" id="modalTitle">
+            <i class="fas {% if modo_edicion %}fa-edit{% else %}fa-cloud-upload-alt{% endif %} me-2"></i>
+            {% if modo_edicion %}Editar Archivo{% else %}Agregar Archivo por URL{% endif %}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Un solo modal-body con scroll -->
+        <div class="modal-body">
+          
+          <input type="hidden" name="usuario_id" value="{{ request.user.id }}">
+          <input type="hidden" id="tipo_archivo" name="tipo_archivo" value="kmz">
+          <input type="hidden" id="archivo_id_editar" name="archivo_id_editar">
+          <input type="hidden" id="modo_edicion_form" name="modo_edicion" value="false">
+
+          <h6 class="text-muted border-bottom pb-2 mb-3">1. Archivo Geográfico</h6>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="archivo_url" class="form-label fw-bold">URL del KML/KMZ *</label>
+              <input type="url" class="form-control" id="archivo_url" name="archivo_url" placeholder="https://..." required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="nombre_archivo" class="form-label fw-bold">Nombre del Archivo *</label>
+              <input type="text" class="form-control" id="nombre_archivo" name="nombre_archivo" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="descripcion" rows="2"></textarea>
+          </div>
+
+          <div class="mt-4 p-3 bg-light border rounded">
+            <h6 class="text-dark fw-bold mb-3"><i class="fas fa-map-marker-alt me-2"></i>2. Detalles del Lugar / Ruta</h6>
+            
+            <div class="mb-3">
+              <label class="form-label fw-bold">¿Qué es este lugar?</label>
+              <select class="form-select form-select-lg" id="tipo_punto" name="tipo_punto">
+                <option value="">-- Solo subir archivo (Sin crear punto) --</option>
+                <option value="ofrenda">Ofrenda</option>
+                <option value="servicio">Servicio</option>
+                <option value="sitio_turistico">Sitio Turístico</option>
+              </select>
+            </div>
+
+            <div id="div_categorias_sitio" style="display:none;" class="mb-3">
+              <label class="fw-bold form-label">Categoría del Sitio</label>
+              <div class="input-group">
+                <select class="form-select" id="select_categoria_bd" name="id_categoria_bd">
+                  <option value="">-- Selecciona una categoría --</option>
+                  {% for cat in categorias %}
+                    <option value="{{ cat.id_categoria }}">{{ cat.nombre }}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn-outline-secondary" type="button" onclick="abrirModalCategoria()">
+                  <i class="fas fa-plus"></i> Crear nueva
+                </button>
+              </div>
+            </div>
+
+            <div id="campos_comunes_punto" class="conditional-section-group" style="display:none;">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label small fw-bold">Nombre del Lugar</label>
+                  <input type="text" class="form-control" name="nombre_punto">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label small fw-bold">Imagen de Portada (URL)</label>
+                  <input type="url" class="form-control" name="imagen_portada">
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label small fw-bold">Fecha Inicio</label>
+                  <input type="date" class="form-control" name="fecha_inicio">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label small fw-bold">Fecha Fin</label>
+                  <input type="date" class="form-control" name="fecha_fin">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label small fw-bold">Apertura</label>
+                  <input type="time" class="form-control" name="hora_apertura">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label small fw-bold">Cierre</label>
+                  <input type="time" class="form-control" name="hora_cierre">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-bold">Días de Operación</label>
+                <div class="d-flex flex-wrap gap-2 bg-white p-2 border rounded">
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="lunes" id="chk_lun"> 
+                    <label class="form-check-label" for="chk_lun">Lun</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="martes" id="chk_mar"> 
+                    <label class="form-check-label" for="chk_mar">Mar</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="miercoles" id="chk_mie"> 
+                    <label class="form-check-label" for="chk_mie">Mié</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="jueves" id="chk_jue"> 
+                    <label class="form-check-label" for="chk_jue">Jue</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="viernes" id="chk_vie"> 
+                    <label class="form-check-label" for="chk_vie">Vie</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="sabado" id="chk_sab"> 
+                    <label class="form-check-label" for="chk_sab">Sáb</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="dias_semana" value="domingo" id="chk_dom"> 
+                    <label class="form-check-label" for="chk_dom">Dom</label>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-bold"><i class="fas fa-images me-1"></i> Galería Multimedia</label>
+                <input type="file" id="inputGaleria" name="galeria_multimedia" multiple accept="image/*,video/*" style="display:none;">
+                <div class="gallery-dropzone" onclick="document.getElementById('inputGaleria').click()">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p class="mb-0 small text-muted">Arrastra archivos aquí o haz clic para subir</p>
+                </div>
+                <div id="previewGaleria" class="preview-container"></div>
+              </div>
+            </div>
+
+            <div id="campos_ofrenda" class="conditional-section" style="display:none;">
+              <hr>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Nombre del Anfitrión</label>
+                <input type="text" class="form-control" name="anfitrion" placeholder="Familia o persona responsable">
+              </div>
+            </div>
+
+            <div id="campos_servicio" class="conditional-section" style="display:none;">
+              <hr>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Tipo Servicio</label>
+                  <select class="form-select" name="tipo_servicio">
+                    <option value="hospedaje">Hospedaje</option>
+                    <option value="cajero">Cajero / Banco</option>
+                    <option value="modulo">Módulo de Información</option>
+                    <option value="salud">Salud / Farmacia</option>
+                    <option value="alimentacion">Alimentación</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-bold">Contacto</label>
+                  <input type="text" class="form-control" name="contacto_servicio" placeholder="Tel, Email o Web">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Métodos de Pago</label>
+                <div class="d-flex gap-3 flex-wrap">
+                  <div class="form-check"><input class="form-check-input" type="checkbox" name="tipo_pago" value="efectivo" checked> <label>Efectivo</label></div>
+                  <div class="form-check"><input class="form-check-input" type="checkbox" name="tipo_pago" value="tarjeta"> <label>Tarjeta</label></div>
+                  <div class="form-check"><input class="form-check-input" type="checkbox" name="tipo_pago" value="transferencia"> <label>Transferencia</label></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="campos_sitio_turistico" class="conditional-section" style="display:none;">
+              <hr>
+              <div class="mb-3">
+                <label class="fw-bold form-label">Reglas de Acceso / Restricciones</label>
+                <textarea class="form-control" name="reglas_acceso" rows="2" placeholder="Ej: No mascotas, usar cubrebocas..."></textarea>
+              </div>
+            </div>
+
+            
+          </div>
+           <button type="submit" class="btn boton bt-body">
+            <i class="fas fa-save me-2"></i>Guardar Archivo
+          </button>
+        </div>
+
+        <!-- Footer del modal -->
+        <div class="modal-footer custom-modal-footer">
+          <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Cancelar</button>
+         
+        </div>
+        
+      </form>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // --- 1. REFERENCIAS AL DOM ---
+        const archivoModalEl = document.getElementById('archivoModal');
+        const tipoPuntoSelect = document.getElementById('tipo_punto');
+        const inputGaleria = document.getElementById('inputGaleria');
+        const previewContainer = document.getElementById('previewGaleria');
+        const urlForm = document.getElementById('urlForm');
+        
+        // Variable global para la galería
+        let dt = new DataTransfer();
+
+        // --- 2. LOGICA DEL MODAL BOOTSTRAP ---
+        
+        // Al cerrar el modal, limpiar todo
+        archivoModalEl.addEventListener('hidden.bs.modal', function () {
+            // Limpiar formulario
+            if (urlForm) {
+                urlForm.reset();
+                urlForm.classList.remove('was-validated');
+            }
+            // Limpiar galería
+            dt = new DataTransfer();
+            if (inputGaleria) inputGaleria.files = dt.files;
+            actualizarPreview();
+            
+            // Ocultar campos condicionales
+            gestionarSelectores(""); 
+        });
+
+        // Al abrir, verificar estado inicial (por si es edición en el futuro)
+        archivoModalEl.addEventListener('shown.bs.modal', function () {
+             if (tipoPuntoSelect) gestionarSelectores(tipoPuntoSelect.value);
+        });
+
+        // --- 3. LÓGICA DE CAMPOS CONDICIONALES ---
+        if (tipoPuntoSelect) {
+            tipoPuntoSelect.addEventListener('change', function() {
+                gestionarSelectores(this.value);
+            });
+        }
+
+        function gestionarSelectores(valor) {
+            // Ocultar todo primero
+            document.querySelectorAll('.conditional-section').forEach(el => el.style.display = 'none');
+            const comunes = document.getElementById('campos_comunes_punto');
+            const divSubCat = document.getElementById('div_categorias_sitio');
+            const selectSubCat = document.getElementById('select_categoria_bd');
+
+            if (!valor) {
+                if (comunes) comunes.style.display = 'none';
+                if (divSubCat) divSubCat.style.display = 'none';
+                if (selectSubCat) selectSubCat.required = false;
+                return;
+            }
+
+            // Mostrar comunes
+            if (comunes) comunes.style.display = 'block';
+
+            // Lógica específica
+            if (valor === 'ofrenda') {
+                document.getElementById('campos_ofrenda').style.display = 'block';
+            } else if (valor === 'servicio') {
+                document.getElementById('campos_servicio').style.display = 'block';
+            } else if (valor === 'sitio_turistico') {
+                document.getElementById('campos_sitio_turistico').style.display = 'block';
+                if (divSubCat) divSubCat.style.display = 'block';
+                if (selectSubCat) selectSubCat.required = true;
+                return; // Salir para no ocultar divSubCat abajo
+            }
+
+            // Si no es turistico, ocultar categorías
+            if (divSubCat) divSubCat.style.display = 'none';
+            if (selectSubCat) selectSubCat.required = false;
+        }
+
+
+        // --- 4. LÓGICA DE GALERÍA (Drag & Drop simulado) ---
+        if (inputGaleria) {
+            inputGaleria.addEventListener('change', function(e) {
+                for(let i = 0; i < this.files.length; i++){
+                    // Evitar duplicados simples por nombre
+                    let exists = false;
+                    for(let j=0; j<dt.items.length; j++){
+                        if(dt.files[j].name === this.files[i].name) exists = true;
+                    }
+                    if(!exists) dt.items.add(this.files[i]);
+                }
+                this.files = dt.files;
+                actualizarPreview();
+            });
+        }
+
+        window.actualizarPreview = function() {
+            if(!previewContainer) return;
+            previewContainer.innerHTML = '';
+            
+            for(let i = 0; i < dt.files.length; i++) {
+                let file = dt.files[i];
+                let reader = new FileReader();
+                
+                let item = document.createElement('div');
+                item.className = 'preview-item';
+                
+                let btnRemove = document.createElement('button');
+                btnRemove.className = 'preview-remove';
+                btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+                btnRemove.type = "button";
+                btnRemove.onclick = function() { eliminarArchivo(i); };
+                
+                reader.onload = function(e) {
+                    if(file.type.startsWith('image/')) {
+                        item.innerHTML = `<img src="${e.target.result}">`;
+                    } else {
+                        item.innerHTML = `<div class="d-flex align-items-center justify-content-center bg-dark text-white w-100"><i class="fas fa-video fa-2x"></i></div>`;
+                    }
+                    item.appendChild(btnRemove);
+                    previewContainer.appendChild(item);
+                }
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.eliminarArchivo = function(index) {
+            let newDt = new DataTransfer();
+            for(let i = 0; i < dt.files.length; i++) {
+                if(i !== index) newDt.items.add(dt.files[i]);
+            }
+            dt = newDt;
+            inputGaleria.files = dt.files;
+            actualizarPreview();
+        };
+
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,919 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+
+{% block title %}Gestor de Archivos por URL{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 0 auto;">
+  
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12 mb-3">
+      <div class="d-flex justify-content-end">
+        <div class="d-flex">
+          <button type="button" class="btn boton bt-body me-1" data-bs-toggle="modal" data-bs-target="#archivoModal">
+            <i class="fas fa-plus me-1"></i> Nuevo Archivo URL
+          </button>
+          <button type="button" class="btn boton bt-body" data-bs-toggle="modal" data-bs-target="#categoriaModal">
+            <i class="fas fa-plus me-1"></i> Nueva categoría de sitio
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Filtros y búsqueda -->
+  <div class="mb-4">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" 
+                 class="form-control" 
+                 id="searchInput" 
+                 placeholder="Buscar por nombre, descripción o URL...">
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <select class="form-control" id="filterStatus">
+          <option value="">Todos los estados</option>
+          <option value="procesado">Procesados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="error">Con error</option>
+          <option value="visible">Visibles</option>
+          <option value="oculto">Ocultos</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes del sistema -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-dismissible {{ message.tags }}" style="margin-bottom: 20px;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Tabla de archivos -->
+  <div class="card mb-4">
+    <div class="card-header py-3" style="background-color: var(--color-gris-oscuro);">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-white">
+          <i class="fas fa-external-link-alt me-2"></i> Archivos por URL
+          <span class="badge bg-light text-dark ms-2" id="totalCount">{{ archivos|length }}</span>
+        </h5>
+        <div class="text-white">
+          <i class="fas fa-filter me-1"></i>
+          <span id="filteredCount">{{ archivos|length }}</span> de {{ archivos|length }} archivos
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered mb-0" id="archivosTable">
+          <thead class="text-white" style="background-color: var(--color-gris-oscuro);">
+            <tr>
+              <th class="text-center align-middle" style="width: 45%;">Archivo</th>
+              <th class="text-center align-middle" style="width: 10%;">Tipo</th>
+              <th class="text-center align-middle" style="width: 15%;">Estado</th>
+              <th class="text-center align-middle" style="width: 10%;">Visibilidad</th>
+              <th class="text-center align-middle" style="width: 20%;">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for archivo in archivos %}
+            <tr class="archivo-row text-center align-middle" 
+                data-id="{{ archivo.id_archivo }}"
+                data-type="{{ archivo.tipo_archivo }}"
+                data-status="{% if archivo.procesado %}procesado{% else %}pendiente{% endif %}"
+                data-visible="{% if archivo.visible %}visible{% else %}oculto{% endif %}"
+                data-name="{{ archivo.nombre_archivo|lower }}"
+                data-desc="{{ archivo.descripcion|lower|default:'' }}"
+                data-url="{{ archivo.archivo_path|lower }}">
+              
+              <!-- Columna Archivo -->
+              <td class="text-start align-middle">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="text-center" style="color: var(--color-naranja); min-width: 40px;">
+                    <i class="fas 
+                      {% if archivo.tipo_archivo == 'kml' %}fa-map-marked-alt
+                      {% elif archivo.tipo_archivo == 'kmz' %}fa-file-archive
+                      {% else %}fa-file{% endif %} 
+                      fa-2x">
+                    </i>
+                  </div>
+                  
+                  <div class="flex-grow-1">
+                    <!-- Nombre y Hash -->
+                    <div class="d-flex align-items-center mb-2">
+                      <strong class="me-2">{{ archivo.nombre_archivo }}</strong>
+                      {% if archivo.hash_archivo %}
+                        <small class="text-muted" title="Hash SHA256">
+                          <i class="fas fa-fingerprint me-1"></i>
+                          {{ archivo.hash_archivo|slice:":8" }}...
+                        </small>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- URL -->
+                    <div class="mb-2">
+                      <a href="{{ archivo.archivo_path }}" 
+                         target="_blank" 
+                         class="text-decoration-none"
+                         title="Abrir URL">
+                        <i class="fas fa-external-link-alt me-1"></i>
+                        {{ archivo.archivo_path|truncatechars:50 }}
+                      </a>
+                    </div>
+                    
+                    <!-- Información adicional -->
+                    <div class="mb-2">
+                      <small class="text-muted">
+                        <i class="fas fa-user me-1"></i>{{ archivo.usuario.nombre }} {{ archivo.usuario.ap }} 
+                        <span class="mx-2">|</span>
+                        <i class="fas fa-calendar me-1"></i>{{ archivo.fecha_subida|date:"d/m/Y" }}
+                        {% if archivo.tamanio > 0 %}
+                          <span class="mx-2">|</span>
+                          <i class="fas fa-weight-hanging me-1"></i>{{ archivo.tamanio|filesizeformat }}
+                        {% endif %}
+                      </small>
+                    </div>
+                    
+                    <!-- Badges de relaciones -->
+                    <div class="mb-2">
+                      <!-- Geometrías -->
+                      {% with geometrias=archivo.geometriaespacial_set.all %}
+                      {% if geometrias %}
+                        <span class="badge">
+                          <i class="fas fa-shapes me-1"></i>{{ geometrias|length }} geometrías
+                        </span>
+                      {% endif %}
+                      {% endwith %}
+                      
+                      <!-- Puntos de Interés -->
+                      {% with puntos=archivo.puntos_interes_relacionados %}
+                      {% if puntos %}
+                        <span class="badge bg-warning me-1">
+                          <i class="fas fa-map-marker-alt me-1"></i>{{ puntos|length }} puntos
+                        </span>
+                      {% endif %}
+                      {% endwith %}
+                    </div>
+                    
+                    <!-- Descripción -->
+                    {% if archivo.descripcion %}
+                      <p class="mb-0 small text-muted text-truncate">
+                        <i class="fas fa-align-left me-1"></i>{{ archivo.descripcion|truncatechars:80 }}
+                      </p>
+                    {% endif %}
+                    
+                    <!-- Error de procesamiento -->
+                    {% if archivo.error_procesamiento %}
+                      <div class="mt-2">
+                        <small class="text-danger">
+                          <i class="fas fa-exclamation-triangle me-1"></i>
+                          {{ archivo.error_procesamiento|truncatechars:50 }}
+                        </small>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <!-- Columna Tipo -->
+              <td class="text-center align-middle">
+                {% if archivo.tipo_archivo == 'kml' %}
+                  <span class="badge bg-primary">
+                    <i class="fas fa-map-marked-alt me-1"></i>KML
+                  </span>
+                {% elif archivo.tipo_archivo == 'kmz' %}
+                  <span class="badge bg-secondary">
+                    <i class="fas fa-file-archive me-1"></i>KMZ
+                  </span>
+                {% else %}
+                  <span class="bg-light text-dark">
+                    <i class="fas fa-file me-1"></i>{{ archivo.tipo_archivo|default:"Otro" }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Columna Estado -->
+              <td class="text-center align-middle">
+                {% if archivo.procesado %}
+                  <span class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i> Procesado
+                  </span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">
+                    <i class="fas fa-clock me-1"></i> Pendiente
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Columna Visibilidad -->
+              <td class="text-center align-middle">
+                <div class="d-flex justify-content-center align-items-center">
+                  <div class="form-check form-switch" style="transform: scale(1.5);">
+                    <input class="form-check-input visibility-toggle" 
+                           type="checkbox" 
+                           role="switch"
+                           data-archivo-id="{{ archivo.id_archivo }}"
+                           {% if archivo.visible %}checked{% endif %}>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Columna Acciones - CORREGIDA -->
+              <td class="text-center align-middle">
+                <div class="d-flex flex-column gap-1">
+                    <!-- Fila 1: Editar y Mapa/Procesar -->
+                    <div class="d-flex justify-content-center gap-1">
+                    <!-- Botón Editar -->
+                    <button onclick="abrirModalEdicion({{ archivo.id_archivo }})" 
+                            class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1"
+                            style="width: 65px; height: 50px; background-color: #D6CEAA; border: none; color: #4A4A4A;">
+                        <i class="fas fa-edit"></i>
+                        <span class="small mt-1">Editar</span>
+                    </button>
+
+                    <!-- Botón Mapa o Procesar -->
+                    {% if archivo.procesado and archivo.geometriaespacial_set.count > 0 and archivo.tipo_archivo in 'kml,kmz' %}
+                        <a href="{% url 'mapa' %}?archivo_id={{ archivo.id_archivo }}" 
+                        class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
+                        style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
+                        <i class="fas fa-map"></i>
+                        <span class="small mt-1">Mapa</span>
+                        </a>
+                    {% elif not archivo.procesado and archivo.tipo_archivo in 'kml,kmz' %}
+                        <button onclick="procesarArchivo({{ archivo.id_archivo }})" 
+                                class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
+                                style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
+                        <i class="fas fa-cogs"></i>
+                        <span class="small mt-1">Procesar</span>
+                        </button>
+                    {% else %}
+                        <!-- Espaciador si no hay botón Mapa/Procesar -->
+                        <div style="width: 65px;"></div>
+                    {% endif %}
+                    </div>
+
+                    <!-- Fila 2: Actualizar y Eliminar -->
+                    <div class="d-flex justify-content-center gap-1">
+                    <!-- Botón Actualizar -->
+                    <button onclick="actualizarDesdeURL({{ archivo.id_archivo }})" 
+                            class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
+                            style="width: 65px; height: 50px; background-color: #D6CEAA; border: none; color: #4A4A4A;">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="small mt-1">Actualizar</span>
+                    </button>
+                    
+                    <!-- Botón Eliminar -->
+                    <form action="{% url 'eliminar_archivo' archivo.id_archivo %}" 
+                            method="POST" 
+                            class="d-inline"
+                            onsubmit="return confirm('¿Eliminar este archivo y todas sus relaciones?');">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
+                                style="background-color: #e74c3c; border: none; color: white; width: 65px; height: 50px;">
+                        <i class="fas fa-trash"></i>
+                        <span class="small mt-1">Eliminar</span>
+                        </button>
+                    </form>
+                    </div>
+                </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-5 align-middle">
+                <div class="text-muted">
+                  <i class="fas fa-link fa-3x mb-3" style="color: var(--color-beige);"></i>
+                  <h5 style="color: var(--color-gris-oscuro);">No hay archivos por URL</h5>
+                  <p>Comienza importando archivos desde URLs externas</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <input type="hidden" id="modo_edicion" value="false">
+  <input type="hidden" id="archivo_id_editar">
+</div>
+
+{% include 'myapp/crud_geolocalizacion/upload_categoriaSitio.html' %}
+{% include 'myapp/mod_db/upload_kml.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Variables globales
+    let archivosFiltrados = Number("{{ archivos|length|default:'0' }}");
+
+
+    // Función para alternar visibilidad
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar toggles de visibilidad
+        document.querySelectorAll('.visibility-toggle').forEach(function(toggle) {
+            toggle.addEventListener('change', function() {
+                const archivoId = this.getAttribute('data-archivo-id');
+                const visible = this.checked;
+                toggleVisibilidad(archivoId, visible);
+            });
+        });
+        
+        // Configurar filtros
+        setupFilters();
+        
+        // Configurar búsqueda
+        setupSearch();
+    });
+    
+    function toggleVisibilidad(archivoId, visible) {
+        // Usar la URL correcta 'toggle_visibilidad'
+        fetch(`/toggle-visibilidad/${archivoId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ visible: visible })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Actualizar badge de visibilidad
+                const row = document.querySelector(`tr[data-id="${archivoId}"]`);
+                if (row) {
+                    const badge = row.querySelector('td:nth-child(4) .badge');
+                    if (badge) {
+                        badge.textContent = visible ? 'Sí' : 'No';
+                        badge.className = visible ? 'badge bg-success' : 'badge bg-secondary';
+                    }
+                    
+                    // Actualizar atributo data-visible
+                    row.setAttribute('data-visible', visible ? 'visible' : 'oculto');
+                }
+                
+                showToast(visible ? 'Archivo visible' : 'Archivo oculto', 'success');
+            } else {
+                showToast('Error al cambiar visibilidad: ' + data.error, 'error');
+                const toggle = document.querySelector(`input[data-archivo-id="${archivoId}"]`);
+                if (toggle) {
+                    toggle.checked = !visible;
+                }
+            }
+        })
+        
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error de conexión', 'error');
+            const toggle = document.querySelector(`input[data-archivo-id="${archivoId}"]`);
+            if (toggle) {
+                toggle.checked = !visible;
+            }
+        });
+    }
+
+
+    // Procesar archivo (solo para KML/KMZ)
+    function procesarArchivo(archivoId) {
+        if (confirm('¿Procesar este archivo para extraer geometrías?')) {
+            showToast('Procesando archivo...', 'info');
+            
+            // Usar la URL correcta 'procesar_archivo'
+            fetch(`/procesar/${archivoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || 'Archivo procesado exitosamente', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            });
+        }
+    }
+    
+    // Actualizar desde URL
+    function actualizarDesdeURL(archivoId) {
+        if (confirm('¿Actualizar este archivo desde su URL? Esto verificará si hay cambios.')) {
+            showToast('Actualizando archivo...', 'info');
+            
+            // Usar la URL correcta 'actualizar_desde_url'
+            fetch(`actualizar-url/${archivoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.cambiado) {
+                        if (confirm('El archivo ha cambiado. ¿Deseas reprocesarlo?')) {
+                            procesarArchivo(archivoId);
+                        } else {
+                            location.reload();
+                        }
+                    } else {
+                        showToast('El archivo está actualizado', 'info');
+                        location.reload();
+                    }
+                } else {
+                    showToast('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            });
+        }
+    }
+    
+    // Mostrar modal de edición
+    function mostrarEditarRecurso(archivoId) {
+    fetch("{% url 'detalle_archivo' 0 %}".replace('0', archivoId), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('editarArchivoId').value = archivoId;
+            document.getElementById('editarNombreArchivo').value = data.nombre_archivo || '';
+            document.getElementById('editarDescripcion').value = data.descripcion || '';
+            document.getElementById('editarTipoArchivo').value = data.tipo_archivo || 'kmz';
+            document.getElementById('editarVisible').checked = data.visible;
+
+            // 🔥 ABRIR MODAL
+            document.getElementById('editarRecursoModal').classList.add('active');
+        } else {
+            showToast(data.error || 'Error al cargar datos', 'error');
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        showToast('No se pudo cargar el recurso', 'error');
+    });
+}
+
+    
+    function cerrarEditarModal() {
+        document.getElementById('editarRecursoModal').classList.remove('active');
+    }
+    
+    // Guardar edición de archivo
+    function guardarEdicionRecurso() {
+        const archivoId = document.getElementById('editarArchivoId').value;
+        const nombre = document.getElementById('editarNombreArchivo').value.trim();
+        
+        if (!nombre) {
+            showToast('El nombre del archivo es obligatorio', 'error');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('nombre_archivo', nombre);
+        formData.append('descripcion', document.getElementById('editarDescripcion').value);
+        formData.append('tipo_archivo', document.getElementById('editarTipoArchivo').value);
+        formData.append('visible', document.getElementById('editarVisible').checked ? 'on' : 'off');
+        
+        // Usar la URL correcta 'editar_archivo'
+        fetch(`/editar/${archivoId}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Cambios guardados exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('Error: ' + (data.error || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error de conexión', 'error');
+        });
+    }
+    
+    function guardarArchivo() {
+        const modoEdicion = document.getElementById('modo_edicion').value === "true";
+        const archivoId = document.getElementById('archivo_id_editar').value;
+        const formData = new FormData(document.getElementById('urlForm'));
+
+        let url = '/subir-url/'; // default: nuevo archivo
+        if (modoEdicion && archivoId) {
+            url = `/editar/${archivoId}/`; // editar archivo existente
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() },
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Archivo guardado correctamente', 'success');
+                cerrarModal();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.error || 'Error al guardar', 'error');
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            showToast('Error de conexión', 'error');
+        });
+    }
+
+
+
+
+    // Configurar filtros
+    function setupFilters() {
+        const filterType = document.getElementById('filterType');
+        const filterStatus = document.getElementById('filterStatus');
+        
+        if (filterType) {
+            filterType.addEventListener('change', applyFilters);
+        }
+        
+        if (filterStatus) {
+            filterStatus.addEventListener('change', applyFilters);
+        }
+    }
+    
+    // Configurar búsqueda
+    function setupSearch() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+    }
+    
+    // Aplicar filtros y búsqueda
+    function applyFilters() {
+        const searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const filterType = document.getElementById('filterType')?.value || '';
+        const filterStatus = document.getElementById('filterStatus')?.value || '';
+        
+        const rows = document.querySelectorAll('#archivosTable tbody .archivo-row');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const type = row.getAttribute('data-type');
+            const status = row.getAttribute('data-status');
+            const visible = row.getAttribute('data-visible');
+            const name = row.getAttribute('data-name');
+            const desc = row.getAttribute('data-desc');
+            const url = row.getAttribute('data-url');
+            
+            let shouldShow = true;
+            
+            // Filtrar por tipo
+            if (filterType && type !== filterType) {
+                shouldShow = false;
+            }
+            
+            // Filtrar por estado
+            if (filterStatus) {
+                if (filterStatus === 'visible' && visible !== 'visible') {
+                    shouldShow = false;
+                } else if (filterStatus === 'oculto' && visible !== 'oculto') {
+                    shouldShow = false;
+                } else if (filterStatus === 'procesado' && status !== 'procesado') {
+                    shouldShow = false;
+                } else if (filterStatus === 'pendiente' && status !== 'pendiente') {
+                    shouldShow = false;
+                } else if (filterStatus === 'error' && !row.querySelector('.status-error')) {
+                    shouldShow = false;
+                }
+            }
+            
+            // Filtrar por búsqueda
+            if (searchText) {
+                const matchesSearch = name.includes(searchText) || 
+                                    desc.includes(searchText) || 
+                                    url.includes(searchText);
+                if (!matchesSearch) {
+                    shouldShow = false;
+                }
+            }
+            
+            // Mostrar/ocultar fila
+            row.style.display = shouldShow ? '' : 'none';
+            if (shouldShow) visibleCount++;
+        });
+        
+        // Actualizar contador
+        const filteredCount = document.getElementById('filteredCount');
+        if (filteredCount) {
+            filteredCount.textContent = visibleCount;
+        }
+        
+        archivosFiltrados = visibleCount;
+    }
+    
+    // Función para mostrar notificaciones
+    function showToast(message, type = 'info') {
+        // Eliminar toast existente
+        const existingToast = document.getElementById('customToast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+        
+        // Crear nuevo toast
+        const toast = document.createElement('div');
+        toast.id = 'customToast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        // Estilo según tipo
+        if (type === 'success') {
+            toast.style.backgroundColor = '#28a745';
+        } else if (type === 'error') {
+            toast.style.backgroundColor = '#e74c3c';
+        } else if (type === 'info') {
+            toast.style.backgroundColor = '#17a2b8';
+        } else {
+            toast.style.backgroundColor = '#6c757d';
+        }
+        
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }, 3000);
+        
+        // Añadir animaciones CSS si no existen
+        if (!document.querySelector('#toastAnimations')) {
+            const style = document.createElement('style');
+            style.id = 'toastAnimations';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // Cerrar modal al hacer clic fuera
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('editarRecursoModal');
+        if (event.target === modal) {
+            cerrarEditarModal();
+        }
+    });
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            cerrarEditarModal();
+        }
+    });
+
+    window.abrirModalCreacion = function() {
+        const form = document.getElementById('urlForm');
+        if (form) form.reset();
+
+        document.getElementById('modo_edicion').value = "false";
+        document.getElementById('archivo_id_editar').value = "";
+        // también actualizar los hidden dentro del formulario (evitar IDs duplicados usando selector dentro del modal)
+        const modoForm = document.querySelector('#archivoModal form input[name="modo_edicion"]');
+        if (modoForm) modoForm.value = 'false';
+        const archivoIdForm = document.querySelector('#archivoModal form input[name="archivo_id_editar"]');
+        if (archivoIdForm) archivoIdForm.value = '';
+
+        gestionarSelectores(document.getElementById('tipo_punto').value);
+        const modal = new bootstrap.Modal(document.getElementById('archivoModal'));
+        modal.show();
+    };
+
+
+    window.cerrarModal = function() {
+        document.getElementById('archivoModal').classList.remove('active');
+    };
+
+function abrirModalEdicion(archivoId) {
+    if (!archivoId) return;
+
+    console.log("Cargando ID:", archivoId);
+
+    fetch(`/archivos/detalle/${archivoId}/`)
+        .then(res => {
+            if(!res.ok) throw new Error("Error HTTP " + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (!data.success) {
+                showToast(data.error, 'error');
+                return;
+            }
+
+            // 1. Preparar Modal y Formulario
+            const modalEl = document.getElementById('archivoModal');
+            const form = modalEl.querySelector('form');
+            if(form) form.reset(); 
+
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar';
+            
+            // Inputs ocultos (IDs globales y del form)
+            const setHidden = (name, val) => {
+                const inp = form.querySelector(`input[name="${name}"]`);
+                if(inp) inp.value = val;
+                // Fallback a global
+                const glob = document.getElementById(name);
+                if(glob) glob.value = val;
+            };
+            setHidden('modo_edicion', 'true');
+            setHidden('archivo_id_editar', archivoId);
+
+            // 2. Datos del Archivo
+            const setVal = (name, val) => {
+                const el = form.querySelector(`[name="${name}"]`) || document.getElementById(name);
+                if(el) el.value = val || '';
+            };
+
+            setVal('archivo_url', data.archivo_path);
+            setVal('nombre_archivo', data.nombre_archivo);
+            // El textarea del archivo
+            const descArchivo = form.querySelector('textarea[name="descripcion"]');
+            if(descArchivo) descArchivo.value = data.descripcion || '';
+
+            if(document.getElementById('visible')) {
+                document.getElementById('visible').checked = data.visible;
+            }
+
+            // 3. Datos del Punto (Imagen, Días, Galería)
+            if (data.tipo_punto) {
+                // Selector tipo
+                const selectTipo = document.getElementById('tipo_punto');
+                if(selectTipo) {
+                    selectTipo.value = data.tipo_punto;
+                    if(typeof gestionarSelectores === 'function') gestionarSelectores(data.tipo_punto);
+                }
+
+                // Campos comunes
+                setVal('nombre_punto', data.nombre_punto);
+                setVal('estado_punto', data.estado_punto);
+                setVal('fecha_inicio', data.fecha_inicio);
+                setVal('fecha_fin', data.fecha_fin);
+                setVal('hora_apertura', data.hora_apertura);
+                setVal('hora_cierre', data.hora_cierre);
+
+                // --- CORRECCIÓN IMAGEN PORTADA ---
+                // Asegúrate que tu input en HTML tenga name="imagen_portada"
+                const imgPortada = form.querySelector('input[name="imagen_portada"]');
+                if(imgPortada) {
+                    imgPortada.value = data.imagen_portada || '';
+                }
+
+                // --- CORRECCIÓN DÍAS DE SEMANA ---
+                const diasInputs = form.querySelectorAll('input[name="dias_semana"]');
+                diasInputs.forEach(cb => cb.checked = false); // Limpiar
+                
+                if (data.dias_semana && data.dias_semana.length > 0) {
+                    data.dias_semana.forEach(dia => {
+                        // value="lunes", value="martes", etc.
+                        const check = form.querySelector(`input[name="dias_semana"][value="${dia.trim()}"]`);
+                        if(check) check.checked = true;
+                    });
+                }
+
+                // --- CORRECCIÓN GALERÍA MULTIMEDIA ---
+                const previewContainer = document.getElementById('previewGaleria');
+                if (previewContainer) {
+                    previewContainer.innerHTML = ''; // Limpiar
+                    
+                    if (data.galeria && data.galeria.length > 0) {
+                        data.galeria.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'preview-item';
+                            // Estilos inline para asegurar visualización
+                            div.style.cssText = "position: relative; width: 80px; height: 80px; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; margin-right: 5px; margin-bottom: 5px;";
+                            
+                            let content = '';
+                            if (item.tipo === 'video') {
+                                content = `<div style="width:100%; height:100%; background:#000; color:#fff; display:flex; align-items:center; justify-content:center;"><i class="fas fa-video"></i></div>`;
+                            } else {
+                                content = `<img src="${item.url}" style="width:100%; height:100%; object-fit:cover;">`;
+                            }
+
+                            div.innerHTML = `
+                                ${content}
+                                <div title="Guardado en BD" style="position: absolute; top: 0; right: 0; background: rgba(0,255,0,0.7); color: white; width: 20px; height: 20px; text-align: center; font-size: 12px;">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            `;
+                            previewContainer.appendChild(div);
+                        });
+                    }
+                }
+
+                // Subtipos
+                if (data.tipo_punto === 'sitio_turistico') {
+                    setVal('id_categoria_bd', data.id_categoria_bd);
+                    setVal('reglas_acceso', data.reglas_acceso);
+                } else if (data.tipo_punto === 'ofrenda') {
+                    setVal('anfitrion', data.anfitrion);
+                } else if (data.tipo_punto === 'servicio') {
+                    setVal('tipo_servicio', data.tipo_servicio);
+                    setVal('contacto_servicio', data.contacto_servicio);
+                    // Pagos
+                    const pagosInputs = form.querySelectorAll('input[name="tipo_pago"]');
+                    pagosInputs.forEach(cb => cb.checked = false);
+                    if (data.tipo_pago) {
+                        data.tipo_pago.forEach(pago => {
+                            const ch = form.querySelector(`input[name="tipo_pago"][value="${pago.trim()}"]`);
+                            if(ch) ch.checked = true;
+                        });
+                    }
+                }
+            } else {
+                // Sin punto: resetear selectores
+                const selectTipo = document.getElementById('tipo_punto');
+                if(selectTipo) {
+                    selectTipo.value = "";
+                    if(typeof gestionarSelectores === 'function') gestionarSelectores("");
+                }
+            }
+
+            // Abrir Modal Bootstrap
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl); 
+            modalInstance.show();
+        })
+        .catch(err => {
+            console.error(err);
+            showToast("Error: " + err.message, 'error');
+        });
+}
+
+</script>
+{% endblock %}

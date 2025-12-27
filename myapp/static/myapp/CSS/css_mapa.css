@@ -3,7 +3,7 @@
     max-width: 1400px;        
     margin: 0 auto;           
     box-sizing: border-box;
-    padding-top: 10px;
+    padding-top: 50px ;
 }
 
 /* HEADER */
@@ -181,3 +181,4 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+

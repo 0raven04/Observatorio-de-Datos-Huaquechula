@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="caminos_de_las_nimas" id="caminos_de_las_nimas">
+	<SimpleField name="id" type="float"></SimpleField>
+	<SimpleField name="Nombre" type="string"></SimpleField>
+</Schema>
+<Folder><name>caminos_de_las_nimas</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#caminos_de_las_nimas">
+		<SimpleData name="id">1</SimpleData>
+		<SimpleData name="Nombre">Camino de las ánimas</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-98.5399125649033,18.7685634407557 -98.5397560146895,18.7694151089298</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>
