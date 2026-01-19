@@ -75,7 +75,7 @@ def registro_visita(request):
         registro = RegistroVisita.objects.create(
             tamanio_grupo=tamanio_grupo,
             es_extranjero=es_extranjero,
-            pais_origen=request.POST.get('pais') if es_extranjero else None,  # País solo para extranjeros
+            pais_origen=request.POST.get('pais', '') if es_extranjero else '',  # País solo para extranjeros
             procedencia=request.POST.get('procedencia'),
             tipo_transporte=tipo_transporte,
             motivo_visita=motivo_visita,
@@ -90,7 +90,7 @@ def registro_visita(request):
             edad = to_int(request.POST.get(f'edad{i}'))
             sexo = request.POST.get(f'genero{i}')
             # Validar que los datos de la persona sean correctos
-            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:
+            if edad is not None and 0 <= edad <= 120 and sexo in ['Hombre', 'Mujer', 'Otro']:
                 personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))
 
         # Crear todas las personas de una vez (optimizado)
@@ -199,8 +199,15 @@ def backup_database(request):
         backup_path = os.path.join(temp_dir, backup_filename)
         
         # Construir comando para mysqldump
+        # Usar ruta configurada o default 'mysqldump'
+        dump_cmd = getattr(settings, 'MYSQLDUMP_PATH', 'mysqldump')
+        
+        # Verificar si la ruta configurada existe, si no, intentar usar el comando global
+        if not os.path.exists(dump_cmd) and dump_cmd != 'mysqldump':
+             dump_cmd = 'mysqldump'
+
         cmd = [
-            'mysqldump',
+            dump_cmd,
             f'-h{db_host}',
             f'-u{db_user}',
             f'-p{db_pass}',
@@ -339,7 +346,7 @@ def editar_registro(request, id_registro):
         # Actualizar registro principal
         registro.tamanio_grupo = tamanio_grupo
         registro.es_extranjero = es_extranjero
-        registro.pais_origen = request.POST.get('pais') if es_extranjero else None
+        registro.pais_origen = request.POST.get('pais', '') if es_extranjero else ''
         registro.procedencia = request.POST.get('procedencia')
         registro.tipo_transporte = tipo_transporte
         registro.motivo_visita = motivo_visita
@@ -354,7 +361,7 @@ def editar_registro(request, id_registro):
             edad = to_int(request.POST.get(f'edad{i}'))
             sexo = request.POST.get(f'genero{i}')
             # Validar datos de la persona
-            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:
+            if edad is not None and 0 <= edad <= 120 and sexo in ['Hombre', 'Mujer', 'Otro']:
                 personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))
 
         # Crear nuevas personas
@@ -465,7 +472,7 @@ def formulario(request):
         registro = RegistroVisita.objects.create(  
             tamanio_grupo=tamanio_grupo,  
             es_extranjero=es_extranjero,  
-            pais_origen=request.POST.get('pais') if es_extranjero else None,  
+            pais_origen=request.POST.get('pais', '') if es_extranjero else '',  
             procedencia=request.POST.get('procedencia'),  
             tipo_transporte=tipo_transporte,  
             motivo_visita=motivo_visita,  
@@ -479,7 +486,7 @@ def formulario(request):
         for i in range(1, tamanio_grupo + 1):  
             edad = to_int(request.POST.get(f'edad{i}'))  
             sexo = request.POST.get(f'genero{i}')  
-            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:  
+            if edad is not None and 0 <= edad <= 120 and sexo in ['Hombre', 'Mujer', 'Otro']:  
                 personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))  
   
         if personas:  
@@ -694,38 +701,34 @@ def lista_documentos(request):
 
 @login_required
 def editar_documento_view(request, documento_id):
-    """
-    Vista para editar un documento:
-    - GET: Retorna el formulario HTML parcial
-    - POST: Procesa la actualización
-    """
     documento = get_object_or_404(Documento, id=documento_id)
-    
+
     if request.method == 'POST':
         try:
-            titulo = request.POST.get('titulo')
+            titulo = request.POST.get('titulo', '').strip()
             categoria_id = request.POST.get('categoria')
-            descripcion = request.POST.get('descripcion')
+            descripcion = request.POST.get('descripcion') or ""
             es_publico = request.POST.get('es_publico') == 'on'
-            
+
             if not titulo or not categoria_id:
                 return JsonResponse({'success': False, 'error': 'Faltan campos requeridos'})
-            
-            categoria = Categoria.objects.get(id=categoria_id)
-            
+
+            categoria = get_object_or_404(Categoria, id=categoria_id)
+
             documento.titulo = titulo
             documento.categoria = categoria
             documento.descripcion = descripcion
             documento.es_publico = es_publico
             documento.save()
-            
+
             return JsonResponse({'success': True})
-            
+
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
-            
+
     # GET request
     categorias = Categoria.objects.all()
+
     return render(request, 'myapp/editar_documento.html', {
         'documento': documento,
         'categorias': categorias

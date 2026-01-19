@@ -53,6 +53,9 @@ document.querySelectorAll('.btn-editar').forEach(button => {
                 // Cambia acción del formulario para edición
                 document.getElementById('formulario').action = `/visitas/editar/${id}/`;
 
+                // Actualizar visibilidad del campo país
+                togglePaisVisibility();
+
                 // Muestra el modal
                 const modal = new bootstrap.Modal(document.getElementById('miModal'));
                 modal.show();
@@ -168,37 +171,37 @@ document.addEventListener('DOMContentLoaded', function () {
 const numInput = document.getElementById('numPersonas');
 numInput.addEventListener("keypress", soloNumeros);
 const container = document.getElementById('camposPersonas');
-const pais= document.getElementById('pais');
-const procedencia= document.getElementById('procedencia');
+const pais = document.getElementById('pais');
+const procedencia = document.getElementById('procedencia');
 procedencia.addEventListener("keypress", soloLetras);
-const transporte= document.getElementById('transporte');
-const motivo= document.getElementById('motivo');
-const numDias= document.getElementById('numDias');
+const transporte = document.getElementById('transporte');
+const motivo = document.getElementById('motivo');
+const numDias = document.getElementById('numDias');
 numDias.addEventListener("keypress", soloNumeros);
-const numVisitas= document.getElementById('numVisitas');
+const numVisitas = document.getElementById('numVisitas');
 numVisitas.addEventListener("keypress", soloNumeros);
 
 
 
-        (function() {
-            'use strict'
-            const forms = document.querySelectorAll('.needs-validation')
-            
-            Array.from(forms).forEach(form => {
-              form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                  event.preventDefault()
-                  event.stopPropagation()
-                }
-                
-                form.classList.add('was-validated')
-              }, false)
-            })
-          })()
+(function () {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
 
 
 document.querySelectorAll("input").forEach(input => {
-    input.addEventListener("input", function() {
+    input.addEventListener("input", function () {
         this.classList.remove("is-valid");
         this.classList.remove("is-invalid");
     });
@@ -227,3 +230,48 @@ function soloNumeros(event) {
 
 
 
+
+// ===== CONTROL DE VISIBILIDAD DE PAÍS (EXTRANJEROS) =====
+function togglePaisVisibility() {
+    console.log("Ejecutando togglePaisVisibility");
+    const isExtranjero = document.getElementById('gridRadios1').checked; // Radio "Sí"
+    const container = document.getElementById('paisSelector');
+    const select = document.getElementById('pais');
+
+    if (!container || !select) {
+        console.error("No se encontraron los elementos paisSelector o pais");
+        return;
+    }
+
+    if (isExtranjero) {
+        console.log("Es extranjero: MOSTRANDO");
+        container.classList.remove('d-none');
+        // Forzar display flex si d-none no funciona por alguna razon, aunque remove d-none deberia bastar
+        // dado que tiene d-flex en el HTML
+        container.style.display = 'flex';
+        select.required = true;
+    } else {
+        console.log("No es extranjero: OCULTANDO");
+        container.classList.add('d-none');
+        container.style.display = 'none';
+        select.required = false;
+        select.value = ""; // Limpiar selección
+    }
+}
+
+// Asignar eventos a los radio buttons de Extranjero
+const radiosExtranjero = document.querySelectorAll('input[name="esExtranjero"]');
+console.log("Radios encontrados:", radiosExtranjero.length);
+
+radiosExtranjero.forEach(radio => {
+    radio.addEventListener('change', function () {
+        console.log("Cambio en radio extranjero detectado");
+        togglePaisVisibility();
+    });
+});
+
+// Inicializar estado al cargar la página
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("DOM Cargado - Inicializando togglePaisVisibility");
+    togglePaisVisibility();
+});

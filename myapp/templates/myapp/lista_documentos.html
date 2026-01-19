@@ -104,8 +104,8 @@
                             {% for doc in documentos %}
                             <tr class="align-middle">
                                 <td>
-                                    <span class="badge rounded-pill" style="background-color: #4A4A4A">{{ doc.id
-                                        }}</span>
+                                    <span class="badge rounded-pill" style="background-color: #4A4A4A">
+                                        1 </span>
                                 </td>
                                 <td>{{ doc.titulo }}</td>
                                 <td>{{ doc.categoria.nombre }}</td>
@@ -252,11 +252,79 @@
         }
 
         function editarDocumento(id) {
+            console.log('Opening edit modal for ID:', id);
             // Cargar formulario de edición
             fetch(`/documentos/editar/${id}/`)
-                .then(res => res.text())
+                .then(res => {
+                    console.log('Fetch response status:', res.status);
+                    return res.text();
+                })
                 .then(html => {
-                    document.getElementById('editModalBody').innerHTML = html;
+                    console.log('HTML received');
+                    const modalBody = document.getElementById('editModalBody');
+                    modalBody.innerHTML = html;
+
+                    const form = document.getElementById('editForm');
+                    console.log('Form found:', form);
+
+                    if (form) {
+                        // 1. Populate values from data attributes
+                        const catId = form.dataset.categoriaId;
+                        const esPublicoVal = form.dataset.esPublico;
+                        console.log('Data attributes:', { catId, esPublicoVal });
+
+                        const isPublic = esPublicoVal === 'True';
+
+                        const catSelect = form.querySelector('[name="categoria"]');
+                        if (catSelect) {
+                            catSelect.value = catId;
+                            console.log('Category set to:', catId);
+                        } else {
+                            console.error('Category select not found');
+                        }
+
+                        const publicCheck = form.querySelector('[name="es_publico"]');
+                        if (publicCheck) {
+                            publicCheck.checked = isPublic;
+                            console.log('Public check set to:', isPublic);
+                        } else {
+                            console.error('Public checkbox not found');
+                        }
+
+                        // 2. Attach submit handler
+                        form.addEventListener('submit', function (e) {
+                            e.preventDefault();
+                            console.log('Form submitting...');
+                            const formData = new FormData(form);
+
+                            fetch(`/documentos/editar/${id}/`, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                                }
+                            })
+                                .then(response => {
+                                    console.log('Post response status:', response.status);
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    console.log('Post response data:', data);
+                                    if (data.success) {
+                                        location.reload();
+                                    } else {
+                                        alert('Error: ' + (data.error || 'Error desconocido'));
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Post error:', err);
+                                    alert('Error al guardar cambios');
+                                });
+                        });
+                    } else {
+                        console.error('Form element #editForm not found in injected HTML');
+                    }
+
                     new bootstrap.Modal(document.getElementById('editModal')).show();
                 });
         }

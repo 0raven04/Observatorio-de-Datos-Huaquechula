@@ -171,3 +171,10 @@ ALLOWED_EXTENSIONS = {
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Asegúrate de que INSTALLED_APPS incluya tu app
+
+# Configuración para respaldo de base de datos
+# Intenta rutas comunes de XAMPP o MySQL Server
+MYSQLDUMP_PATH = r'C:\xampp\mysql\bin\mysqldump.exe'
+if not os.path.exists(MYSQLDUMP_PATH):
+    # Ruta alternativa común para MySQL Server 8.0
+    MYSQLDUMP_PATH = r'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe'
