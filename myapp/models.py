@@ -213,16 +213,26 @@ class Documento(models.Model):
         ('privado', 'Privado'),
         ('confidencial', 'Confidencial'),
     ]
+    TIPO_CHOICES = [
+        ('video', 'Video'),
+        ('reporte', 'Reporte'),
+        ('historico', 'Documento Histórico'),
+    ]
     
     id_documento = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=200)
     fecha_carga = models.DateTimeField(default=timezone.now)
     descripcion = models.TextField(blank=True, null=True)
     
-    # CAMBIO: Agrega blank=True y default=''
+    tipo = models.CharField(
+        max_length=20,        # Suficiente para 'historico' o 'video'
+        choices=TIPO_CHOICES,
+        default='reporte'     # Valor por defecto sugerido
+    )
+    
     url = models.TextField(
-        default='',  # ← VALOR POR DEFECTO
-        blank=True   # ← Permite estar vacío
+        default='', 
+        blank=True,
     )
     
     fecha_actualizacion = models.DateTimeField(null=True, blank=True)
@@ -433,8 +443,7 @@ class GeometriaEspacial(models.Model):
         ('poligono', 'Polígono'),
         ('multipoligono', 'Multipolígono'),
         ('multipunto', 'Multipunto'),
-    ]
-    
+    ]  
     id_geometria = models.AutoField(primary_key=True)
     
     # Relación con ArchivoKMZ (puede ser null para geometrías manuales)
@@ -445,7 +454,6 @@ class GeometriaEspacial(models.Model):
         null=True,
         blank=True
     )
-    
     nombre = models.CharField(max_length=255, blank=True, null=True)
     tipo = models.CharField(max_length=20, choices=TIPO_GEOMETRIA_CHOICES)
     

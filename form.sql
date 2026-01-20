@@ -82,7 +82,7 @@ CREATE TABLE ArchivoKMZ (
 
 CREATE TABLE GeometriaEspacial (
     id_geometria INT AUTO_INCREMENT PRIMARY KEY,
-    id_archivo INT NULL, -- CORREGIDO: NULL para permitir creación manual
+    id_archivo INT NULL, 
     nombre VARCHAR(255),
     tipo VARCHAR(20) NOT NULL, 
     coordenadas JSON NOT NULL, 
@@ -99,7 +99,6 @@ CREATE TABLE Punto_Interes (
     id_punto INT AUTO_INCREMENT PRIMARY KEY,
     id_geometria INT NULL, 
     categoria ENUM('ofrenda', 'servicio', 'sitio_turistico', 'evento', 'otro') NOT NULL,
-    
     nombre VARCHAR(100) NOT NULL,
     descripcion MEDIUMTEXT,
     imagen_portada MEDIUMTEXT, 
@@ -111,13 +110,11 @@ CREATE TABLE Punto_Interes (
     
     dias_semana SET('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NULL,
     
-    -- AUDITORIA
     usuario_creacion INT,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (id_geometria) REFERENCES GeometriaEspacial(id_geometria) ON DELETE SET NULL,
     FOREIGN KEY (usuario_creacion) REFERENCES Usuario(id_usuario),
-    
 ) ENGINE=InnoDB;
 
 

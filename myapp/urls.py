@@ -53,9 +53,6 @@ urlpatterns = [
     path('clase/', views.DocumentoListView.as_view(), name='panel_documentos_clase'),
     
 
-    
-
-    
 
     
     path('registros/', views.registro_visita, name='lista_registros'),  # Cambia 'registro' a 'lista_registros' si es necesario
@@ -77,7 +74,12 @@ urlpatterns = [
     path('archivos/editar/<int:archivo_id>/', views.editar_archivo, name='editar_archivo'),
     path('lista-archivos/', views.lista_archivos, name='lista_archivos'),
     path('toggle-visibilidad/<int:archivo_id>/', views.toggle_visibilidad, name='toggle_visibilidad'),
+    
+    
     path('procesar/<int:archivo_id>/', views.procesar_archivo, name='procesar_archivo'),
+    
+    
+    
     path('actualizar-url/<int:archivo_id>/', views.actualizar_desde_url, name='actualizar_desde_url'),
     path('eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
     path('crear-categoria/', views.crear_categoria, name='crear_categoria'),

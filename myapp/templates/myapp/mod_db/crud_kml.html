@@ -246,22 +246,25 @@
                     </button>
 
                     <!-- Botón Mapa o Procesar -->
-                    {% if archivo.procesado and archivo.geometriaespacial_set.count > 0 and archivo.tipo_archivo in 'kml,kmz' %}
-                        <a href="{% url 'mapa' %}?archivo_id={{ archivo.id_archivo }}" 
-                        class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
-                        style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
-                        <i class="fas fa-map"></i>
-                        <span class="small mt-1">Mapa</span>
-                        </a>
-                    {% elif not archivo.procesado and archivo.tipo_archivo in 'kml,kmz' %}
-                        <button onclick="procesarArchivo({{ archivo.id_archivo }})" 
-                                class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
-                                style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
-                        <i class="fas fa-cogs"></i>
-                        <span class="small mt-1">Procesar</span>
-                        </button>
+                    {% if archivo.tipo_archivo == 'kml' or archivo.tipo_archivo == 'kmz' %}
+                        {% if archivo.procesado and archivo.num_geometrias > 0 %}
+                            <a href="{% url 'mapa' %}?archivo_id={{ archivo.id_archivo }}" 
+                            class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
+                            style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
+                                <i class="fas fa-map"></i>
+                                <span class="small mt-1">Mapa</span>
+                            </a>
+
+                        {% elif not archivo.procesado %}
+                            <button onclick="procesarArchivo({{ archivo.id_archivo }})" 
+                                    class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
+                                    style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
+                                <i class="fas fa-cogs"></i>
+                                <span class="small mt-1">Procesar</span>
+                            </button>
+                        {% endif %}
+
                     {% else %}
-                        <!-- Espaciador si no hay botón Mapa/Procesar -->
                         <div style="width: 65px;"></div>
                     {% endif %}
                     </div>
@@ -390,33 +393,35 @@
 
 
     // Procesar archivo (solo para KML/KMZ)
-    function procesarArchivo(archivoId) {
-        if (confirm('¿Procesar este archivo para extraer geometrías?')) {
-            showToast('Procesando archivo...', 'info');
-            
-            // Usar la URL correcta 'procesar_archivo'
-            fetch(`/procesar/${archivoId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message || 'Archivo procesado exitosamente', 'success');
-                    setTimeout(() => location.reload(), 2000);
-                } else {
-                    showToast('Error: ' + data.error, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error de conexión', 'error');
-            });
-        }
+   function procesarArchivo(archivoId) {
+    if (confirm('¿Procesar este archivo para extraer geometrías?')) {
+        showToast('Procesando archivo...', 'info');
+        
+        // CORRECCIÓN AQUÍ: Definimos la url usando el ID
+        const url = `/procesar/${archivoId}/`; 
+
+        fetch(url, {  // Ahora 'url' ya existe
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Archivo procesado exitosamente', 'success');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showToast('Error: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error de conexión', 'error');
+        });
     }
+}
     
     // Actualizar desde URL
     function actualizarDesdeURL(archivoId) {

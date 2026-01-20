@@ -60,6 +60,14 @@
         position: sticky;
         top: 20px;
     }
+    .badge-tipo {
+        font-size: 0.9rem;
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-left: 10px; 
+        color: white;
+    }
+
 </style>
 {% endblock %}
 
@@ -87,7 +95,27 @@
                         <i class="{{ documento.icono_archivo }} fa-2x" style="color: #D6CEAA;"></i>
                     </div>
                 </div>
+                <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h3 mb-2">{{ documento.titulo }}</h1>
+                    
+                    <span class="badge badge-clasificacion badge-{{ documento.clasificacion }}">
+                        {{ documento.nombre_clasificacion }}
+                    </span>
+
+                    <span class="badge badge-tipo badge-{{ documento.tipo }}">
+                        <i class="fas 
+                        {% if documento.tipo == 'video' %}fa-video
+                        {% elif documento.tipo == 'historico' %}fa-landmark
+                        {% else %}fa-file-alt{% endif %} me-1"></i>
+                        {{ documento.get_tipo_display }}
+                    </span>
+                </div>
                 
+                <div>
+                    <i class="{{ documento.icono_archivo }} fa-2x" style="color: #D6CEAA;"></i>
+                </div>
+            </div>
                 {% if documento.descripcion %}
                 <div class="mt-3">
                     <h6 class="text-muted mb-2">Descripción:</h6>
@@ -129,6 +157,23 @@
                             </option>
                         {% endfor %}
                     </select>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label">
+                            {% if documento.tipo == 'video' %}
+                                <i class="fas fa-film me-2"></i>Tipo de Recurso
+                            {% elif documento.tipo == 'historico' %}
+                                <i class="fas fa-university me-2"></i>Tipo de Recurso
+                            {% else %}
+                                <i class="fas fa-file-alt me-2"></i>Tipo de Recurso
+                            {% endif %}
+                        </div>
+                        <div class="info-value text-capitalize">
+                            <strong>{{ documento.get_tipo_display }}</strong>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="col-md-6">
@@ -262,7 +307,7 @@
     </div>
 </div>
 
-<!-- Modal para edición (se carga dinámicamente) -->
+
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -276,6 +321,49 @@
         </div>
     </div>
 </div>
+
+
+{% if documento.url %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h6 class="mb-0">Vista previa</h6>
+    </div>
+    <div class="card-body text-center">
+        
+        {# CASO 1: Es un VIDEO (por tipo o extensión) #}
+        {% if documento.tipo == 'video' or documento.url|lower|slice:'-4:' in '.mp4,.mov,.avi' %}
+            <div class="ratio ratio-16x9">
+                <video controls class="rounded">
+                    <source src="{{ documento.url }}" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+            <p class="text-muted small mt-2">
+                <i class="fas fa-info-circle"></i> Si el video no carga, usa el botón "Ver Documento".
+            </p>
+
+        {# CASO 2: IMAGENES #}
+        {% elif documento.url|lower|slice:'-4:' in '.jpg,.jpeg,.png,.gif' %}
+            <img src="{{ documento.url }}" alt="Vista previa" class="img-fluid rounded" style="max-height: 400px;">
+
+        {# CASO 3: PDF #}
+        {% elif documento.url|lower|slice:'-4:' == '.pdf' %}
+            <div class="alert alert-info">
+                <i class="fas fa-file-pdf fa-2x mb-3 d-block"></i>
+                <p class="mb-0">Este es un documento PDF. <br>Haz clic en <strong>Ver Documento</strong> para abrir el lector completo.</p>
+            </div>
+        
+        {# CASO 4: OTROS #}
+        {% else %}
+            <div class="py-4 text-muted">
+                <i class="{{ documento.icono_archivo }} fa-3x mb-3"></i>
+                <p>Vista previa no disponible para este tipo de archivo.</p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

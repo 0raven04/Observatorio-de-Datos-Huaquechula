@@ -640,26 +640,27 @@ def eliminar_seleccionados(request):
 # ==============================================
 # VISTAS PARA ADMINISTRADORES (Panel de control)
 # ==============================================
-
 @login_required
 def panel_documentos(request):
     User = get_user_model()
-    """
-    Vista para el panel de administración de documentos
-    (Usa la primera plantilla HTML)
-    """
+
     # Obtener parámetros de filtrado y ordenamiento
     clasificacion = request.GET.get('clasificacion', '')
+    tipo_filtro = request.GET.get('tipo', '')  # NUEVO: Capturar filtro de tipo
     sort_by = request.GET.get('sort', 'fecha_carga')
     order = request.GET.get('order', 'desc')
     search = request.GET.get('search', '')
     
-    # Base queryset - administradores ven todo
+    # Base queryset
     documentos = Documento.objects.all()
     
     # Aplicar filtro por clasificación
-    if clasificacion and clasificacion in ['publico', 'privado', 'confidencial']:
+    if clasificacion in dict(Documento.CLASIFICACION_CHOICES):
         documentos = documentos.filter(clasificacion=clasificacion)
+
+    # NUEVO: Aplicar filtro por tipo
+    if tipo_filtro in dict(Documento.TIPO_CHOICES):
+        documentos = documentos.filter(tipo=tipo_filtro)
     
     # Aplicar búsqueda
     if search:
@@ -670,18 +671,17 @@ def panel_documentos(request):
         )
     
     # Aplicar ordenamiento
-    if sort_by in ['titulo', 'fecha_carga', 'clasificacion']:
+    valid_sorts = ['titulo', 'fecha_carga', 'clasificacion', 'tipo'] # Agregamos 'tipo'
+    if sort_by in valid_sorts:
         if order == 'desc':
             sort_by = f'-{sort_by}'
         documentos = documentos.order_by(sort_by)
     
-    # Paginación (20 documentos por página)
+    # Paginación
     paginator = Paginator(documentos, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Obtener todos los administradores para el formulario
-    # Ajusta esto según tu modelo de usuarios
     admins = User.objects.filter(tipo='admin')
     
     context = {
@@ -690,25 +690,28 @@ def panel_documentos(request):
         'sort_by': sort_by.replace('-', ''),
         'order': order,
         'clasificacion_filtro': clasificacion,
+        'tipo_filtro': tipo_filtro,          
+        'tipos_choices': Documento.TIPO_CHOICES,
         'search': search,
     }
     
     return render(request, 'myapp/lista_documentos.html', context)
 
+
+
 @login_required
 def subir_documento(request):
-    # 1. Definir el modelo de usuario correcto
     User = get_user_model()
 
     if request.method == 'POST':
         try:
-            # 2. Recibir datos básicos
             titulo = request.POST.get('titulo', '').strip()
             url = request.POST.get('url', '').strip()
             descripcion = request.POST.get('descripcion', '').strip()
             clasificacion = request.POST.get('clasificacion')
+            tipo = request.POST.get('tipo', 'reporte') 
             
-            # 3. Validaciones
+            # Validaciones
             if not titulo or not url or not clasificacion:
                 messages.error(request, 'Título, URL y Clasificación son obligatorios')
                 return redirect('panel_documentos')
@@ -717,24 +720,22 @@ def subir_documento(request):
                 messages.error(request, 'La URL debe comenzar con http:// o https://')
                 return redirect('panel_documentos')
             
-            # 4. Crear instancia (pero no guardar todavía)
+            # Crear instancia
             documento = Documento(
                 titulo=titulo,
                 url=url,
                 descripcion=descripcion,
-                clasificacion=clasificacion
+                clasificacion=clasificacion,
+                tipo=tipo,  # NUEVO: Asignamos el tipo
+                clave_admin=request.user
             )
             
-            # 5. ASIGNACIÓN AUTOMÁTICA
-            documento.clave_admin = request.user
-            
-            # 6. Guardar
             documento.save()
             
             messages.success(request, f'Documento "{titulo}" creado exitosamente')
             
         except Exception as e:
-            print(f"Error detallado: {e}") # Mira esto en la consola negra si falla
+            print(f"Error detallado: {e}")
             messages.error(request, f'Error al crear documento: {str(e)}')
         
         return redirect('panel_documentos')
@@ -743,43 +744,34 @@ def subir_documento(request):
 
 @login_required
 def editar_documento(request, id):
-    # 1. Definir el modelo de usuario correcto
-    User = get_user_model()
-    
-    # 2. Buscar el documento por su ID personalizado
     documento = get_object_or_404(Documento, id_documento=id)
 
     if request.method == 'POST':
         try:
-            # 3. Obtener datos del formulario
             documento.titulo = request.POST.get('titulo', '').strip()
             documento.url = request.POST.get('url', '').strip()
             documento.descripcion = request.POST.get('descripcion', '').strip()
             documento.clasificacion = request.POST.get('clasificacion')
+            documento.tipo = request.POST.get('tipo') # NUEVO: Actualizar tipo
 
-            # 4. Validar URL
             if not documento.url.startswith(('http://', 'https://')):
-                return JsonResponse({'success': False, 'error': 'URL inválida: debe comenzar con http:// o https://'})
+                return JsonResponse({'success': False, 'error': 'URL inválida'})
 
-            # 5. ASIGNACIÓN AUTOMÁTICA (Igual que en subir_documento)
-    
             documento.clave_admin = request.user
-
-            # 6. Guardar cambios
             documento.save()
             
-            return JsonResponse({'success': True, 'message': 'Documento actualizado correctamente'})
+            return JsonResponse({'success': True, 'message': 'Actualizado correctamente'})
 
         except Exception as e:
-            print(f"Error en POST editar: {e}") # Para depuración
             return JsonResponse({'success': False, 'error': str(e)})
 
-    # --- LÓGICA GET (Cargar formulario) ---
 
     return render(request, 'myapp/editar_documento.html', {
         'documento': documento,
-  
+        'tipos_choices': Documento.TIPO_CHOICES, # NUEVO
+        'clasificacion_choices': Documento.CLASIFICACION_CHOICES
     })
+    
     
 @login_required
 def eliminar_documento(request, id):
@@ -807,45 +799,48 @@ def eliminar_documento(request, id):
 # VISTAS PARA PÚBLICO GENERAL (Repositorio público)
 # ==============================================
 def repositorio_publico(request):
-    """
-    Vista para el repositorio público de documentos
-    """
-    # Obtener parámetros
     busqueda = request.GET.get('q', '')
+    tipo_filtro = request.GET.get('tipo', '') # NUEVO
     
-    # Base queryset - SOLO documentos públicos
+   
     documentos = Documento.objects.filter(clasificacion='publico')
     
-    # Aplicar búsqueda
+
+    if tipo_filtro in dict(Documento.TIPO_CHOICES):
+        documentos = documentos.filter(tipo=tipo_filtro)
+
     if busqueda:
         documentos = documentos.filter(
             Q(titulo__icontains=busqueda) | 
             Q(descripcion__icontains=busqueda)
         )
     
-    # Ordenar por fecha de carga (más reciente primero)
     documentos = documentos.order_by('-fecha_carga')
     
-    # Paginación
     paginator = Paginator(documentos, 15)
     page_number = request.GET.get('page')
     documentos_paginados = paginator.get_page(page_number)
     
-    # Estadísticas
+
     total_publicos = Documento.objects.filter(clasificacion='publico').count()
-    total_privados = Documento.objects.filter(clasificacion='privado').count()
-    total_confidenciales = Documento.objects.filter(clasificacion='confidencial').count()
+
+    qs_publicos = Documento.objects.filter(clasificacion='publico')
+    stats_tipos = {
+        'videos': qs_publicos.filter(tipo='video').count(),
+        'reportes': qs_publicos.filter(tipo='reporte').count(),
+        'historicos': qs_publicos.filter(tipo='historico').count(),
+    }
     
     context = {
         'documentos': documentos_paginados,
         'busqueda': busqueda,
-        'documentos_publicos': total_publicos,
-        'documentos_privados': total_privados,
-        'documentos_confidenciales': total_confidenciales,
+        'tipo_filtro': tipo_filtro,           
+        'tipos_choices': Documento.TIPO_CHOICES, 
+        'total_publicos': total_publicos,
+        'stats_tipos': stats_tipos,
     }
     
     return render(request, 'myapp/repositorio.html', context)
-
 
 
 def descargar_documento(request, id):
@@ -950,10 +945,6 @@ class DocumentoListView(LoginRequiredMixin, ListView):
         context['search'] = self.request.GET.get('search', '')
         return context
 
-# ==============================================
-# FUNCIONES AUXILIARES SIMPLIFICADAS
-# ==============================================
-
 def obtener_estadisticas(request):
     """Función para obtener estadísticas de documentos"""
     estadisticas = {
@@ -974,6 +965,7 @@ def obtener_estadisticas(request):
             estadisticas['confidenciales'] = 0
     
     return estadisticas
+
 
 @login_required
 def exportar_documentos_csv(request):
@@ -1016,13 +1008,143 @@ def exportar_documentos_csv(request):
 
 
 def mapa(request):
-    """Vista del mapa principal"""
-    return render(request, 'mapa.html')
+    archivo_id = request.GET.get('archivo_id')
+    
+    
+    print("[DEBUG MAPA] Iniciando vista mapa")
+    
+    # Obtener todas las geometrías (con sus puntos de interés relacionados)
+    if archivo_id:
+        geometrias = GeometriaEspacial.objects.filter(
+            id_archivo_id=archivo_id
+        ).prefetch_related(
+            'punto_interes_set',
+            'punto_interes_set__sitio_turistico',
+            'punto_interes_set__sitio_turistico__id_categoria',
+            'punto_interes_set__servicio',
+            'punto_interes_set__ofrenda'
+        )
+    else:
+        geometrias = GeometriaEspacial.objects.all().prefetch_related(
+            'punto_interes_set',
+            'punto_interes_set__sitio_turistico',
+            'punto_interes_set__sitio_turistico__id_categoria',
+            'punto_interes_set__servicio',
+            'punto_interes_set__ofrenda'
+        )
+    
+    print(f"[DEBUG MAPA] Total geometrias: {geometrias.count()}")
 
+    features = []
 
+    for geo in geometrias:
+        # Obtener el punto de interés relacionado (si existe)
+        punto = geo.punto_interes_set.first()
+        
+        if not punto:
+            print(f"[DEBUG MAPA] Geometría {geo.id_geometria} sin punto de interés, saltando...")
+            continue
+        
+        print(f"[DEBUG MAPA] Procesando punto: {punto.nombre} (categoria={punto.categoria})")
+        
+        # --- DETERMINAR EL NOMBRE DEL FILTRO ---
+        nombre_filtro = "Otros" # Fallback
+        
+        if punto.categoria == 'sitio_turistico':
+            if hasattr(punto, 'sitio_turistico') and punto.sitio_turistico and punto.sitio_turistico.id_categoria:
+                nombre_filtro = punto.sitio_turistico.id_categoria.nombre
+            else:
+                nombre_filtro = "Sitios Turísticos"
+        
+        elif punto.categoria == 'ofrenda':
+            nombre_filtro = "Ofrendas"
+            
+        elif punto.categoria == 'servicio':
+            nombre_filtro = "Servicios"
 
+        # Preparamos las propiedades
+        propiedades = {
+            "nombre": punto.nombre,
+            "categoria_filtro": nombre_filtro,
+            "categoria_sistema": punto.categoria,
+            "categoria_sitio": (
+                punto.sitio_turistico.id_categoria.nombre
+                if punto.categoria == 'sitio_turistico' and hasattr(punto, 'sitio_turistico') and punto.sitio_turistico and getattr(punto.sitio_turistico, 'id_categoria', None)
+                else ""
+            ),
+            "descripcion": punto.descripcion or "",
+            "imagen": str(punto.imagen_portada) if punto.imagen_portada else "",
+            "horario": f"{punto.hora_apertura} - {punto.hora_cierre}" if punto.hora_apertura else "Siempre abierto",
+            "estado_actual": "Abierto",
+            "tipo_geometria": geo.tipo
+        }
 
+        # Extra para servicios
+        if punto.categoria == 'servicio' and hasattr(punto, 'servicio'):
+            propiedades['contacto'] = punto.servicio.contacto or ""
 
+        # Agregar al GeoJSON si tenemos coordenadas en la geometría
+        print(f"[DEBUG MAPA] geo.coordenadas = {geo.coordenadas}, type = {type(geo.coordenadas)}")
+        print(f"[DEBUG MAPA] geo.propiedades = {geo.propiedades}")
+        print(f"[DEBUG MAPA] geo.nombre = {geo.nombre}")
+        print(f"[DEBUG MAPA] geo.tipo = {geo.tipo}")
+        print(f"[DEBUG MAPA] geo.id_archivo = {geo.id_archivo}")
+        if geo.coordenadas:
+            features.append({
+                "type": "Feature",
+                "geometry": geo.coordenadas if isinstance(geo.coordenadas, dict) else json.loads(geo.coordenadas),
+                "properties": propiedades
+            })
+            print(f"[DEBUG MAPA] Agregado punto: {punto.nombre}")
+        else:
+            print(f"[DEBUG MAPA] Punto {punto.nombre} sin coordenadas o coordenadas vacías")
+
+    print(f"[DEBUG MAPA] Total features generados: {len(features)}")
+
+    geojson_data = {
+        "type": "FeatureCollection",
+        "features": features
+    }
+
+    # --- OBTENER CATEGORÍAS Y SITIOS DE LA BASE DE DATOS ---
+    # Obtener todas las categorías de sitios turísticos
+    categorias_sitio = Categoria_Sitio.objects.all().order_by('nombre')
+    categorias_sitio_data = [
+        {'id': cat.id_categoria, 'nombre': cat.nombre}
+        for cat in categorias_sitio
+    ]
+    
+    # Obtener todos los sitios turísticos
+    sitios_turisticos = Sitio_turistico.objects.all().select_related('id_punto', 'id_categoria')
+    sitios_data = [
+        {'id': sitio.id_sitio, 'nombre': sitio.id_punto.nombre, 'categoria_id': sitio.id_categoria.id_categoria}
+        for sitio in sitios_turisticos
+    ]
+    
+    # Obtener ofrendas
+    ofrendas = Ofrenda.objects.all().select_related('id_punto')
+    ofrendas_data = [
+        {'id': ofrenda.id_ofrenda, 'nombre': ofrenda.id_punto.nombre}
+        for ofrenda in ofrendas
+    ]
+    
+    # Obtener servicios
+    servicios = Servicio.objects.all().select_related('id_punto')
+    servicios_data = [
+        {'id': servicio.id_servicio, 'nombre': servicio.id_punto.nombre}
+        for servicio in servicios
+    ]
+
+    context = {
+        'geojson_data': json.dumps(geojson_data, default=str),
+        'archivo': None,
+        'categorias_sitio': json.dumps(categorias_sitio_data, default=str),
+        'sitios_turisticos': json.dumps(sitios_data, default=str),
+        'ofrendas': json.dumps(ofrendas_data, default=str),
+        'servicios': json.dumps(servicios_data, default=str),
+    }
+
+    return render(request, 'mapa.html', context)
 
 
 @login_required
@@ -1070,7 +1192,13 @@ def subir_desde_url(request):
                 archivo.nombre_archivo = nombre_archivo
                 archivo.archivo_path = archivo_url
                 archivo.descripcion = request.POST.get('descripcion', '')
-                archivo.tipo_archivo = request.POST.get('tipo_archivo', 'kmz')
+                extension = archivo_url.lower().strip()
+                if extension.endswith('.kml'):
+                    archivo.tipo_archivo = 'kml'
+                elif extension.endswith('.kmz'):
+                    archivo.tipo_archivo = 'kmz'
+                else:
+                    archivo.tipo_archivo = request.POST.get('tipo_archivo', 'kmz')
                 archivo.visible = request.POST.get('visible') == 'on'
                 archivo.procesado = False
                 archivo.save()
@@ -1688,121 +1816,26 @@ def crear_categoria(request):
     
     
 @login_required
+@require_POST # Decorador útil para asegurar que solo sea POST
 def procesar_archivo(request, archivo_id):
-    """Procesa un archivo KML/KMZ para extraer geometrías"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    # 1. Obtener el objeto
+    archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
     
-    try:
-        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
-        
-        # Verificar que sea un archivo geográfico
-        if archivo.tipo_archivo not in ['kml', 'kmz']:
-            return JsonResponse({
-                'success': False, 
-                'error': 'Solo se pueden procesar archivos KML/KMZ'
-            }, status=400)
-        
-        # Verificar que la URL esté disponible
-        if not archivo.url_disponible:
-            return JsonResponse({
-                'success': False, 
-                'error': 'La URL del archivo no está disponible'
-            }, status=400)
-        
-        # Aquí iría la lógica real para procesar KML/KMZ desde URL
-        # Por ahora, simulamos procesamiento
-        
-        # 1. Descargar archivo temporalmente
-        try:
-            import tempfile
-            import zipfile
-            
-            # Descargar archivo
-            response = urllib.request.urlopen(archivo.archivo_path, timeout=30)
-            content = response.read()
-            
-            # Simular extracción de geometrías
-            num_geometrias = 0
-            
-            # Para KML (simple XML)
-            if archivo.tipo_archivo == 'kml':
-                # Parsear KML básico
-                # Aquí iría el parser real de KML
-                num_geometrias = 5  # Ejemplo
-                
-                # Crear geometrías de ejemplo
-                for i in range(num_geometrias):
-                    GeometriaEspacial.objects.create(
-                        id_archivo=archivo,
-                        nombre=f"Geometría {i+1} de {archivo.nombre_archivo}",
-                        tipo='punto' if i % 2 == 0 else 'poligono',
-                        coordenadas={
-                            "type": "Point" if i % 2 == 0 else "Polygon",
-                            "coordinates": [-99.1332 + i*0.01, 19.4326 + i*0.01] if i % 2 == 0 else 
-                            [[[-99.1332, 19.4326], [-99.1232, 19.4326], 
-                              [-99.1232, 19.4226], [-99.1332, 19.4226], 
-                              [-99.1332, 19.4326]]]
-                        },
-                        propiedades={"indice": i, "archivo": archivo.nombre_archivo}
-                    )
-            
-            # Para KMZ (zip con KML dentro)
-            elif archivo.tipo_archivo == 'kmz':
-                # Descomprimir y procesar
-                # Aquí iría el parser real de KMZ
-                num_geometrias = 8  # Ejemplo
-                
-                # Crear geometrías de ejemplo
-                for i in range(num_geometrias):
-                    tipos = ['punto', 'linea', 'poligono']
-                    tipo = tipos[i % 3]
-                    
-                    GeometriaEspacial.objects.create(
-                        id_archivo=archivo,
-                        nombre=f"{tipo.capitalize()} {i+1} de {archivo.nombre_archivo}",
-                        tipo=tipo,
-                        coordenadas={
-                            "type": "Point" if tipo == 'punto' else 
-                                   "LineString" if tipo == 'linea' else 
-                                   "Polygon",
-                            "coordinates": [
-                                [-99.1332 + i*0.02, 19.4326 + i*0.02] if tipo == 'punto' else
-                                [[-99.1332, 19.4326], [-99.1232, 19.4426]] if tipo == 'linea' else
-                                [[[-99.1332, 19.4326], [-99.1232, 19.4326], 
-                                  [-99.1232, 19.4226], [-99.1332, 19.4226], 
-                                  [-99.1332, 19.4326]]]
-                            ]
-                        },
-                        propiedades={
-                            "indice": i, 
-                            "archivo": archivo.nombre_archivo,
-                            "tipo": tipo
-                        }
-                    )
-            
-            # Actualizar archivo
-            archivo.procesado = True
-            archivo.procesado_en = timezone.now()
-            archivo.num_geometrias = num_geometrias
-            archivo.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Archivo procesado exitosamente. Se extrajeron {num_geometrias} geometrías.',
-                'num_geometrias': num_geometrias
-            })
-            
-        except Exception as e:
-            archivo.error_procesamiento = str(e)
-            archivo.save()
-            return JsonResponse({
-                'success': False, 
-                'error': f'Error al procesar el archivo: {str(e)}'
-            }, status=500)
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    # 2. Verificar tipo de archivo (validación rápida antes de instanciar)
+    if archivo.tipo_archivo not in ['kml', 'kmz']:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Solo se pueden procesar archivos KML/KMZ'
+        }, status=400)
+
+    # 3. Delegar el trabajo al procesador
+    processor = KMLProcessor(archivo)
+    resultado = processor.procesar()
+
+    # 4. Devolver respuesta basada en el resultado del procesador
+    status_code = 200 if resultado['success'] else 500
+    return JsonResponse(resultado, status=status_code)
+
 
 @login_required
 def actualizar_desde_url(request, archivo_id):

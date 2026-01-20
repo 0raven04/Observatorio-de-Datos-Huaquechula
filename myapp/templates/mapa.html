@@ -1,20 +1,65 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}Mapa de Huaquechula{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'myapp/CSS/css_mapa.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="{% static 'myapp/CSS/css_mapa.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
 <header>
     <h1>Pueblo Huaquechula</h1>
-    <p class="subtitle">Municipio de Puebla, México</p>
+    {% if archivo %}
+        <p class="subtitle">Visualizando: {{ archivo.nombre_archivo }}</p>
+    {% else %}
+        <p class="subtitle">Municipio de Puebla, México</p>
+    {% endif %}
 </header>
 
 <div class="content">
     <div class="full-map">
-    <div id="map"></div>
+        <div id="map"></div>
+        
+        <!-- Filtro desplegable personalizado -->
+        <div id="custom-filter" class="leaflet-control leaflet-control-layers">
+            <div class="filter-header">
+                <h3><i class="fas fa-filter"></i> Filtros</h3>
+                <button id="toggle-filter" class="toggle-btn">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            
+            <div class="filter-content">
+                <div class="filter-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Tipo de Punto</h4>
+                    <div class="filter-checkboxes" id="tipo-filters">
+                        <!-- Se llenará con JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h4><i class="fas fa-tags"></i> Categorías</h4>
+                    <div class="filter-checkboxes" id="categoria-filters">
+                        <!-- Se llenará con JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button id="select-all" class="btn-action">
+                        <i class="fas fa-check-square"></i> Seleccionar todo
+                    </button>
+                    <button id="deselect-all" class="btn-action">
+                        <i class="fas fa-square"></i> Deseleccionar todo
+                    </button>
+                    <button id="reset-view" class="btn-action">
+                        <i class="fas fa-sync-alt"></i> Reiniciar vista
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="info-panel">
@@ -48,6 +93,256 @@
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
-<script src="{% static 'myapp/JAV/js_mapa.js' %}" defer></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+if (!window._mapaYaInicializado) {
+    window._mapaYaInicializado = true;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. CONFIGURACIÓN DEL MAPA
+        var centroHuaquechula = [18.769895, -98.544040];
+        var limitesMapa = L.latLngBounds([
+            [18.749895, -98.564040], [18.789895, -98.524040]
+        ]);
+
+        if (window._leaflet_map_instance) {
+            try { window._leaflet_map_instance.remove(); } catch (e) { }
+            window._leaflet_map_instance = null;
+        }
+
+        var mapContainer = document.getElementById('map');
+        if (mapContainer) { mapContainer.innerHTML = ''; }
+
+        var map = L.map('map', {
+            center: centroHuaquechula, zoom: 16, minZoom: 14, maxZoom: 18,
+            maxBounds: limitesMapa, maxBoundsViscosity: 1.0, zoomControl: true
+        });
+        window._leaflet_map_instance = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors', maxZoom: 19
+        }).addTo(map);
+
+        var iconoCentro = L.divIcon({
+            html: '<div style="background-color: #4A4A4A; width: 24px; height: 24px; border-radius: 50%; border: 3px solid #EDEBE3;"></div>',
+            className: '', iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -12]
+        });
+        L.marker(centroHuaquechula, { icon: iconoCentro }).addTo(map)
+            .bindPopup('<div style="text-align:center;"><strong>Pueblo Huaquechula</strong><br>Cabecera municipal</div>');
+
+        L.rectangle(limitesMapa, { color: '#e71313', weight: 2, dashArray: '5, 5', fill: false, opacity: 0.6 }).addTo(map);
+
+        // 2. DATOS
+        try {
+            var rawData = '{{ geojson_data|safe }}';
+            var categoriasSitio_BD = JSON.parse('{{ categorias_sitio|safe }}');
+            var sitiosTuristicos_BD = JSON.parse('{{ sitios_turisticos|safe }}');
+            
+            var gruposPorTipo = {
+                'sitio_turistico': L.layerGroup().addTo(map),
+                'ofrenda': L.layerGroup().addTo(map),
+                'servicio': L.layerGroup().addTo(map),
+                'general': L.layerGroup().addTo(map)
+            };
+            
+            var gruposSubCategorias = {};
+            if (categoriasSitio_BD) {
+                categoriasSitio_BD.forEach(function(cat) {
+                    gruposSubCategorias[cat.id] = L.layerGroup().addTo(map);
+                });
+            }
+
+            var todosLosPuntos = [];
+
+            function obtenerColor(cat) {
+                if (!cat) return "#3388ff";
+                cat = cat.toLowerCase();
+                if (cat.includes('ofrenda')) return "#ff7800";
+                if (cat.includes('servicio')) return "#28a745";
+                if (cat.includes('sitio')) return "#e91e63";
+                return "#6c757d";
+            }
+
+            if (rawData && rawData !== '{}' && rawData !== 'null') {
+                var geojsonData = JSON.parse(rawData);
+                if (geojsonData.features) {
+                    L.geoJSON(geojsonData, {
+                        style: function(f) {
+                            var cat = f.properties.categoria || 'general';
+                            return { color: obtenerColor(cat), weight: 4, opacity: 0.8 };
+                        },
+                        onEachFeature: function(f, layer) {
+                            var p = f.properties;
+                            
+                            var html = "<div style='text-align:center; min-width:150px;'><h4>" + (p.nombre || "Sin nombre") + "</h4>";
+                            if(p.imagen) html += "<img src='" + p.imagen + "' style='width:100%; height:100px; object-fit:cover; border-radius:4px;'>";
+                            if(p.horario) html += "<div style='font-size:12px; margin-top:5px;'>🕒 " + p.horario + "</div>";
+                            html += "</div>";
+                            layer.bindPopup(html);
+
+                            var tipo = p.categoria || 'general';
+                            if (gruposPorTipo[tipo]) gruposPorTipo[tipo].addLayer(layer);
+
+                            if (tipo === 'sitio_turistico' && p.id_categoria_bd) {
+                                if (gruposSubCategorias[p.id_categoria_bd]) gruposSubCategorias[p.id_categoria_bd].addLayer(layer);
+                            }
+                            todosLosPuntos.push(layer);
+                        },
+                        pointToLayer: function (f, latlng) {
+                            var cat = f.properties.categoria || 'general';
+                            return L.circleMarker(latlng, { radius: 8, fillColor: obtenerColor(cat), color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.9 });
+                        }
+                    });
+                }
+            }
+
+            // =========================================================
+            // 3. CONTROL DE FILTROS (CON SCROLL CORREGIDO)
+            // =========================================================
+            var ControlFiltros = L.Control.extend({
+                onAdd: function(map) {
+                    var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                    
+                    container.style.backgroundColor = 'white';
+                    container.style.width = '34px';
+                    container.style.height = '34px';
+                    container.style.overflow = 'hidden';
+                    container.style.transition = 'width 0.3s, height 0.3s';
+                    container.style.cursor = 'pointer';
+                    container.style.boxShadow = '0 1px 5px rgba(0,0,0,0.4)';
+                    
+                    // ICONO
+                    var iconDiv = L.DomUtil.create('div', 'filter-icon', container);
+                    iconDiv.innerHTML = '<i class="fas fa-filter" style="font-size:16px; line-height:34px; width:34px; text-align:center; color:#333;"></i>';
+
+                    // --- PANEL DE CONTENIDO (ESTADO EXPANDIDO) ---
+                    var panel = L.DomUtil.create('div', 'filter-panel', container);
+                    panel.style.display = 'none';
+                    panel.style.padding = '10px';
+                    panel.style.minWidth = '220px';
+                    
+                    // *** AQUÍ ESTÁ LA CORRECCIÓN DEL SCROLL ***
+                    panel.style.maxHeight = '60vh';   // Máximo 60% de la altura de pantalla
+                    panel.style.overflowY = 'auto';   // Scroll vertical
+                    panel.style.overflowX = 'hidden'; // Sin scroll horizontal
+                    // *******************************************
+
+                    var header = document.createElement('div');
+                    header.innerHTML = '<strong style="font-size:14px;">Filtrar Mapa</strong> <span style="float:right; cursor:pointer;" id="close-filter">✖</span>';
+                    header.style.marginBottom = '10px';
+                    header.style.borderBottom = '1px solid #eee';
+                    header.style.paddingBottom = '5px';
+                    panel.appendChild(header);
+
+                    // 1. FILTROS PRINCIPALES
+                    var tiposDiv = document.createElement('div');
+                    tiposDiv.innerHTML = '<div style="font-size:12px; font-weight:bold; color:#666; margin-bottom:5px;">TIPOS PRINCIPALES</div>';
+                    
+                    function crearCheckTipo(label, key, color) {
+                        var div = document.createElement('div');
+                        div.innerHTML = `<label style="cursor:pointer; display:block; margin-bottom:5px; font-size:13px;">
+                            <input type="checkbox" checked onchange="toggleLayer('${key}', this.checked)"> 
+                            <span style="color:${color};">●</span> ${label}
+                        </label>`;
+                        return div;
+                    }
+
+                    var cSitios = sitiosTuristicos_BD ? sitiosTuristicos_BD.length : 0;
+                    var cOfrendas = '{{ ofrendas|length }}'; 
+                    var cServicios = '{{ servicios|length }}';
+
+                    tiposDiv.appendChild(crearCheckTipo('Sitios Turísticos (' + cSitios + ')', 'sitio_turistico', '#e91e63'));
+                    tiposDiv.appendChild(crearCheckTipo('Ofrendas (' + cOfrendas + ')', 'ofrenda', '#ff7800'));
+                    tiposDiv.appendChild(crearCheckTipo('Servicios (' + cServicios + ')', 'servicio', '#28a745'));
+                    panel.appendChild(tiposDiv);
+
+                    // 2. SUB-CATEGORÍAS
+                    if (categoriasSitio_BD && categoriasSitio_BD.length > 0) {
+                        var subDiv = document.createElement('div');
+                        subDiv.id = 'subcategorias-panel';
+                        subDiv.style.marginTop = '15px';
+                        subDiv.style.paddingLeft = '15px';
+                        subDiv.style.borderLeft = '2px solid #eee';
+                        subDiv.innerHTML = '<div style="font-size:12px; font-weight:bold; color:#666; margin-bottom:5px;">CATEGORÍAS DE SITIO</div>';
+                        
+                        categoriasSitio_BD.forEach(function(cat) {
+                            var count = sitiosTuristicos_BD ? sitiosTuristicos_BD.filter(s => s.categoria_id === cat.id).length : 0;
+                            var div = document.createElement('div');
+                            div.innerHTML = `<label style="cursor:pointer; display:block; margin-bottom:3px; font-size:13px;">
+                                <input type="checkbox" checked onchange="toggleSubLayer(${cat.id}, this.checked)"> ${cat.nombre} <span style="color:#999; font-size:11px;">(${count})</span>
+                            </label>`;
+                            subDiv.appendChild(div);
+                        });
+                        panel.appendChild(subDiv);
+                    }
+
+                    // Eventos de apertura/cierre
+                    var expanded = false;
+                    container.onclick = function(e) {
+                        if (!expanded) {
+                            expanded = true;
+                            container.style.width = 'auto';
+                            container.style.height = 'auto'; // Deja que crezca con el max-height
+                            iconDiv.style.display = 'none';
+                            panel.style.display = 'block';
+                        }
+                    };
+
+                    header.querySelector('#close-filter').onclick = function(e) {
+                        e.stopPropagation();
+                        expanded = false;
+                        panel.style.display = 'none';
+                        iconDiv.style.display = 'block';
+                        container.style.width = '34px';
+                        container.style.height = '34px';
+                    };
+
+                    // Deshabilitar propagación de scroll al mapa (IMPORTANTE)
+                    L.DomEvent.disableClickPropagation(container);
+                    L.DomEvent.disableScrollPropagation(container);
+
+                    return container;
+                }
+            });
+
+            // Funciones globales
+            window.toggleLayer = function(key, checked) {
+                if (checked) map.addLayer(gruposPorTipo[key]);
+                else map.removeLayer(gruposPorTipo[key]);
+                
+                if (key === 'sitio_turistico') {
+                    var panelSub = document.getElementById('subcategorias-panel');
+                    if(panelSub) panelSub.style.display = checked ? 'block' : 'none';
+                }
+            };
+
+            window.toggleSubLayer = function(id, checked) {
+                if (gruposSubCategorias[id]) {
+                    if (checked) map.addLayer(gruposSubCategorias[id]);
+                    else map.removeLayer(gruposSubCategorias[id]);
+                }
+            };
+
+            map.addControl(new ControlFiltros({ position: 'topright' }));
+
+            if (todosLosPuntos.length > 0) {
+                var grupoTemp = L.featureGroup(todosLosPuntos);
+                var boundsDatos = grupoTemp.getBounds();
+                if (limitesMapa.intersects(boundsDatos)) {
+                    map.fitBounds(boundsDatos, { padding: [50, 50], maxZoom: 18 });
+                }
+            }
+
+        } catch (e) {
+            console.error("Error mapa:", e);
+        }
+    });
+}
+</script>
+
+
 {% endblock %}

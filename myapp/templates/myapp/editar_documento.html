@@ -30,15 +30,31 @@
                 </select>
             </div>
 
-            
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Tipo de Archivo <span class="text-danger">*</span></label>
+                <select class="form-select" name="tipo" required>
+                    {% if tipos_choices %}
+                        {% for valor, nombre in tipos_choices %}
+                            <option value="{{ valor }}" {% if documento.tipo == valor %}selected{% endif %}>
+                                {{ nombre }}
+                            </option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="reporte" {% if documento.tipo == 'reporte' %}selected{% endif %}>Reporte</option>
+                        <option value="video" {% if documento.tipo == 'video' %}selected{% endif %}>Video</option>
+                        <option value="historico" {% if documento.tipo == 'historico' %}selected{% endif %}>Documento Histórico</option>
+                    {% endif %}
+                </select>
+            </div>
         </div>
         <button type="submit" class="btn boton bt-body">
             <i class="fas fa-save me-2"></i>Guardar Cambios
         </button>
 
-    </div> <div class="modal-footer custom-modal-footer">
+    </div> 
+    
+    <div class="modal-footer custom-modal-footer">
         <button type="button" class="btn btn-warning me-2" data-bs-dismiss="modal">Cancelar</button>
-
     </div>
 
 </form>

@@ -9,20 +9,35 @@
 
 {% block content %}
     <main class="container mt-3">
-        <!-- Sección de botones superiores -->
         <div class="row">
-            <div class="col-md-12 d-flex justify-content-between mb-3">
-                <!-- Filtro a la izquierda -->
-                <div class="col-md-3">
-                    <select class="form-select" id="filtroClasificacion" onchange="filtrarDocumentos()">
-                        <option value="">Todas las clasificaciones</option>
-                        <option value="publico" {% if clasificacion_filtro == 'publico' %}selected{% endif %}>Público</option>
-                        <option value="privado" {% if clasificacion_filtro == 'privado' %}selected{% endif %}>Privado</option>
-                        <option value="confidencial" {% if clasificacion_filtro == 'confidencial' %}selected{% endif %}>Confidencial</option>
-                    </select>
+            <div class="col-md-12 d-flex justify-content-between mb-3 align-items-center">
+                
+                <div class="d-flex gap-2 col-md-6">
+                    <div class="flex-grow-1">
+                        <select class="form-select" id="filtroClasificacion" onchange="filtrarDocumentos()">
+                            <option value="">Todas las clasificaciones</option>
+                            <option value="publico" {% if clasificacion_filtro == 'publico' %}selected{% endif %}>Público</option>
+                            <option value="privado" {% if clasificacion_filtro == 'privado' %}selected{% endif %}>Privado</option>
+                            <option value="confidencial" {% if clasificacion_filtro == 'confidencial' %}selected{% endif %}>Confidencial</option>
+                        </select>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <select class="form-select" id="filtroTipo" onchange="filtrarDocumentos()">
+                            <option value="">Todos los tipos</option>
+                            {% if tipos_choices %}
+                                {% for codigo, nombre in tipos_choices %}
+                                    <option value="{{ codigo }}" {% if tipo_filtro == codigo %}selected{% endif %}>{{ nombre }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="reporte" {% if tipo_filtro == 'reporte' %}selected{% endif %}>Reporte</option>
+                                <option value="video" {% if tipo_filtro == 'video' %}selected{% endif %}>Video</option>
+                                <option value="historico" {% if tipo_filtro == 'historico' %}selected{% endif %}>Documento Histórico</option>
+                            {% endif %}
+                        </select>
+                    </div>
                 </div>
                 
-                <!-- Botón a la derecha -->
                 <div class="col-md-3 text-end">
                     <button type="button" class="btn boton bt-body" data-bs-toggle="modal"
                         data-bs-target="#uploadModal">
@@ -53,14 +68,15 @@
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">
-                                    <a href="?sort=titulo&order={% if sort_by == 'titulo' and order == 'asc' %}desc{% else %}asc{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}" 
+                                    <a href="?sort=titulo&order={% if sort_by == 'titulo' and order == 'asc' %}desc{% else %}asc{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" 
                                     class="text-white text-decoration-none">
                                         Título {% if sort_by == 'titulo' %}<i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>{% endif %}
                                     </a>
                                 </th>
+                                <th scope="col">Tipo</th>
                                 <th scope="col">Clasificación</th>
                                 <th scope="col">
-                                    <a href="?sort=fecha_carga&order={% if sort_by == 'fecha_carga' and order == 'asc' %}desc{% else %}asc{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}" 
+                                    <a href="?sort=fecha_carga&order={% if sort_by == 'fecha_carga' and order == 'asc' %}desc{% else %}asc{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" 
                                     class="text-white text-decoration-none">
                                         Fecha {% if sort_by == 'fecha_carga' %}<i class="fas fa-sort-{% if order == 'asc' %}up{% else %}down{% endif %}"></i>{% endif %}
                                     </a>
@@ -77,6 +93,17 @@
                                     <span class="badge rounded-pill">{{ doc.id_documento }}</span>
                                 </td>
                                 <td>{{ doc.titulo }}</td>
+                                
+                                <td>
+                                    {% if doc.tipo == 'video' %}
+                                        <span class="badge rounded-pill" style="background-color: #17a2b8;">Video</span>
+                                    {% elif doc.tipo == 'historico' %}
+                                        <span class="badge rounded-pill" style="background-color: #fd7e14;">Histórico</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill" style="background-color: #6610f2;">Reporte</span>
+                                    {% endif %}
+                                </td>
+
                                 <td>
                                     {% if doc.clasificacion == 'publico' %}
                                     <span class="badge rounded-pill" style="background-color: #28a745; color: white;">Público</span>
@@ -105,7 +132,6 @@
                                 </td>
                                 <td class="align-middle" style="height: 80px;">
                                     <div class="d-flex gap-2 justify-content-center">
-                                        <!-- Botón Editar -->
                                         <button class="btn p-0 d-flex flex-column align-items-center justify-content-center"
                                                 onclick="editarDocumento('{{ doc.id_documento }}')"
                                                 style="width: 60px; height: 55px; background-color: #D6CEAA; border: none; color: #4A4A4A;"
@@ -114,7 +140,6 @@
                                             <small class="fs-xxs">Editar</small>
                                         </button>
 
-                                        <!-- Botón Ver -->
                                         <a href="{{ doc.url }}" target="_blank" 
                                         class="btn p-0 d-flex flex-column align-items-center justify-content-center"
                                         style="width: 60px; height: 55px; background-color: #4A4A4A; color: white; border: none;" 
@@ -123,7 +148,6 @@
                                             <small class="fs-xxs">Ver</small>
                                         </a>
 
-                                        <!-- Botón Eliminar -->
                                         <button class="btn p-0 d-flex flex-column align-items-center justify-content-center"
                                                 onclick="eliminarDocumento('{{ doc.id_documento }}', '{{ doc.titulo }}')"
                                                 style="width: 60px; height: 55px; background-color: #e74c3c; border: none; color: white;"
@@ -136,8 +160,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center py-4">
-                                    <i class="fas fa-folder-open fa-2x text-muted mb-3"></i>
+                                <td colspan="8" class="text-center py-4"> <i class="fas fa-folder-open fa-2x text-muted mb-3"></i>
                                     <p class="text-muted">No hay documentos registrados</p>
                                 </td>
                             </tr>
@@ -151,19 +174,19 @@
                             <ul class="pagination justify-content-center mb-0">
                                 {% if documentos.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ documentos.previous_page_number }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}">Anterior</a>
+                                    <a class="page-link" href="?page={{ documentos.previous_page_number }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">Anterior</a>
                                 </li>
                                 {% endif %}
                                 
                                 {% for i in documentos.paginator.page_range|slice:":5" %}
                                 <li class="page-item {% if documentos.number == i %}active{% endif %}">
-                                    <a class="page-link" href="?page={{ i }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}">{{ i }}</a>
+                                    <a class="page-link" href="?page={{ i }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">{{ i }}</a>
                                 </li>
                                 {% endfor %}
                                 
                                 {% if documentos.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ documentos.next_page_number }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}">Siguiente</a>
+                                    <a class="page-link" href="?page={{ documentos.next_page_number }}{% if sort_by %}&sort={{ sort_by }}&order={{ order }}{% endif %}{% if clasificacion_filtro %}&clasificacion={{ clasificacion_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">Siguiente</a>
                                 </li>
                                 {% endif %}
                             </ul>
@@ -185,7 +208,8 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <div class="modal-body p-4"> <form id="uploadForm" enctype="multipart/form-data" method="POST" action="{% url 'subir_documento' %}">
+                    <div class="modal-body p-4"> 
+                        <form id="uploadForm" enctype="multipart/form-data" method="POST" action="{% url 'subir_documento' %}">
                             {% csrf_token %}
 
                             <div class="mb-3">
@@ -205,7 +229,7 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-5 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">Clasificación <span class="text-danger">*</span></label>
                                     <select class="form-select" name="clasificacion" required>
                                         <option value="">Seleccione...</option>
@@ -214,7 +238,21 @@
                                         <option value="confidencial">Confidencial</option>
                                     </select>
                                 </div>
-
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Tipo de Recurso <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="tipo" required>
+                                        {% if tipos_choices %}
+                                            {% for codigo, nombre in tipos_choices %}
+                                                <option value="{{ codigo }}">{{ nombre }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="reporte">Reporte</option>
+                                            <option value="video">Video</option>
+                                            <option value="historico">Documento Histórico</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
                             </div>
                         </form>
                         <button type="submit" form="uploadForm" class="btn boton bt-body">Guardar Documento</button>
@@ -222,7 +260,6 @@
 
                     <div class="modal-footer custom-modal-footer">
                         <button type="button" class="btn btn-warning me-2" data-bs-dismiss="modal">Cancelar</button>
-                        
                     </div>
 
                 </div>
@@ -239,14 +276,13 @@
                     </div>
 
                     <div id="editModalBody">
-                    </div>
+                        </div>
 
                 </div>
             </div>
         </div>
 
     </main>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -267,13 +303,15 @@
 
     function eliminarDocumento(id, titulo) {
         if (confirm(`¿Está seguro de eliminar "${titulo}"? Esta acción no se puede deshacer.`)) {
-            const btn = event.target;
+            const btn = event.target.closest('button'); // Asegura capturar el botón si se clickea el ícono
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.disabled = true;
             
-            // CORRECCIÓN: Eliminar 'documentos:' del namespace
-            fetch(`{% url 'eliminar_documento' 0 %}`.slice(0, -2) + id + '/', {
+            // Construcción correcta de la URL para eliminar
+            let url = "{% url 'eliminar_documento' 999999 %}".replace('999999', id);
+            
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
@@ -286,7 +324,6 @@
             })
             .then(data => {
                 if (data.success) {
-                    // Feedback visual antes de recargar
                     showToast('Documento eliminado correctamente', 'success');
                     setTimeout(() => location.reload(), 1000);
                 } else {
@@ -322,7 +359,7 @@
             toastContainer = document.createElement('div');
             toastContainer.id = 'toastContainer';
             toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-            toastContainer.style.zIndex = "2000"; // Asegura que se vea encima del modal
+            toastContainer.style.zIndex = "2000"; 
             document.body.appendChild(toastContainer);
         }
 
@@ -352,52 +389,41 @@
         });
     }
 
-    // --- 2. LÓGICA DE EDICIÓN (AJAX ROBUSTO) ---
-    
-    // Función para abrir el modal y cargar el formulario
-function abrirModalEdicion(id) {
-    fetch(`/panel/editar/${id}/`, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error("Servidor respondió con " + response.status);
-        }
-        return response.text();   // 👈 porque regresa HTML, no JSON
-    })
-    .then(html => {
-        document.getElementById("modalBodyEdicion").innerHTML = html;
-        new bootstrap.Modal(document.getElementById("modalEditar")).show();
-    })
-    .catch(error => {
-        console.error(error);
-        alert("Error al obtener datos del servidor");
-    });
-}
+    // --- FUNCION DE FILTRADO ACTUALIZADA ---
+    function filtrarDocumentos() {
+        // Obtenemos valores de AMBOS filtros
+        const filtroClas = document.getElementById('filtroClasificacion').value;
+        const filtroTipo = document.getElementById('filtroTipo') ? document.getElementById('filtroTipo').value : '';
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Mantener otros parámetros
+        const page = urlParams.get('page');
+        const sort = urlParams.get('sort');
+        const order = urlParams.get('order');
+        
+        // Construir nueva URL
+        let newUrl = '?';
+        if (filtroClas) newUrl += `clasificacion=${filtroClas}&`;
+        if (filtroTipo) newUrl += `tipo=${filtroTipo}&`; // Agregado tipo
+        if (page) newUrl += `page=${page}&`;
+        if (sort) newUrl += `sort=${sort}&`;
+        if (order) newUrl += `order=${order}&`;
+        
+        // Remover el último &
+        if (newUrl.endsWith('&')) newUrl = newUrl.slice(0, -1);
+        if (newUrl === '?') newUrl = '';
+        
+        window.location.href = window.location.pathname + newUrl;
+    }
 
-    // Listener GLOBAL para capturar el envío del formulario de edición
-    // Usamos delegación de eventos porque el formulario no existe al cargar la página
-
-    // --- 3. INICIALIZACIÓN DE TOOLTIPS (Opcional) ---
-    document.addEventListener('DOMContentLoaded', function() {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    });
-
+    // --- LÓGICA DE EDICIÓN ---
     function editarDocumento(id) {
-        // Generación robusta de URL: Usamos un ID falso (999999) y lo reemplazamos
         let url = "{% url 'editar_documento' 999999 %}".replace('999999', id);
         
         const modalBody = document.getElementById('editModalBody');
-        
-        // Loader visual
         modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>';
         
-        // Abrir modal (Bootstrap 5)
         const editModal = new bootstrap.Modal(document.getElementById('editModal'));
         editModal.show();
 
@@ -414,17 +440,15 @@ function abrirModalEdicion(id) {
             });
     }
 
-    // 2. Listener GLOBAL para GUARDAR cambios (Intercep el submit)
+    // Listener GLOBAL para GUARDAR cambios
     document.addEventListener('submit', function(e) {
-        // Verificamos si el evento viene de nuestro formulario de edición
         if (e.target && e.target.id === 'editDocumentForm') {
-            e.preventDefault(); // Detener recarga
+            e.preventDefault(); 
             
             const form = e.target;
             const formData = new FormData(form);
             const submitBtn = form.querySelector('button[type="submit"]');
             
-            // Feedback visual en el botón
             const originalText = submitBtn.innerHTML;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
@@ -439,12 +463,10 @@ function abrirModalEdicion(id) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cerrar modal
                     const modalEl = document.getElementById('editModal');
                     const modalInstance = bootstrap.Modal.getInstance(modalEl);
                     if (modalInstance) modalInstance.hide();
 
-                    // Mostrar éxito y recargar
                     showToast(data.message || 'Guardado correctamente', 'success');
                     setTimeout(() => location.reload(), 1000);
                 } else {
@@ -461,31 +483,6 @@ function abrirModalEdicion(id) {
             });
         }
     });
-
-    function filtrarDocumentos() {
-        const filtro = document.getElementById('filtroClasificacion').value;
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Mantener otros parámetros
-        const page = urlParams.get('page');
-        const sort = urlParams.get('sort');
-        const order = urlParams.get('order');
-        
-        // Construir nueva URL
-        let newUrl = '?';
-        if (filtro) newUrl += `clasificacion=${filtro}&`;
-        if (page) newUrl += `page=${page}&`;
-        if (sort) newUrl += `sort=${sort}&`;
-        if (order) newUrl += `order=${order}&`;
-        
-        // Remover el último & si existe
-        if (newUrl.endsWith('&')) newUrl = newUrl.slice(0, -1);
-        if (newUrl === '?') newUrl = '';
-        
-        window.location.href = window.location.pathname + newUrl;
-    }
-
-
 
     // Inicializar tooltips
     document.addEventListener('DOMContentLoaded', function() {
