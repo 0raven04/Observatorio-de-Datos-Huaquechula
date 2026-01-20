@@ -228,3 +228,37 @@ class Documento(models.Model):
             return 'fas fa-file-powerpoint'
         else:
             return 'fas fa-file'
+
+# Modelos del Observatorio Territorial
+
+class Eje(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nombre
+
+class CategoriaIndicador(models.Model):
+    eje = models.ForeignKey(Eje, on_delete=models.CASCADE, related_name='categorias')
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.eje.nombre} - {self.nombre}"
+
+class Indicador(models.Model):
+    categoria = models.ForeignKey(CategoriaIndicador, on_delete=models.CASCADE, related_name='indicadores')
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True)
+    unidad_medida = models.CharField(max_length=50, blank=True) # e.g., "Porcentaje", "Años", "Cantidad"
+
+    def __str__(self):
+        return self.nombre
+
+class Medicion(models.Model):
+    indicador = models.ForeignKey(Indicador, on_delete=models.CASCADE, related_name='mediciones')
+    periodo = models.CharField(max_length=50) # e.g., "2024", "2024-Q1"
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_registro = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.indicador.nombre} ({self.periodo}): {self.valor}"

@@ -1,14 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
-from .models import RegistroVisita, PersonaVisita, Encuestador, Usuario
-from django.contrib.auth.hashers import make_password
-from django.db import transaction
-from django.contrib.auth import logout
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 from django.contrib import messages
+from .models import Usuario, RegistroVisita, PersonaVisita, Encuestador, Documento
+from .models import Eje, CategoriaIndicador, Indicador, Medicion
+from django.db.models import Sum
 import subprocess
-from django.conf import settings
-from datetime import datetime
 import os
 from .models import Lugar
 
@@ -678,5 +677,42 @@ def obtener_documentos_categoria(request, categoria_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
     
-def repositorio(request):
     return render(request, 'myapp/repositorio.html')
+
+from .models import Eje, Medicion
+
+@login_required
+def dashboard_view(request):
+    """
+    Vista principal del Dashboard del Observatorio.
+    Muestra los indicadores agrupados por Eje y Categoría.
+    """
+    ejes = Eje.objects.prefetch_related('categorias__indicadores__mediciones').all()
+    
+    return render(request, 'myapp/dashboard.html', {
+        'ejes': ejes
+    })
+
+@login_required
+def indicator_chart_data(request, indicator_id):
+    """
+    API endpoint para obtener datos históricos de un indicador.
+    Formato optimizado para Chart.js.
+    """
+    try:
+        indicador = Indicador.objects.get(id=indicator_id)
+        mediciones = indicador.mediciones.all().order_by('periodo')
+        
+        data = {
+            'labels': [m.periodo for m in mediciones],
+            'values': [float(m.valor) for m in mediciones],
+            'indicator_name': indicador.nombre,
+            'unit': indicador.unidad_medida,
+            'category': indicador.categoria.nombre,
+            'axis': indicador.categoria.eje.nombre
+        }
+        
+        return JsonResponse(data)
+        
+    except Indicador.DoesNotExist:
+        return JsonResponse({'error': 'Indicador no encontrado'}, status=404)

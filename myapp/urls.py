@@ -34,4 +34,6 @@ urlpatterns = [
     path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),
     path('repositorio/', views.repositorio, name='repositorio'),
     path('estadistica/', views.graficos_indicadores, name='estadistica'),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('api/indicator/<int:indicator_id>/chart-data/', views.indicator_chart_data, name='indicator_chart_data'),
 ]
