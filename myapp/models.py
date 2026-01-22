@@ -117,7 +117,7 @@ class PersonaVisita(models.Model):
     sexo = models.CharField(max_length=10, choices=sexo_choices)
 
     def __str__(self):
-        return f'Persona {self.id_persona} - Registro {self.id_registro.id_registro}'
+        return f"Persona en Visita {self.id_registro.id_registro} - Edad: {self.edad}, Sexo: {self.sexo}"
 
     class Meta:
         db_table = 'Persona_visita'
@@ -137,4 +137,45 @@ class UsuarioBackend(BaseBackend):
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return None
+            return None# Modelos del Observatorio Territorial
+
+class Eje(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nombre
+
+class CategoriaIndicador(models.Model):
+    eje = models.ForeignKey(Eje, on_delete=models.CASCADE, related_name='categorias')
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.eje.nombre} - {self.nombre}"
+
+class Indicador(models.Model):
+    categoria = models.ForeignKey(CategoriaIndicador, on_delete=models.CASCADE, related_name='indicadores')
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True)
+    unidad_medida = models.CharField(max_length=50, blank=True)
+    
+    # Campos para integración con INEGI
+    inegi_indicator_id = models.CharField(max_length=50, blank=True, null=True, help_text="ID del indicador en la API del INEGI")
+    data_source = models.CharField(max_length=20, default='manual', choices=[
+        ('manual', 'Manual'),
+        ('inegi', 'INEGI'),
+        ('other', 'Otra fuente')
+    ])
+    last_sync = models.DateTimeField(null=True, blank=True, help_text="Última sincronización con fuente externa")
+
+    def __str__(self):
+        return self.nombre
+
+class Medicion(models.Model):
+    indicador = models.ForeignKey(Indicador, on_delete=models.CASCADE, related_name='mediciones')
+    periodo = models.CharField(max_length=50)
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_registro = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.indicador.nombre} ({self.periodo}): {self.valor}"

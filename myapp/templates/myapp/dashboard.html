@@ -1,0 +1,549 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Observatorio Territorial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS del proyecto -->
+    <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style1.css' %}">
+    
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        /* Estilos específicos para el dashboard que respetan los tokens base */
+        .dashboard-header {
+            background-color: var(--color-arena-claro);
+            padding: 2rem 0;
+            border-bottom: 3px solid var(--color-arena-oscuro);
+            margin-bottom: 2rem;
+            margin-top: 80px;
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            top: 140px;
+            left: 0;
+            width: 280px;
+            height: calc(100vh - 140px);
+            background: white;
+            border-right: 2px solid var(--color-arena-oscuro);
+            padding: 2rem 1rem;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .sidebar h5 {
+            color: var(--color-gris-oscuro);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-section {
+            display: block;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-gris-oscuro);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .nav-section:hover {
+            background-color: var(--color-arena-claro);
+            border-left-color: var(--color-naranja);
+        }
+        
+        .nav-section.active {
+            background-color: var(--color-arena-oscuro);
+            border-left-color: var(--color-naranja);
+            font-weight: bold;
+        }
+        
+        /* Main content with sidebar offset */
+        .main-content {
+            margin-left: 300px;
+            padding: 0 2rem;
+        }
+        
+        .axis-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            border: 1px solid var(--color-beige);
+            overflow: hidden;
+        }
+        
+        .axis-header {
+            background-color: var(--color-gris-oscuro);
+            color: white;
+            padding: 1rem;
+        }
+        
+        .category-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-arena-oscuro);
+        }
+        
+        .category-section:last-child {
+            border-bottom: none;
+        }
+        
+        .indicator-value {
+            font-weight: bold;
+            color: var(--color-naranja);
+            font-size: 1.1rem;
+        }
+        
+        .indicator-unit {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        body {
+            padding-top: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                top: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        
+        /* Custom navbar styling */
+        .custom-navbar {
+            background-color: #B8AF85 !important; /* Arena oscuro más oscuro y opaco */
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar (Copiada de index.html para consistencia) -->
+    <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <!-- Logo -->
+            <a class="navbar-brand" href="{% url 'vista_inicio' %}">
+                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo" style="height: 110px; width: auto;">
+            </a>
+
+            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menú horizontal -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+                <ul class="navbar-nav d-flex justify-content-around w-75 desktop-nav">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
+                    {% if user.is_authenticated %}
+                         <li class="nav-item"><a class="nav-link" href="{% url 'eliminar_seleccionados' %}?next=dashboard">Cerrar Sesión</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <h5><i class="fas fa-compass me-2"></i>Dimensiones</h5>
+        <nav>
+            <a href="#" class="nav-section active" data-section="all">
+                <i class="fas fa-th-large me-2"></i>Todas las dimensiones
+            </a>
+            <a href="#" class="nav-section" data-section="bienestar">
+                <i class="fas fa-heart me-2"></i>Índices de Bienestar – INEGI
+            </a>
+            <a href="#" class="nav-section" data-section="tradicion">
+                <i class="fas fa-landmark me-2"></i>Tradición – Patrimonio
+            </a>
+            <a href="#" class="nav-section" data-section="tbc">
+                <i class="fas fa-users me-2"></i>Turismo de Base Comunitaria
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Header del Dashboard -->
+    <header class="dashboard-header text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold" style="color: var(--color-gris-oscuro);">Observatorio Territorial</h1>
+            <p class="lead text-muted">Indicadores estratégicos de Huaquechula</p>
+        </div>
+    </header>
+
+    <main class="main-content mb-5">
+        {% if ejes %}
+            <div class="row">
+                {% for eje in ejes %}
+                <div class="col-md-12 axis-card-wrapper" data-dimension="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre or 'TBC' in eje.nombre %}tbc{% else %}other{% endif %}">
+                    <div class="axis-card">
+                        <div class="axis-header d-flex justify-content-between align-items-center">
+                            <h3 class="h4 mb-0"><i class="fas fa-chart-pie me-2"></i>{{ eje.nombre }}</h3>
+                            <span class="badge bg-light text-dark">{{ eje.categorias.count }} Categorías</span>
+                        </div>
+                        
+                        {% for categoria in eje.categorias.all %}
+                        <div class="category-section">
+                            <h4 class="h5 mb-3" style="color: var(--color-gris-oscuro); border-left: 4px solid var(--color-naranja); padding-left: 10px;">
+                                {{ categoria.nombre }}
+                            </h4>
+                            
+                            <div class="row">
+                                {% for indicador in categoria.indicadores.all %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-3 bg-light rounded border">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <strong>{{ indicador.nombre }}</strong>
+                                                <p class="small text-muted mb-0">{{ indicador.descripcion|truncatechars:100 }}</p>
+                                            </div>
+                                            <div class="text-end ms-2">
+                                                {% with medicion=indicador.mediciones.last %}
+                                                    {% if medicion %}
+                                                        <div class="indicator-value">{{ medicion.valor }}</div>
+                                                        <div class="indicator-unit">{{ indicador.unidad_medida }}</div>
+                                                        <small class="text-muted" style="font-size: 0.7rem;">{{ medicion.periodo }}</small>
+                                                    {% else %}
+                                                        <span class="text-muted small">Sin datos</span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <!-- Botón para ver gráfica -->
+                                        {% if indicador.mediciones.count > 0 %}
+                                        <button class="btn btn-sm btn-outline-primary mt-2 w-100" 
+                                                onclick="showChart({{ indicador.id }}, '{{ indicador.nombre|escapejs }}')">
+                                            <i class="fas fa-chart-line me-1"></i> Ver Tendencia
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% empty %}
+                                    <p class="text-muted">No hay indicadores en esta categoría.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="p-4 text-center text-muted">
+                            No hay categorías registradas en este eje.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning text-center">
+                <h4 class="alert-heading">No hay datos configurados</h4>
+                <p>Aún no se han configurado los Ejes e Indicadores en el sistema.</p>
+                <hr>
+                <p class="mb-0">Por favor, contacte al administrador para cargar los datos iniciales.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Modal para Gráficas -->
+    <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: var(--color-gris-oscuro); color: white;">
+                    <h5 class="modal-title" id="chartModalLabel">
+                        <i class="fas fa-chart-line me-2"></i>Tendencia del Indicador
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <canvas id="indicatorChart" style="max-height: 400px;"></canvas>
+                        </div>
+                    </div>
+                    <div id="chartMetadata" class="mt-3 p-3 bg-light rounded"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center p-4 text-white" style="background-color: var(--color-gris-oscuro);">
+        <div class="container">
+            <p class="mb-2">&copy; 2025 Observatorio Turístico de Huaquechula</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar navigation filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const navSections = document.querySelectorAll('.nav-section');
+            const axisCards = document.querySelectorAll('.axis-card-wrapper');
+            
+            navSections.forEach(section => {
+                section.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active state
+                    navSections.forEach(s => s.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const selectedSection = this.getAttribute('data-section');
+                    
+                    // Filter cards
+                    axisCards.forEach(card => {
+                        if (selectedSection === 'all') {
+                            card.style.display = 'block';
+                        } else {
+                            const cardDimension = card.getAttribute('data-dimension');
+                            card.style.display = cardDimension === selectedSection ? 'block' : 'none';
+                        }
+                    });
+                });
+            });
+        });
+
+        // Chart visualization
+        let currentChart = null;
+
+        function showChart(indicatorId, indicatorName) {
+            // Mostrar loading
+            const modalElement = document.getElementById('chartModal');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            
+            document.getElementById('chartMetadata').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>';
+            
+            // Obtener datos del indicador
+            fetch(`/api/indicator/${indicatorId}/chart-data/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al obtener datos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Destruir gráfica anterior si existe
+                    if (currentChart) {
+                        currentChart.destroy();
+                    }
+                    
+                    // Actualizar título del modal
+                    document.getElementById('chartModalLabel').innerHTML = 
+                        `<i class="fas fa-chart-line me-2"></i>${data.indicator_name}`;
+                    
+                    // Crear nueva gráfica
+                    const ctx = document.getElementById('indicatorChart').getContext('2d');
+                    currentChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: data.indicator_name,
+                                data: data.values,
+                                borderColor: '#D35400',
+                                backgroundColor: 'rgba(211, 84, 0, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointHoverRadius: 7,
+                                pointBackgroundColor: '#D35400',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                title: {
+                                    display: false
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(74, 74, 74, 0.9)',
+                                    titleColor: '#fff',
+                                    bodyColor: '#fff',
+                                    borderColor: '#D35400',
+                                    borderWidth: 1,
+                                    padding: 12,
+                                    displayColors: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.parsed.y} ${data.unit}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    title: {
+                                        display: true,
+                                        text: data.unit,
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Período',
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Mostrar metadatos
+                    const metadata = `
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong><i class="fas fa-layer-group me-2"></i>Eje:</strong> ${data.axis}
+                            </div>
+                            <div class="col-md-4">
+                                <strong><i class="fas fa-folder me-2"></i>Categoría:</strong> ${data.category}
+                            </div>
+                            <div class="col-md-4">
+                                <strong><i class="fas fa-ruler me-2"></i>Unidad:</strong> ${data.unit}
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    Mostrando ${data.labels.length} período(s) de datos
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('chartMetadata').innerHTML = metadata;
+                })
+                .catch(error => {
+                    console.error('Error loading chart data:', error);
+                    document.getElementById('chartMetadata').innerHTML = 
+                        '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error al cargar los datos de la gráfica</div>';
+                });
+        }
+    </script>
+
+    <!-- ============================================================================ -->
+    <!-- 📊 A PARTIR DE AQUÍ INSERTA TUS GRÁFICAS PERSONALIZADAS                     -->
+    <!-- ============================================================================ -->
+    <!-- 
+        Ejemplo de uso:
+        
+        <div class="container my-5">
+            <h2>Mi Gráfica Personalizada</h2>
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="miGrafica"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        fetch('/api/indicator/1/jsonstat/')
+            .then(r => r.json())
+            .then(data => {
+                const ctx = document.getElementById('miGrafica').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.dimension.time.category.index,
+                        datasets: [{
+                            label: data.label,
+                            data: data.value,
+                            borderColor: '#8B4513',
+                            backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: data.label
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    -->
+    <!-- ============================================================================ -->
+
+<div style="width: 80%; margin: 20px auto;">
+    <canvas id="miGrafica1"></canvas>
+</div>
+<script>
+// Obtener datos del indicador 1
+fetch('/api/indicator/1/jsonstat/')
+    .then(response => response.json())
+    .then(data => {
+        // Extraer datos
+        const labels = data.dimension.time.category.index;
+        const values = data.value;
+        
+        // Crear gráfica
+        const ctx = document.getElementById('miGrafica1').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',  // Tipo de gráfica
+            data: {
+                labels: labels,  // Años en el eje X
+                datasets: [{
+                    label: data.label,  // Nombre del indicador
+                    data: values,  // Valores en el eje Y
+                    borderColor: '#8B4513',  // Color café
+                    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4  // Curvatura de la línea
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: data.label
+                    }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>
+

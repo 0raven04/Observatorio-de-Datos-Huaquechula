@@ -150,3 +150,11 @@ AUTHENTICATION_BACKENDS = [
     'myapp.authentication_backend.UsuarioBackend',  # ruta a tu backend corregido
     'django.contrib.auth.backends.ModelBackend',    # para mantener el backend default (opcional)
 ]
+
+# INEGI API Configuration
+# Obtén tu token registrándote en: https://www.inegi.org.mx/app/api/indicadores/
+INEGI_API_TOKEN = '142a3684-a55f-b0d4-b991-26843e97642d'
+INEGI_API_BASE_URL = 'https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/INDICATOR'
+INEGI_API_VERSION = '2.0'
+HUAQUECHULA_GEO_CODE = '21071'  # Puebla (21) + Huaquechula (071)
+
