@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, FileResponse
 from pytz import timezone
 from myapp.models import (
-    ArchivoKMZ, GeometriaEspacial, Punto_Interes, Categoria_Sitio, Galeria_Multimedia, Servicio, Ofrenda, Documento, Administrador, Sitio_turistico, Usuario, Encuestador, RegistroVisita
+    ArchivoKMZ, GeometriaEspacial, Punto_Interes, Categoria_Sitio, Galeria_Multimedia,
+    Servicio, Ofrenda, Documento, Administrador, Sitio_turistico, Usuario, Encuestador,
+    RegistroVisita, ResenaGlobal
 )
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
@@ -15,6 +17,7 @@ from django.conf import settings
 from datetime import datetime
 import os
 import sys
+from django.shortcuts import render
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -38,9 +41,8 @@ import urllib.request
 import hashlib
 from urllib.parse import urlparse
 import mimetypes
-
-
 from myapp.models import Categoria_Sitio
+
 def registrar_usuario(request):
     """
     Vista para registrar nuevos usuarios:
@@ -752,7 +754,7 @@ def editar_documento(request, id):
             documento.url = request.POST.get('url', '').strip()
             documento.descripcion = request.POST.get('descripcion', '').strip()
             documento.clasificacion = request.POST.get('clasificacion')
-            documento.tipo = request.POST.get('tipo') # NUEVO: Actualizar tipo
+            documento.tipo = request.POST.get('tipo')
 
             if not documento.url.startswith(('http://', 'https://')):
                 return JsonResponse({'success': False, 'error': 'URL inválida'})
@@ -1006,145 +1008,189 @@ def exportar_documentos_csv(request):
 
 
 
-
 def mapa(request):
     archivo_id = request.GET.get('archivo_id')
     
-    
-    print("[DEBUG MAPA] Iniciando vista mapa")
-    
-    # Obtener todas las geometrías (con sus puntos de interés relacionados)
+    # NUEVA LÓGICA DE FILTRADO CORREGIDA
     if archivo_id:
-        geometrias = GeometriaEspacial.objects.filter(
-            id_archivo_id=archivo_id
-        ).prefetch_related(
-            'punto_interes_set',
-            'punto_interes_set__sitio_turistico',
-            'punto_interes_set__sitio_turistico__id_categoria',
-            'punto_interes_set__servicio',
-            'punto_interes_set__ofrenda'
-        )
-    else:
-        geometrias = GeometriaEspacial.objects.all().prefetch_related(
-            'punto_interes_set',
-            'punto_interes_set__sitio_turistico',
-            'punto_interes_set__sitio_turistico__id_categoria',
-            'punto_interes_set__servicio',
-            'punto_interes_set__ofrenda'
-        )
-    
-    print(f"[DEBUG MAPA] Total geometrias: {geometrias.count()}")
+        # CORRECCIÓN: Usamos 'punto_interes' sin el '_set' dentro del Q()
+        query = Q(id_archivo_id=archivo_id) | Q(punto_interes__isnull=False)
+        geometrias = GeometriaEspacial.objects.filter(query).distinct()
 
+    else:
+        geometrias = GeometriaEspacial.objects.all()
+
+    # Optimizamos consultas
+    geometrias = geometrias.prefetch_related(
+        'punto_interes_set',
+        'punto_interes_set__sitio_turistico',
+        'punto_interes_set__sitio_turistico__id_categoria',
+        'punto_interes_set__servicio',
+        'punto_interes_set__ofrenda',
+        'punto_interes_set__galeria_multimedia_set'
+    )
+    
+    lista_geometrias = list(geometrias)
+    
+    # =================================================================
+    # PASO 1: HUELLAS DIGITALES (Evitar duplicados)
+    # =================================================================
+    coords_con_punto = set()
+    for geo in lista_geometrias:
+        # Normalizamos la lectura de coordenadas para el hash
+        try:
+            c_raw = geo.coordenadas if isinstance(geo.coordenadas, (dict, list)) else json.loads(geo.coordenadas)
+            if not isinstance(c_raw, (dict, list)): continue
+            
+            c_obj = None
+            if geo.tipo == 'punto':
+                if isinstance(c_raw, list): c_obj = c_raw
+                elif isinstance(c_raw, dict) and 'coordinates' in c_raw: c_obj = c_raw['coordinates']
+            elif geo.tipo == 'linea' and isinstance(c_raw, list): c_obj = c_raw
+            elif (geo.tipo == 'poligono' or geo.tipo == 'multipoligono') and isinstance(c_raw, list): c_obj = c_raw
+            
+            if c_obj:
+                # Si esta geometría tiene un Punto de Interés asociado en BD, guardamos su hash
+                # (geo.punto_interes_set.exists() es la forma correcta de verificarlo)
+                if geo.punto_interes_set.exists():
+                    c_str = json.dumps(c_obj, sort_keys=True)
+                    key = hashlib.md5(c_str.encode('utf-8')).hexdigest()
+                    coords_con_punto.add(key)
+        except Exception: pass
+
+    # =================================================================
+    # PASO 2: CONSTRUIR EL GEOJSON
+    # =================================================================
     features = []
 
-    for geo in geometrias:
-        # Obtener el punto de interés relacionado (si existe)
-        punto = geo.punto_interes_set.first()
-        
-        if not punto:
-            print(f"[DEBUG MAPA] Geometría {geo.id_geometria} sin punto de interés, saltando...")
+    for geo in lista_geometrias:
+        if not geo.coordenadas:
             continue
-        
-        print(f"[DEBUG MAPA] Procesando punto: {punto.nombre} (categoria={punto.categoria})")
-        
-        # --- DETERMINAR EL NOMBRE DEL FILTRO ---
-        nombre_filtro = "Otros" # Fallback
-        
-        if punto.categoria == 'sitio_turistico':
-            if hasattr(punto, 'sitio_turistico') and punto.sitio_turistico and punto.sitio_turistico.id_categoria:
-                nombre_filtro = punto.sitio_turistico.id_categoria.nombre
-            else:
-                nombre_filtro = "Sitios Turísticos"
-        
-        elif punto.categoria == 'ofrenda':
-            nombre_filtro = "Ofrendas"
+
+        try:
+            coords_raw = geo.coordenadas if isinstance(geo.coordenadas, (dict, list)) else json.loads(geo.coordenadas)
             
-        elif punto.categoria == 'servicio':
-            nombre_filtro = "Servicios"
+            # Determinar tipo de geometría GeoJSON y coord_key para el hash
+            geometry_obj = None
+            coord_key = None
+            
+            if geo.tipo == 'linea' and isinstance(coords_raw, list):
+                geometry_obj = { "type": "LineString", "coordinates": coords_raw }
+            elif geo.tipo == 'punto':
+                if isinstance(coords_raw, list): geometry_obj = { "type": "Point", "coordinates": coords_raw }
+                elif isinstance(coords_raw, dict) and 'coordinates' in coords_raw: geometry_obj = coords_raw
+            elif geo.tipo == 'poligono' and isinstance(coords_raw, list):
+                geometry_obj = { "type": "Polygon", "coordinates": coords_raw }
+            elif geo.tipo == 'multipoligono' and isinstance(coords_raw, list):
+                geometry_obj = { "type": "MultiPolygon", "coordinates": coords_raw }
+            
+            if not geometry_obj: continue
 
-        # Preparamos las propiedades
-        propiedades = {
-            "nombre": punto.nombre,
-            "categoria_filtro": nombre_filtro,
-            "categoria_sistema": punto.categoria,
-            "categoria_sitio": (
-                punto.sitio_turistico.id_categoria.nombre
-                if punto.categoria == 'sitio_turistico' and hasattr(punto, 'sitio_turistico') and punto.sitio_turistico and getattr(punto.sitio_turistico, 'id_categoria', None)
-                else ""
-            ),
-            "descripcion": punto.descripcion or "",
-            "imagen": str(punto.imagen_portada) if punto.imagen_portada else "",
-            "horario": f"{punto.hora_apertura} - {punto.hora_cierre}" if punto.hora_apertura else "Siempre abierto",
-            "estado_actual": "Abierto",
-            "tipo_geometria": geo.tipo
-        }
+            # Generamos la huella digital para el elemento actual
+            c_str = json.dumps(geometry_obj['coordinates'], sort_keys=True)
+            coord_key = hashlib.md5(c_str.encode('utf-8')).hexdigest()
 
-        # Extra para servicios
-        if punto.categoria == 'servicio' and hasattr(punto, 'servicio'):
-            propiedades['contacto'] = punto.servicio.contacto or ""
+            punto = geo.punto_interes_set.first()
+            
+            
+            if punto and punto.estado == 'inactivo':
+                continue
+            # LA MAGIA ESTÁ AQUÍ:
+            # Si este elemento NO tiene un Punto de Interés, pero su huella digital coincide 
+            # con una geometría que SÍ lo tiene (ej. el polígono del Zócalo administrado), lo descartamos.
+            # Esto evita que el Zócalo crudo (general_kml) se muestre bajo el Zócalo administrado (sitio_turistico).
+            if not punto and coord_key in coords_con_punto:
+                continue
 
-        # Agregar al GeoJSON si tenemos coordenadas en la geometría
-        print(f"[DEBUG MAPA] geo.coordenadas = {geo.coordenadas}, type = {type(geo.coordenadas)}")
-        print(f"[DEBUG MAPA] geo.propiedades = {geo.propiedades}")
-        print(f"[DEBUG MAPA] geo.nombre = {geo.nombre}")
-        print(f"[DEBUG MAPA] geo.tipo = {geo.tipo}")
-        print(f"[DEBUG MAPA] geo.id_archivo = {geo.id_archivo}")
-        if geo.coordenadas:
+            # -- Resto de tu lógica para construir las propiedades (sin cambios) --
+            extra_props = {}
+            if geo.propiedades:
+                try: extra_props = geo.propiedades if isinstance(geo.propiedades, dict) else json.loads(geo.propiedades)
+                except json.JSONDecodeError: pass
+            
+            nombre_rescatado = extra_props.get('Nombre') or extra_props.get('nombre') or geo.nombre or "Sin nombre"
+            cat_filtro_rescatada = "Corredores" if geo.tipo == 'linea' else "Otros"
+
+            desc_rescatada = extra_props.get('descripcion') or extra_props.get('description') or ""
+            if not desc_rescatada and extra_props:
+                desc_rescatada = f"Datos extra: {json.dumps(extra_props)}"
+
+            propiedades = {
+                "id_geometria": geo.id_geometria,
+                "nombre": nombre_rescatado,
+                "categoria_filtro": cat_filtro_rescatada,
+                "categoria_sistema": "general_kml", 
+                "descripcion": desc_rescatada,
+                "imagen": "",
+                "horario": "Siempre abierto",
+                "id_categoria_bd": None
+            }
+
+            if punto:
+                nombre_filtro = "Otros"
+                id_cat_bd = None
+                
+                if punto.categoria == 'sitio_turistico':
+                    sitio = getattr(punto, 'sitio_turistico', None)
+                    if sitio and sitio.id_categoria:
+                        nombre_filtro = sitio.id_categoria.nombre
+                        id_cat_bd = sitio.id_categoria.id_categoria
+                    else: nombre_filtro = "Sitio Turístico"
+                elif punto.categoria == 'ofrenda': nombre_filtro = "Ofrendas"
+                elif punto.categoria == 'servicio': nombre_filtro = "Servicios"
+
+                # Galería multimedia del punto
+                galeria_items = [
+                    {"url": g.url_archivo, "tipo": g.tipo_archivo}
+                    for g in punto.galeria_multimedia_set.all()
+                ]
+
+                propiedades.update({
+                    "id_punto": punto.id_punto,
+                    "nombre": punto.nombre,
+                    "categoria_filtro": nombre_filtro,
+                    "categoria_sistema": punto.categoria,
+                    "id_categoria_bd": id_cat_bd,
+                    "descripcion": punto.descripcion or "",
+                    "imagen": getattr(punto.imagen_portada, 'url', str(punto.imagen_portada)) if punto.imagen_portada else "",
+                    "horario": f"{punto.hora_apertura} - {punto.hora_cierre}" if punto.hora_apertura and punto.hora_cierre else "Siempre abierto",
+                    "galeria": galeria_items,
+                    "ofrenda_anfitrion": "",
+                })
+
+                # Datos específicos por categoría
+                if punto.categoria == 'ofrenda' and hasattr(punto, 'ofrenda'):
+                    propiedades['ofrenda_anfitrion'] = punto.ofrenda.anfitrion or ""
+
+                if punto.categoria == 'servicio' and hasattr(punto, 'servicio') and punto.servicio:
+                    propiedades['contacto'] = punto.servicio.contacto or ""
+
             features.append({
                 "type": "Feature",
-                "geometry": geo.coordenadas if isinstance(geo.coordenadas, dict) else json.loads(geo.coordenadas),
+                "geometry": geometry_obj,
                 "properties": propiedades
             })
-            print(f"[DEBUG MAPA] Agregado punto: {punto.nombre}")
-        else:
-            print(f"[DEBUG MAPA] Punto {punto.nombre} sin coordenadas o coordenadas vacías")
 
-    print(f"[DEBUG MAPA] Total features generados: {len(features)}")
+        except Exception as e:
+            print(f"Error procesando geo {geo.id_geometria}: {e}")
 
-    geojson_data = {
-        "type": "FeatureCollection",
-        "features": features
-    }
+    geojson_data = { "type": "FeatureCollection", "features": features }
 
-    # --- OBTENER CATEGORÍAS Y SITIOS DE LA BASE DE DATOS ---
-    # Obtener todas las categorías de sitios turísticos
-    categorias_sitio = Categoria_Sitio.objects.all().order_by('nombre')
-    categorias_sitio_data = [
-        {'id': cat.id_categoria, 'nombre': cat.nombre}
-        for cat in categorias_sitio
-    ]
-    
-    # Obtener todos los sitios turísticos
-    sitios_turisticos = Sitio_turistico.objects.all().select_related('id_punto', 'id_categoria')
-    sitios_data = [
-        {'id': sitio.id_sitio, 'nombre': sitio.id_punto.nombre, 'categoria_id': sitio.id_categoria.id_categoria}
-        for sitio in sitios_turisticos
-    ]
-    
-    # Obtener ofrendas
-    ofrendas = Ofrenda.objects.all().select_related('id_punto')
-    ofrendas_data = [
-        {'id': ofrenda.id_ofrenda, 'nombre': ofrenda.id_punto.nombre}
-        for ofrenda in ofrendas
-    ]
-    
-    # Obtener servicios
-    servicios = Servicio.objects.all().select_related('id_punto')
-    servicios_data = [
-        {'id': servicio.id_servicio, 'nombre': servicio.id_punto.nombre}
-        for servicio in servicios
-    ]
+    sitios_data = list(Sitio_turistico.objects.select_related('id_punto', 'id_categoria').values('id_sitio', 'id_punto__nombre', 'id_categoria__nombre'))
+    ofrendas_data = list(Ofrenda.objects.select_related('id_punto').values('id_ofrenda', 'id_punto__nombre', 'anfitrion'))
+    servicios_data = list(Servicio.objects.select_related('id_punto').values('id_servicio', 'id_punto__nombre', 'tipo_servicio', 'contacto'))
 
     context = {
         'geojson_data': json.dumps(geojson_data, default=str),
-        'archivo': None,
-        'categorias_sitio': json.dumps(categorias_sitio_data, default=str),
+        'categorias_sitio': json.dumps(list(Categoria_Sitio.objects.values('id_categoria', 'nombre')), default=str),
         'sitios_turisticos': json.dumps(sitios_data, default=str),
         'ofrendas': json.dumps(ofrendas_data, default=str),
         'servicios': json.dumps(servicios_data, default=str),
+        'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
     }
 
     return render(request, 'mapa.html', context)
+
 
 
 @login_required
@@ -1327,7 +1373,6 @@ def subir_desde_url(request):
                         fs = FileSystemStorage()
                         
                         for f in archivos_galeria:
-                            # Determinar tipo
                             ext = f.name.split('.')[-1].lower()
                             tipo = 'imagen'
                             if ext in ['mp4', 'avi', 'mov', 'webm']:
@@ -1400,19 +1445,17 @@ def lista_archivos(request):
         'archivos_procesados': archivos_procesados,
         'ahora': ahora,
     }
-    return render(request, 'myapp/mod_db/crud_kml.html', {
-        'categorias': categorias,
-        'archivos': archivos,
-    })
+    context['categorias'] = categorias
+
+    # 2. Pasamos la variable 'context' COMPLETA al render
+    return render(request, 'myapp/mod_db/crud_kml.html', context)
 
 
 @login_required
 def detalle_archivo(request, archivo_id):
     try:
         archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
-        # Buscar el punto a través de la geometría
-        # Nota: Ajusta 'id_geometria__id_archivo' si tu relación es diferente, 
-        # pero basándome en tus modelos parece correcto.
+        # VOLVEMOS AL .first() ORIGINAL
         punto = Punto_Interes.objects.filter(id_geometria__id_archivo=archivo).first()
 
         def format_date(dt):
@@ -1438,6 +1481,7 @@ def detalle_archivo(request, archivo_id):
         if punto:
             data.update({
                 'tiene_punto': True,
+                'id_punto': punto.id_punto,
                 'nombre_punto': punto.nombre,
                 'descripcion_punto': punto.descripcion or '',
                 'estado_punto': punto.estado,
@@ -1445,28 +1489,17 @@ def detalle_archivo(request, archivo_id):
                 'fecha_fin': format_date(punto.fecha_fin),
                 'hora_apertura': format_time(punto.hora_apertura),
                 'hora_cierre': format_time(punto.hora_cierre),
-                
-                # CORRECCIÓN 1: Imagen Portada (Es URLField, se toma directo)
                 'imagen_portada': punto.imagen_portada or '',
-                
-                # CORRECCIÓN 2: Días de semana (String a Lista)
                 'dias_semana': punto.dias_semana.split(',') if punto.dias_semana else [],
             })
 
-            # CORRECCIÓN 3: Galería Multimedia
-            # El modelo es Galeria_Multimedia, por defecto Django usa el nombre en minúsculas + _set
             try:
                 items_galeria = punto.galeria_multimedia_set.all() 
                 galeria_data = []
                 for item in items_galeria:
-                    galeria_data.append({
-                        'id': item.id_foto,          # Según tu modelo: id_foto
-                        'url': item.url_archivo,     # Según tu modelo: url_archivo
-                        'tipo': item.tipo_archivo    # Según tu modelo: tipo_archivo
-                    })
+                    galeria_data.append({'id': item.id_foto, 'url': item.url_archivo, 'tipo': item.tipo_archivo})
                 data['galeria'] = galeria_data
-            except Exception as e:
-                print(f"Error procesando galería: {e}")
+            except Exception:
                 data['galeria'] = []
 
             # --- SUBTIPOS ---
@@ -1478,11 +1511,7 @@ def detalle_archivo(request, archivo_id):
                     'reglas_acceso': sitio.reglas_acceso or ''
                 })
             elif hasattr(punto, 'ofrenda'):
-                ofrenda = punto.ofrenda
-                data.update({
-                    'tipo_punto': 'ofrenda',
-                    'anfitrion': ofrenda.anfitrion or ''
-                })
+                data.update({'tipo_punto': 'ofrenda', 'anfitrion': punto.ofrenda.anfitrion or ''})
             elif hasattr(punto, 'servicio'):
                 servicio = punto.servicio
                 data.update({
@@ -1491,15 +1520,11 @@ def detalle_archivo(request, archivo_id):
                     'contacto_servicio': servicio.contacto or '',
                     'tipo_pago': servicio.tipo_pago.split(',') if servicio.tipo_pago else []
                 })
-            else:
-                data['tipo_punto'] = ''
 
         return JsonResponse(data)
 
     except Exception as e:
-        print(f"ERROR: {str(e)}")
-        return JsonResponse({'success': False, 'error': f"Error interno: {str(e)}"}, status=500)
-    
+        return JsonResponse({'success': False, 'error': f"Error: {str(e)}"}, status=500)
     
 @login_required
 def editar_archivo(request, archivo_id):
@@ -1669,21 +1694,214 @@ def editar_archivo(request, archivo_id):
 
 
 
+
+################  Punto de Interés  ################
+# ==========================================================
+# 1. VISTA DE LISTA PRINCIPAL
+# ==========================================================
+
 @login_required
-def toggle_visibilidad(request, archivo_id):
-    """Alterna la visibilidad de un archivo"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+def lista_puntos(request):
+    puntos = Punto_Interes.objects.select_related('id_geometria', 'usuario_creacion').all()
+    categorias = Categoria_Sitio.objects.all()
     
+    context = {
+        'puntos': puntos,
+        'categorias': categorias, # <- Lo enviamos al template
+        'total_activos': puntos.filter(estado='activo').count(),
+        'total_inactivos': puntos.filter(estado='inactivo').count(),
+        'total_ofrendas': puntos.filter(categoria='ofrenda').count(),
+        'total_sitios': puntos.filter(categoria='sitio_turistico').count(),
+    }
+    return render(request, 'myapp/mod_db/crud_punto_interes.html', context)
+
+# ==========================================================
+# 2. VISTA PARA EL TOGGLE DE VISIBILIDAD (Activo/Inactivo)
+# ==========================================================
+@login_required
+@require_POST
+def toggle_visibilidad(request, punto_id):
+    """Cambia el estado de un punto entre 'activo' e 'inactivo' mediante AJAX"""
     try:
-        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        punto = get_object_or_404(Punto_Interes, id_punto=punto_id)
+        
+        # Leemos el JSON que envía el frontend (el switch)
         data = json.loads(request.body)
-        archivo.visible = data.get('visible', True)
-        archivo.save()
-        return JsonResponse({'success': True, 'visible': archivo.visible})
+        es_activo = data.get('activo', False)
+        
+        # Asignamos el estado usando tu ESTADO_CHOICES
+        punto.estado = 'activo' if es_activo else 'inactivo'
+        punto.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'nuevo_estado': punto.estado,
+            'message': f'Estado actualizado a {punto.get_estado_display()}'
+        })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+
+# ==========================================================
+# 3. VISTA PARA OBTENER DATOS DEL PUNTO (Para rellenar el Modal)
+# ==========================================================
+# ==========================================================
+# 3. VISTA PARA OBTENER DATOS DEL PUNTO (Para rellenar el Modal)
+# ==========================================================
+@login_required
+def detalle_punto(request, punto_id):
+    """Devuelve un JSON con los datos del punto para llenar el formulario de edición"""
+    try:
+        punto = get_object_or_404(Punto_Interes, id_punto=punto_id)
+
+        fmt_date = lambda d: d.strftime('%Y-%m-%d') if d else ''
+        fmt_time = lambda t: t.strftime('%H:%M') if t else ''
+
+        # Galería multimedia existente
+        galeria = [
+            {'id': g.id_foto, 'url': g.url_archivo, 'tipo': g.tipo_archivo}
+            for g in punto.galeria_multimedia_set.all()
+        ]
+
+        data = {
+            'success': True,
+            'id_punto': punto.id_punto,
+            'categoria': punto.categoria,
+            'nombre': punto.nombre,
+            'descripcion': punto.descripcion or '',
+            'imagen_portada': punto.imagen_portada or '',
+            'estado': punto.estado,
+            'fecha_inicio': fmt_date(punto.fecha_inicio),
+            'fecha_fin': fmt_date(punto.fecha_fin),
+            'hora_apertura': fmt_time(punto.hora_apertura),
+            'hora_cierre': fmt_time(punto.hora_cierre),
+            'dias_semana': punto.dias_semana_list,
+            'galeria': galeria,
+        }
+
+        if hasattr(punto, 'ofrenda'):
+            data['anfitrion'] = punto.ofrenda.anfitrion or ''
+        elif hasattr(punto, 'sitio_turistico'):
+            sitio = punto.sitio_turistico
+            data['id_categoria_bd'] = sitio.id_categoria.id_categoria if sitio.id_categoria else ''
+            data['reglas_acceso'] = sitio.reglas_acceso or ''
+        elif hasattr(punto, 'servicio'):
+            servicio = punto.servicio
+            data['tipo_servicio'] = servicio.tipo_servicio or ''
+            data['contacto_servicio'] = servicio.contacto or ''
+            data['tipo_pago'] = servicio.tipo_pago.split(',') if servicio.tipo_pago else []
+
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ==========================================================
+# 4. VISTA PARA GUARDAR LA EDICIÓN
+# ==========================================================
+@login_required
+@require_POST
+def editar_punto(request, punto_id):
+    """Recibe los datos del Modal vía POST y actualiza el registro"""
+    try:
+        punto = get_object_or_404(Punto_Interes, id_punto=punto_id)
+
+        # 1. Campos básicos del Punto_Interes
+        punto.nombre = request.POST.get('nombre_punto', punto.nombre)
+        punto.categoria = request.POST.get('categoria', punto.categoria)
+        punto.descripcion = request.POST.get('descripcion', '')
+        punto.imagen_portada = request.POST.get('imagen_portada', '') or None
+
+        fecha_inicio = request.POST.get('fecha_inicio')
+        punto.fecha_inicio = fecha_inicio if fecha_inicio else None
+
+        fecha_fin = request.POST.get('fecha_fin')
+        punto.fecha_fin = fecha_fin if fecha_fin else None
+
+        hora_apertura = request.POST.get('hora_apertura')
+        punto.hora_apertura = hora_apertura if hora_apertura else None
+
+        hora_cierre = request.POST.get('hora_cierre')
+        punto.hora_cierre = hora_cierre if hora_cierre else None
+
+        dias_seleccionados = request.POST.getlist('dias_semana')
+        punto.dias_semana_list = dias_seleccionados
+        punto.save()
+
+        # 2. Submodelos según categoría
+        categoria = punto.categoria
+
+        if categoria == 'ofrenda':
+            anfitrion = request.POST.get('anfitrion', '').strip()
+            if hasattr(punto, 'ofrenda'):
+                punto.ofrenda.anfitrion = anfitrion
+                punto.ofrenda.save()
+            else:
+                Ofrenda.objects.create(id_punto=punto, anfitrion=anfitrion)
+
+        elif categoria == 'sitio_turistico':
+            id_cat = request.POST.get('id_categoria_bd')
+            reglas = request.POST.get('reglas_acceso', '')
+            if id_cat:
+                cat_obj = Categoria_Sitio.objects.get(id_categoria=id_cat)
+                if hasattr(punto, 'sitio_turistico'):
+                    punto.sitio_turistico.id_categoria = cat_obj
+                    punto.sitio_turistico.reglas_acceso = reglas
+                    punto.sitio_turistico.save()
+                else:
+                    Sitio_turistico.objects.create(id_punto=punto, id_categoria=cat_obj, reglas_acceso=reglas)
+
+        elif categoria == 'servicio':
+            tipo_servicio_val = request.POST.get('tipo_servicio', 'hospedaje')
+            contacto_val = request.POST.get('contacto_servicio', '')
+            pagos_lista = request.POST.getlist('tipo_pago')
+            pagos_str = ','.join(pagos_lista) if pagos_lista else 'efectivo'
+            if hasattr(punto, 'servicio'):
+                punto.servicio.tipo_servicio = tipo_servicio_val
+                punto.servicio.contacto = contacto_val
+                punto.servicio.tipo_pago = pagos_str
+                punto.servicio.save()
+            else:
+                Servicio.objects.create(
+                    id_punto=punto,
+                    tipo_servicio=tipo_servicio_val,
+                    contacto=contacto_val,
+                    tipo_pago=pagos_str
+                )
+
+        # 3. Galería multimedia — guardada como URLs (no archivos locales)
+        urls_galeria = request.POST.getlist('galeria_url_nueva')
+        for url in urls_galeria:
+            url = url.strip()
+            if not url:
+                continue
+            # Detectar tipo por extensión
+            url_lower = url.lower().split('?')[0]  # sin query params
+            if any(url_lower.endswith(ext) for ext in ['.mp4', '.avi', '.mov', '.webm']):
+                tipo = 'video'
+            elif any(url_lower.endswith(ext) for ext in ['.mp3', '.wav', '.ogg']):
+                tipo = 'audio'
+            else:
+                tipo = 'imagen'
+            Galeria_Multimedia.objects.create(
+                id_punto=punto,
+                url_archivo=url,
+                tipo_archivo=tipo,
+                descripcion=''
+            )
+
+        # 4. Eliminar fotos marcadas para borrar
+        ids_eliminar = request.POST.getlist('galeria_eliminar')
+        if ids_eliminar:
+            Galeria_Multimedia.objects.filter(
+                id_foto__in=ids_eliminar,
+                id_punto=punto
+            ).delete()
+
+        return JsonResponse({'success': True, 'message': 'Punto guardado correctamente.'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f"Error interno: {str(e)}"}, status=500)
 
 
 
@@ -1816,25 +2034,22 @@ def crear_categoria(request):
     
     
 @login_required
-@require_POST # Decorador útil para asegurar que solo sea POST
+@require_POST 
 def procesar_archivo(request, archivo_id):
-    # 1. Obtener el objeto
-    archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
-    
-    # 2. Verificar tipo de archivo (validación rápida antes de instanciar)
-    if archivo.tipo_archivo not in ['kml', 'kmz']:
-        return JsonResponse({
-            'success': False, 
-            'error': 'Solo se pueden procesar archivos KML/KMZ'
-        }, status=400)
-
-    # 3. Delegar el trabajo al procesador
-    processor = KMLProcessor(archivo)
-    resultado = processor.procesar()
-
-    # 4. Devolver respuesta basada en el resultado del procesador
-    status_code = 200 if resultado['success'] else 500
-    return JsonResponse(resultado, status=status_code)
+    try:
+        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        processor = KMLProcessor(archivo)
+        resultado = processor.procesar()
+        
+        if resultado['success']:
+            return JsonResponse(resultado)
+        else:
+            # Enviamos un 400 (Bad Request) en lugar de un 500
+            return JsonResponse(resultado, status=400)
+            
+    except Exception as e:
+        # Esto evita que el servidor "truene" con un 500
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 @login_required
@@ -1919,7 +2134,7 @@ def actualizar_desde_url(request, archivo_id):
 
 @login_required
 def eliminar_archivo(request, archivo_id):
-    """Elimina un archivo"""
+    """Elimina un archivo y toda la información asociada en cascada"""
     if request.method != 'POST':
         messages.error(request, 'Método no permitido')
         return redirect('lista_archivos')
@@ -1927,9 +2142,22 @@ def eliminar_archivo(request, archivo_id):
     try:
         archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
         nombre = archivo.nombre_archivo
+        
+        # --- NUEVA LÓGICA DE LIMPIEZA PROFUNDA ---
+        # 1. Buscamos todas las geometrías que le pertenecen a este archivo
+        geometrias_del_archivo = GeometriaEspacial.objects.filter(id_archivo=archivo)
+        
+        # 2. Buscamos todos los Puntos de Interés que usan esas geometrías y los destruimos.
+        # (Esto también destruirá Ofrendas, Sitios y Servicios asociados por CASCADE)
+        Punto_Interes.objects.filter(id_geometria__in=geometrias_del_archivo).delete()
+        # -----------------------------------------
+        
+        # 3. Ahora sí, borramos el archivo original
         archivo.delete()
-        messages.success(request, f'Recurso "{nombre}" eliminado exitosamente')
+        
+        messages.success(request, f'Recurso "{nombre}" y sus puntos vinculados fueron eliminados exitosamente')
         return redirect('lista_archivos')
+        
     except Exception as e:
         messages.error(request, f'Error al eliminar recurso: {str(e)}')
         return redirect('lista_archivos')
@@ -1988,7 +2216,7 @@ def vista_graficas(request):
 
 
 
-@login_required  
+@login_required
 def redirigir_por_tipo_usuario(request):  
     """  
     Vista que redirige a los usuarios según su tipo después del login  
@@ -2012,3 +2240,217 @@ def redirigir_por_tipo_usuario(request):
               
     except Usuario.DoesNotExist:  
         return redirect('login')
+    
+
+# =====================================================
+# SISTEMA DE RESEÑAS GLOBALES DEL MUNICIPIO
+# =====================================================
+import urllib.parse
+import urllib.error
+
+def _obtener_ip(request):
+    """Extrae la IP real del visitante considerando proxies."""
+    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded:
+        return x_forwarded.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '0.0.0.0')
+
+
+def _verificar_recaptcha(token):
+    """Verifica el token reCAPTCHA con la API de Google."""
+    import urllib.request as urlreq
+    secret = settings.RECAPTCHA_SECRET_KEY
+    url = 'https://www.google.com/recaptcha/api/siteverify'
+    datos = urllib.parse.urlencode({
+        'secret': secret,
+        'response': token
+    }).encode('utf-8')
+    try:
+        req = urlreq.Request(url, data=datos, method='POST')
+        with urlreq.urlopen(req, timeout=5) as resp:
+            resultado = json.loads(resp.read().decode('utf-8'))
+        return resultado.get('success', False)
+    except Exception:
+        return False
+
+
+@require_http_methods(['GET', 'POST'])
+def api_resenas_globales(request):
+    """
+    GET  /api/resenas/  → Lista de reseñas aprobadas + estadísticas
+    POST /api/resenas/  → Crear nueva reseña (nickname + calificacion + comentario)
+    """
+    if request.method == 'GET':
+        resenas_qs = ResenaGlobal.objects.filter(estado='aprobada')
+
+        total = resenas_qs.count()
+        promedio = 0.0
+        distribucion = {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0}
+
+        if total > 0:
+            from django.db.models import Avg
+            avg = resenas_qs.aggregate(Avg('calificacion'))['calificacion__avg']
+            promedio = round(float(avg), 1)
+            for i in range(1, 6):
+                distribucion[str(i)] = resenas_qs.filter(calificacion=i).count()
+
+        resenas_list = []
+        for r in resenas_qs[:50]:   # Máx. 50 por carga
+            resenas_list.append({
+                'id': r.id_resena,
+                'autor': r.autor,
+                'calificacion': r.calificacion,
+                'comentario': r.comentario or '',
+                'fecha': r.fecha_publicacion.strftime('%d %b %Y'),
+                'likes': r.likes,
+            })
+
+        return JsonResponse({
+            'promedio': promedio,
+            'total': total,
+            'distribucion': distribucion,
+            'resenas': resenas_list,
+        })
+
+    # POST — crear reseña
+    try:
+        datos = json.loads(request.body)
+    except (json.JSONDecodeError, Exception):
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+
+    nombre_visitante = (datos.get('nombre_visitante') or '').strip()
+    comentario       = (datos.get('comentario') or '').strip()
+    calificacion     = datos.get('calificacion')
+    recaptcha_token  = datos.get('recaptcha_token', '')
+
+    # Validaciones
+    if not nombre_visitante:
+        return JsonResponse({'error': 'El apodo es obligatorio.'}, status=400)
+    if len(nombre_visitante) > 100:
+        return JsonResponse({'error': 'El apodo es demasiado largo (máx. 100 car.).'}, status=400)
+    try:
+        calificacion = int(calificacion)
+        if not (1 <= calificacion <= 5):
+            raise ValueError
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Calificación inválida (1-5).'}, status=400)
+
+    # Verificar reCAPTCHA
+    if not _verificar_recaptcha(recaptcha_token):
+        return JsonResponse({'error': 'Verifica que no eres un robot.'}, status=400)
+
+    # Rate limiting por IP: máx. 3 reseñas en 24h
+    from django.utils import timezone as tz
+    from datetime import timedelta
+    ip = _obtener_ip(request)
+    hace_24h = tz.now() - timedelta(hours=24)
+    resenas_ip = ResenaGlobal.objects.filter(
+        ip_visitante=ip, fecha_publicacion__gte=hace_24h
+    ).count()
+    if resenas_ip >= 3:
+        return JsonResponse(
+            {'error': 'Límite alcanzado: máx. 3 reseñas por día desde la misma IP.'},
+            status=429
+        )
+
+    resena = ResenaGlobal.objects.create(
+        id_usuario=request.user if request.user.is_authenticated else None,
+        nombre_visitante=nombre_visitante,
+        calificacion=calificacion,
+        comentario=comentario or None,
+        estado='aprobada',
+        ip_visitante=ip,
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'resena': {
+            'id': resena.id_resena,
+            'autor': resena.autor,
+            'calificacion': resena.calificacion,
+            'comentario': resena.comentario or '',
+            'fecha': resena.fecha_publicacion.strftime('%d %b %Y'),
+            'likes': 0,
+        }
+    }, status=201)
+
+
+@require_http_methods(['POST'])
+def like_resena(request, resena_id):
+    """Incrementa el contador de likes de una reseña."""
+    resena = get_object_or_404(ResenaGlobal, pk=resena_id, estado='aprobada')
+    ResenaGlobal.objects.filter(pk=resena_id).update(likes=resena.likes + 1)
+    return JsonResponse({'ok': True, 'likes': resena.likes + 1})
+
+
+@require_http_methods(['POST'])
+def reportar_resena(request, resena_id):
+    """Marca la reseña como pendiente para revisión del admin."""
+    resena = get_object_or_404(ResenaGlobal, pk=resena_id)
+    resena.estado = 'pendiente'
+    resena.save(update_fields=['estado'])
+    return JsonResponse({'ok': True, 'mensaje': 'Reseña reportada. Gracias por tu aviso.'})
+
+
+# =====================================================
+# GESTI�N DE RESE�AS � PANEL ADMINISTRATIVO
+# =====================================================
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def gestionar_resenas(request):
+    resenas = ResenaGlobal.objects.all().order_by('-fecha_publicacion')
+    context = {
+        'resenas': resenas,
+        'resenas_aprobadas': resenas.filter(estado='aprobada').count(),
+        'resenas_pendientes': resenas.filter(estado='pendiente').count(),
+        'resenas_ocultas': resenas.filter(estado='oculta').count(),
+    }
+    return render(request, 'myapp/mod_db/crud_resenas.html', context)
+
+@login_required
+@require_http_methods(['POST'])
+def cambiar_estado_resena(request, resena_id):
+    import json as _json
+    resena = get_object_or_404(ResenaGlobal, pk=resena_id)
+    try:
+        datos = _json.loads(request.body)
+        nuevo_estado = datos.get('estado', '')
+    except Exception:
+        return JsonResponse({'error': 'JSON invalido'}, status=400)
+    if nuevo_estado not in {'aprobada', 'pendiente', 'oculta'}:
+        return JsonResponse({'error': 'Estado no valido'}, status=400)
+    resena.estado = nuevo_estado
+    resena.save(update_fields=['estado'])
+    return JsonResponse({'ok': True, 'estado': nuevo_estado})
+
+@login_required
+@require_http_methods(['POST'])
+def eliminar_resena_admin(request, resena_id):
+    resena = get_object_or_404(ResenaGlobal, pk=resena_id)
+    resena.delete()
+    return JsonResponse({'ok': True})
+
+@login_required
+@require_http_methods(['POST'])
+def accion_masiva_resenas(request):
+    import json as _json
+    try:
+        datos = _json.loads(request.body)
+        ids = [int(i) for i in datos.get('ids', [])]
+        estado = datos.get('estado', '')
+        accion = datos.get('accion', '')
+    except Exception:
+        return JsonResponse({'error': 'Datos invalidos'}, status=400)
+    if not ids:
+        return JsonResponse({'error': 'Sin IDs'}, status=400)
+    qs = ResenaGlobal.objects.filter(pk__in=ids)
+    if accion == 'eliminar':
+        count = qs.count()
+        qs.delete()
+        return JsonResponse({'ok': True, 'eliminadas': count})
+    if estado not in {'aprobada', 'pendiente', 'oculta'}:
+        return JsonResponse({'error': 'Estado no valido'}, status=400)
+    actualizadas = qs.update(estado=estado)
+    return JsonResponse({'ok': True, 'actualizadas': actualizadas})

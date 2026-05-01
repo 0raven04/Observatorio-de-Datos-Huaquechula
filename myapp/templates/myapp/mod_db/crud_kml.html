@@ -81,11 +81,10 @@
         <table class="table table-hover table-bordered mb-0" id="archivosTable">
           <thead class="text-white" style="background-color: var(--color-gris-oscuro);">
             <tr>
-              <th class="text-center align-middle" style="width: 45%;">Archivo</th>
+              <th class="text-center align-middle" style="width: 50%;">Archivo</th>
               <th class="text-center align-middle" style="width: 10%;">Tipo</th>
               <th class="text-center align-middle" style="width: 15%;">Estado</th>
-              <th class="text-center align-middle" style="width: 10%;">Visibilidad</th>
-              <th class="text-center align-middle" style="width: 20%;">Acciones</th>
+              <th class="text-center align-middle" style="width: 25%;">Acciones</th>
             </tr>
           </thead>
 
@@ -219,18 +218,7 @@
                 {% endif %}
               </td>
 
-              <!-- Columna Visibilidad -->
-              <td class="text-center align-middle">
-                <div class="d-flex justify-content-center align-items-center">
-                  <div class="form-check form-switch" style="transform: scale(1.5);">
-                    <input class="form-check-input visibility-toggle" 
-                           type="checkbox" 
-                           role="switch"
-                           data-archivo-id="{{ archivo.id_archivo }}"
-                           {% if archivo.visible %}checked{% endif %}>
-                  </div>
-                </div>
-              </td>
+              
 
               <!-- Columna Acciones - CORREGIDA -->
               <td class="text-center align-middle">
@@ -391,37 +379,58 @@
         });
     }
 
-
-    // Procesar archivo (solo para KML/KMZ)
-   function procesarArchivo(archivoId) {
-    if (confirm('¿Procesar este archivo para extraer geometrías?')) {
-        showToast('Procesando archivo...', 'info');
-        
-        // CORRECCIÓN AQUÍ: Definimos la url usando el ID
-        const url = `/procesar/${archivoId}/`; 
-
-        fetch(url, {  // Ahora 'url' ya existe
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}',
+    // Función para obtener el CSRF Token de las cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'Archivo procesado exitosamente', 'success');
-                setTimeout(() => location.reload(), 2000);
-            } else {
-                showToast('Error: ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión', 'error');
-        });
+        }
+        return cookieValue;
     }
-}
+
+    function procesarArchivo(archivoId) {
+        if (confirm('¿Procesar este archivo para extraer geometrías?')) {
+            showToast('Procesando archivo...', 'info');
+            
+            const url = `/procesar/${archivoId}/`; 
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // CAMBIO AQUÍ: Usamos la función getCookie
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                // Importante: No enviar cuerpo si no es necesario, o enviar {}
+                body: JSON.stringify({}) 
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error('Sesión expirada o error de seguridad (CSRF)');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast(error.message, 'error');
+            });
+        }
+    }
     
     // Actualizar desde URL
     function actualizarDesdeURL(archivoId) {

@@ -39,25 +39,50 @@
 
                 <!-- Solo mostrar enlaces de navegación en escritorio -->
                 <div class="collapse navbar-collapse d-none d-md-flex justify-content-center" id="navbarSupportedContent">
-                    <ul class="navbar-nav d-flex justify-content-around w-75">
+                    <ul class="navbar-nav d-flex justify-content-around w-75 align-items-center">
+
                         <li class="nav-item">
-                            <a class="nav-link {% if 'lista_archivos' in request.resolver_match.url_name %}active{% endif %}"
-                                href="{% url 'lista_archivos' %}" aria-current="{% if 'lista_archivos' in request.resolver_match.url_name %}page{% else %}false{% endif %}">
-                                Archivos de localización
+                            <a class="nav-link {% if request.resolver_match.url_name == 'lista_puntos_interes' %}active{% endif %}"
+                                href="{% url 'lista_puntos_interes' %}">
+                                <i class="fas fa-map-marked-alt me-1"></i> Puntos
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link {% if 'lista_registros' in request.resolver_match.url_name %}active{% endif %}"
-                                href="{% url 'lista_registros' %}" aria-current="{% if 'lista_registros' in request.resolver_match.url_name %}page{% else %}false{% endif %}">
-                                Registro de visitantes
+                            <a class="nav-link {% if request.resolver_match.url_name == 'lista_archivos' %}active{% endif %}"
+                                href="{% url 'lista_archivos' %}">
+                                <i class="fas fa-file-import me-1"></i> Archivos
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'lista_documentos' in request.resolver_match.url_name %}active{% endif %}"
-                                href="{% url 'lista_documentos' %}" aria-current="{% if 'lista_documentos' in request.resolver_match.url_name %}page{% else %}false{% endif %}">
-                                Documentos
+
+                        <!-- Dropdown "Gestión" -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link submenu-toggle" href="#">
+                                <i class="fas fa-cog me-1"></i> Gestión <span class="submenu-arrow">▼</span>
                             </a>
+                            <ul class="submenu">
+                                <li>
+                                    <a class="nav-link submenu-item"
+                                       href="{% url 'lista_registros' %}">
+                                        <i class="fas fa-users me-1"></i> Registro de visitantes
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link submenu-item"
+                                       href="{% url 'lista_documentos' %}">
+                                        <i class="fas fa-file-alt me-1"></i> Documentos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link submenu-item
+                                       {% if request.resolver_match.url_name == 'gestionar_resenas' %}active{% endif %}"
+                                       href="{% url 'gestionar_resenas' %}">
+                                        <i class="fas fa-star me-1"></i> Reseñas
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
+
                     </ul>
                 </div>
 
@@ -103,24 +128,33 @@
             </div>
             <ul class="list-unstyled">
                 <li class="sidebar-item text-center">
+                    <a class="nav-link {% if 'lista_puntos_interes' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'lista_puntos_interes' %}">
+                        <i class="fas fa-map-marked-alt me-2"></i>Puntos de Interés
+                    </a>
+                </li>
+                <li class="sidebar-item text-center">
                     <a class="nav-link {% if 'lista_archivos' in request.resolver_match.url_name %}active{% endif %}"
                         href="{% url 'lista_archivos' %}">
-                        <i class="fas fa-map-marked-alt me-2"></i>
-                        Archivos de localización
+                        <i class="fas fa-file-import me-2"></i>Archivos
                     </a>
                 </li>
                 <li class="sidebar-item text-center">
                     <a class="nav-link {% if 'lista_registros' in request.resolver_match.url_name %}active{% endif %}"
                         href="{% url 'lista_registros' %}">
-                        <i class="fas fa-users me-2"></i>
-                        Registro de visitantes
+                        <i class="fas fa-users me-2"></i>Registro de visitantes
                     </a>
                 </li>
                 <li class="sidebar-item text-center">
                     <a class="nav-link {% if 'lista_documentos' in request.resolver_match.url_name %}active{% endif %}"
                         href="{% url 'lista_documentos' %}">
-                        <i class="fas fa-file-alt me-2"></i>
-                        Documentos
+                        <i class="fas fa-file-alt me-2"></i>Documentos
+                    </a>
+                </li>
+                <li class="sidebar-item text-center">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'gestionar_resenas' %}active{% endif %}"
+                        href="{% url 'gestionar_resenas' %}">
+                        <i class="fas fa-star me-2"></i>Reseñas
                     </a>
                 </li>
             </ul>

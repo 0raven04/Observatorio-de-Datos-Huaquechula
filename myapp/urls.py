@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from .views import registro_visita
 from myapp.views import backup_database
 from . import views
@@ -12,7 +12,7 @@ urlpatterns = [
     path('inicio/', views.vista_inicio, name='vista_inicio_alternativo'),
     path('redirigir/', views.redirigir_por_tipo_usuario, name='redirigir_usuario'),
     
-    # URLs de gestión de visitas (CRUD)
+    # URLs de gestiÃ³n de visitas (CRUD)
     path('visitas/', views.registro_visita, name='lista_registros'),
     path('visitas/registro/', views.formulario, name='registro_visita'),  # Para crear nuevo
     path('visitas/obtener/<int:id_registro>/', views.obtener_registro, name='obtener_registro'),
@@ -23,13 +23,13 @@ urlpatterns = [
     # URLs de formulario (alias para compatibilidad)
     path('formulario/', views.formulario, name='formulario'),
     
-    # URLs de mapas y geolocalización
+    # URLs de mapas y geolocalizaciÃ³n
     path('mapa/', views.mapa, name='mapa'),
     
     # URLs de respaldo
     path('backup/', views.backup_database, name='backup_database'),
     
-    # URLs de gráficas y estadísticas
+    # URLs de grÃ¡ficas y estadÃ­sticas
     path('estadistica/', views.graficos_indicadores, name='estadistica'),
     path('vista_graficas/', views.vista_graficas, name='vista_graficas'),
     
@@ -39,17 +39,17 @@ urlpatterns = [
     path('panel/subir/', views.subir_documento, name='subir_documento'),
     path('panel/editar/<int:id>/', views.editar_documento, name='editar_documento'),
     path('panel/eliminar/<int:id>/', views.eliminar_documento, name='eliminar_documento'),
-    # Repositorio público
+    # Repositorio pÃºblico
     path('repositorio/', views.repositorio_publico, name='repositorio'),
     path('repositorio-publico/', views.repositorio_publico, name='repositorio_publico'),
     path('descargar/<int:id>/', views.descargar_documento, name='descargar_documento'),
     path('detalle/<int:id>/', views.ver_documento_detalle, name='detalle_documento'),
     
-    # Estadísticas y exportación
+    # EstadÃ­sticas y exportaciÃ³n
     path('estadisticas/', views.obtener_estadisticas, name='estadisticas'),
     path('exportar/csv/', views.exportar_documentos_csv, name='exportar_csv'),
        path('lista/', views.panel_documentos, name='lista_documentos'), 
-    # Versión con clases (opcional)
+    # VersiÃ³n con clases (opcional)
     path('clase/', views.DocumentoListView.as_view(), name='panel_documentos_clase'),
     
 
@@ -61,10 +61,9 @@ urlpatterns = [
     path('registros/editar/<int:id_registro>/', views.editar_registro, name='editar_registro'),
     path('registros/eliminar/<int:id_registro>/', views.eliminar_registro, name='eliminar_registro'),
     
-     path('registro/', views.formulario, name='registro'),  # Opción 1: usar 'formulario' como 'registro'
+     path('registro/', views.formulario, name='registro'),  # OpciÃ³n 1: usar 'formulario' como 'registro'
     # O
     path('registro/', views.registro_visita, name='registro'),
-        
         
         
   
@@ -73,18 +72,32 @@ urlpatterns = [
     path('archivos/detalle/<int:archivo_id>/', views.detalle_archivo, name='detalle_archivo'),
     path('archivos/editar/<int:archivo_id>/', views.editar_archivo, name='editar_archivo'),
     path('lista-archivos/', views.lista_archivos, name='lista_archivos'),
-    path('toggle-visibilidad/<int:archivo_id>/', views.toggle_visibilidad, name='toggle_visibilidad'),
-    
-    
+
     path('procesar/<int:archivo_id>/', views.procesar_archivo, name='procesar_archivo'),
-    
-    
-    
     path('actualizar-url/<int:archivo_id>/', views.actualizar_desde_url, name='actualizar_desde_url'),
     path('eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
     path('crear-categoria/', views.crear_categoria, name='crear_categoria'),
-    # Verificación masiva
+    # VerificaciÃ³n masiva
     path('verificar-urls/', views.verificar_urls, name='verificar_urls'),
     path('archivos/api/categorias/', views.get_categorias_json, name='get_categorias_json'),
     
+    
+    path('puntos-interes/', views.lista_puntos, name='lista_puntos_interes'),
+    path('puntos/detalle/<int:punto_id>/', views.detalle_punto, name='detalle_punto'),
+    path('puntos/editar/<int:punto_id>/', views.editar_punto, name='editar_punto'),
+    
+    path('puntos/toggle-visibilidad/<int:punto_id>/', views.toggle_visibilidad, name='toggle_visibilidad'),
+
+    # =====================================================
+    # API RESEÃ‘AS GLOBALES DEL MUNICIPIO
+    # =====================================================
+    path('api/resenas/', views.api_resenas_globales, name='api_resenas_globales'),
+    path('api/resenas/<int:resena_id>/like/', views.like_resena, name='like_resena'),
+    path('api/resenas/<int:resena_id>/reportar/', views.reportar_resena, name='reportar_resena'),
+
+    # Gestion administrativa de resenas
+    path('resenas/', views.gestionar_resenas, name='gestionar_resenas'),
+    path('resenas/<int:resena_id>/estado/', views.cambiar_estado_resena, name='cambiar_estado_resena'),
+    path('resenas/<int:resena_id>/eliminar/', views.eliminar_resena_admin, name='eliminar_resena_admin'),
+    path('resenas/accion-masiva/', views.accion_masiva_resenas, name='accion_masiva_resenas'),
 ]

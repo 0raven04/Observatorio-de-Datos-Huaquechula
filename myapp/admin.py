@@ -3,9 +3,11 @@ from django.contrib import admin
 from .models import (
     Usuario, Encuestador, Propietario, Administrador,
     RegistroVisita,
-    Ofrenda, Servicio, Categoria_Sitio, Sitio_turistico,Galeria_Multimedia,
-    Ruta,Ruta_Detalle,
-    ArchivoKMZ, GeometriaEspacial, Punto_Interes, Documento)
+    Ofrenda, Servicio, Categoria_Sitio, Sitio_turistico, Galeria_Multimedia,
+    Ruta, Ruta_Detalle,
+    ArchivoKMZ, GeometriaEspacial, Punto_Interes, Documento,
+    ResenaGlobal,
+)
     
 
 
@@ -205,3 +207,54 @@ class RutaDetalleAdmin(admin.ModelAdmin):
     list_display = ('id_ruta_detalle', 'id_ruta', 'id_punto', 'orden', 'tiempo_parada')
     list_filter = ('id_ruta',)
     search_fields = ('actividad_sugerida', 'id_punto__nombre')
+
+
+# =====================================================
+# PANEL DE MODERACIÓN DE RESEÑAS
+# =====================================================
+@admin.register(ResenaGlobal)
+class ResenaGlobalAdmin(admin.ModelAdmin):
+    list_display  = ['id_resena', 'autor_display', 'calificacion_stars',
+                     'estado', 'fecha_publicacion', 'likes', 'ip_visitante']
+    list_filter   = ['estado', 'calificacion', 'fecha_publicacion']
+    search_fields = ['nombre_visitante', 'comentario', 'ip_visitante']
+    readonly_fields = ['fecha_publicacion', 'ip_visitante', 'likes']
+    list_per_page = 30
+    date_hierarchy = 'fecha_publicacion'
+    actions = ['aprobar_resenas', 'ocultar_resenas', 'marcar_pendiente']
+
+    fieldsets = (
+        ('Autor', {
+            'fields': ('id_usuario', 'nombre_visitante', 'ip_visitante'),
+        }),
+        ('Contenido', {
+            'fields': ('calificacion', 'comentario'),
+        }),
+        ('Moderación', {
+            'fields': ('estado', 'likes', 'fecha_publicacion'),
+        }),
+    )
+
+    def autor_display(self, obj):
+        return obj.autor
+    autor_display.short_description = 'Autor'
+
+    def calificacion_stars(self, obj):
+        return '★' * obj.calificacion + '☆' * (5 - obj.calificacion)
+    calificacion_stars.short_description = 'Calificación'
+
+    @admin.action(description='✅ Aprobar reseñas seleccionadas')
+    def aprobar_resenas(self, request, queryset):
+        count = queryset.update(estado='aprobada')
+        self.message_user(request, f'{count} reseña(s) aprobada(s).')
+
+    @admin.action(description='🚫 Ocultar reseñas seleccionadas')
+    def ocultar_resenas(self, request, queryset):
+        count = queryset.update(estado='oculta')
+        self.message_user(request, f'{count} reseña(s) ocultada(s).')
+
+    @admin.action(description='🔄 Marcar como pendiente')
+    def marcar_pendiente(self, request, queryset):
+        count = queryset.update(estado='pendiente')
+        self.message_user(request, f'{count} reseña(s) marcada(s) como pendiente.')
+

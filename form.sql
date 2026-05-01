@@ -84,13 +84,13 @@ CREATE TABLE GeometriaEspacial (
     id_geometria INT AUTO_INCREMENT PRIMARY KEY,
     id_archivo INT NULL, 
     nombre VARCHAR(255),
-    tipo VARCHAR(20) NOT NULL, 
-    coordenadas JSON NOT NULL, 
+    tipo VARCHAR(20) NOT NULL,
+    coordenadas JSON NOT NULL,
     centroide POINT NULL SRID 4326, 
-    propiedades JSON, 
-    estilo JSON, 
+    propiedades JSON,
+    estilo JSON,
     perimetro DECIMAL(15, 6) NULL,
-    area DECIMAL(15, 6) NULL, 
+    area DECIMAL(15, 6) NULL,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_archivo) REFERENCES ArchivoKMZ(id_archivo) ON DELETE CASCADE
 );
@@ -103,16 +103,13 @@ CREATE TABLE Punto_Interes (
     descripcion MEDIUMTEXT,
     imagen_portada MEDIUMTEXT, 
     estado ENUM('activo', 'inactivo') DEFAULT 'activo',
-    fecha_inicio DATE NULL, 
-    fecha_fin DATE NULL,    
+    fecha_inicio DATE NULL,
+    fecha_fin DATE NULL,
     hora_apertura TIME NULL,
     hora_cierre TIME NULL,
-    
     dias_semana SET('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NULL,
-    
     usuario_creacion INT,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (id_geometria) REFERENCES GeometriaEspacial(id_geometria) ON DELETE SET NULL,
     FOREIGN KEY (usuario_creacion) REFERENCES Usuario(id_usuario),
 ) ENGINE=InnoDB;
@@ -120,7 +117,7 @@ CREATE TABLE Punto_Interes (
 
 CREATE TABLE Ofrenda (
     id_ofrenda INT AUTO_INCREMENT PRIMARY KEY,
-    id_punto INT NOT NULL UNIQUE, 
+    id_punto INT NOT NULL UNIQUE,
     anfitrion VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_punto) REFERENCES Punto_Interes(id_punto) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -152,13 +149,13 @@ CREATE TABLE Sitio_turistico (
 
 CREATE TABLE Ruta (
     id_ruta INT AUTO_INCREMENT PRIMARY KEY,
-    id_geometria INT NULL, 
+    id_geometria INT NULL,
     nombre VARCHAR(100) NOT NULL,
     descripcion MEDIUMTEXT,
-    duracion_estimada INT, 
+    duracion_estimada INT,
     longitud_km DECIMAL(8,2),
     dificultad ENUM('facil', 'moderada', 'dificil') DEFAULT 'moderada',
-    clave_propietario INT, -- OJO: Asegurate de tener la tabla Propietario creada antes
+    clave_propietario INT,
     estado ENUM('activa', 'inactiva') DEFAULT 'activa',
     FOREIGN KEY (id_geometria) REFERENCES GeometriaEspacial(id_geometria) ON DELETE SET NULL,
     FOREIGN KEY (clave_propietario) REFERENCES Propietario(clave_propietario)
@@ -167,10 +164,10 @@ CREATE TABLE Ruta (
 CREATE TABLE Ruta_Detalle (
     id_ruta_detalle INT AUTO_INCREMENT PRIMARY KEY,
     id_ruta INT NOT NULL,
-    id_punto INT NOT NULL, 
-    orden INT NOT NULL, 
-    tiempo_parada INT, 
-    actividad_sugerida TEXT, 
+    id_punto INT NOT NULL,
+    orden INT NOT NULL,
+    tiempo_parada INT,
+    actividad_sugerida TEXT,
     FOREIGN KEY (id_ruta) REFERENCES Ruta(id_ruta) ON DELETE CASCADE,
     FOREIGN KEY (id_punto) REFERENCES Punto_Interes(id_punto) ON DELETE CASCADE
 ) ENGINE=InnoDB;

@@ -308,11 +308,6 @@ class ArchivoKMZ(models.Model):
     TIPO_ARCHIVO_CHOICES = [
         ('kml', 'KML (Archivo geográfico)'),
         ('kmz', 'KMZ (Archivo comprimido)'),
-        ('imagen', 'Imagen (JPG, PNG, GIF, etc.)'),
-        ('video', 'Video (MP4, AVI, etc.)'),
-        ('audio', 'Audio (MP3, WAV, etc.)'),
-        ('pdf', 'Documento PDF'),
-        ('otro', 'Otro tipo de archivo'),
     ]
     
     id_archivo = models.AutoField(primary_key=True)
@@ -766,17 +761,17 @@ class Ruta(models.Model):
     # AÑADE VALORES POR DEFECTO
     duracion_estimada = models.IntegerField(
         help_text="Duración en minutos",
-        default=0  # ← VALOR POR DEFECTO
+        default=0
     )
     longitud_km = models.DecimalField(
-        max_digits=8, 
+        max_digits=8,
         decimal_places=2,
-        default=0.0  # ← VALOR POR DEFECTO
+        default=0.0
     )
     dificultad = models.CharField(
         max_length=10, 
         choices=DIFICULTAD_CHOICES, 
-        default='moderada'  # ← VALOR POR DEFECTO
+        default='moderada'  
     )
     
     # Este campo es problemático - necesita un usuario por defecto
@@ -821,3 +816,56 @@ class Ruta_Detalle(models.Model):
     
     def __str__(self):
         return f"Ruta {self.id_ruta.nombre} - Punto {self.orden}: {self.id_punto.nombre}"
+
+
+# =====================================================
+# SISTEMA DE RESEÑAS GLOBALES DEL MUNICIPIO
+# =====================================================
+class ResenaGlobal(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aprobada', 'Aprobada'),
+        ('oculta', 'Oculta'),
+    ]
+
+    id_resena = models.AutoField(primary_key=True)
+
+    # NULL para visitantes anónimos
+    id_usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        db_column='id_usuario',
+        null=True,
+        blank=True,
+        related_name='resenas'
+    )
+
+    # Apodo del visitante anónimo
+    nombre_visitante = models.CharField(max_length=100, blank=True, null=True)
+
+    calificacion = models.PositiveSmallIntegerField()          # 1-5
+    comentario   = models.TextField(blank=True, null=True)
+    fecha_publicacion = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(
+        max_length=10, choices=ESTADO_CHOICES, default='aprobada'
+    )
+    likes = models.PositiveIntegerField(default=0)
+
+    # IP para rate limiting
+    ip_visitante = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'Resena_Global'
+        verbose_name = 'Reseña Global'
+        verbose_name_plural = 'Reseñas Globales'
+        ordering = ['-fecha_publicacion']
+
+    def __str__(self):
+        return f"Reseña de {self.autor} — {self.calificacion}★"
+
+    @property
+    def autor(self):
+        """Nombre que se muestra en el feed público."""
+        if self.id_usuario:
+            return self.id_usuario.nombre_usuario
+        return self.nombre_visitante or 'Visitante'

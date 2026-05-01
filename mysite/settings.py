@@ -14,11 +14,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 import django.db.backends.mysql.base
-import osgeo
-
 
 def check_database_version_supported(self):
     pass
+
+
+
 
 django.db.backends.mysql.base.DatabaseWrapper.check_database_version_supported = check_database_version_supported
 
@@ -183,24 +184,17 @@ ALLOWED_EXTENSIONS = {
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
-# --- CONFIGURACIÓN GDAL / GEOS PARA WINDOWS ---
 
-# 1. Obtener la ruta donde se instaló el paquete (donde tomaste la foto)
-OSGEO_PATH = os.path.dirname(osgeo.__file__)
 
-# 2. Agregar esa carpeta al PATH de Windows para que encuentre las dependencias
-# (Esto es crucial para que encuentre 'proj_9.dll' y otros que salen en tu foto)
-os.environ['PATH'] = OSGEO_PATH + ';' + os.environ['PATH']
-
-# 3. Configurar variable para proyecciones
-os.environ['PROJ_LIB'] = os.path.join(OSGEO_PATH, 'data', 'proj')
-
-# 4. Decirle a Django los nombres exactos de los archivos que tienes
-GDAL_LIBRARY_PATH = os.path.join(OSGEO_PATH, 'gdal.dll')
-GEOS_LIBRARY_PATH = os.path.join(OSGEO_PATH, 'geos_c.dll')
 
 AUTH_USER_MODEL = 'myapp.Usuario'
 
 # Asegúrate de que el directorio media existe
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 os.makedirs(os.path.join(MEDIA_ROOT, 'kmz_files'), exist_ok=True)
+
+# =====================================================
+# GOOGLE reCAPTCHA v2
+# =====================================================
+RECAPTCHA_SITE_KEY   = '6LcENtQsAAAAAOTnhbFqiK-67LfQGtWR3W_KCxaT'
+RECAPTCHA_SECRET_KEY = '6LcENtQsAAAAAKCqocNDvvCDqlBirSTPCiQcG9bU'
