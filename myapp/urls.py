@@ -52,6 +52,7 @@ urlpatterns = [
     # Repositorio público
     path('repositorio/', views.repositorio_publico, name='repositorio'),
     path('repositorio-publico/', views.repositorio_publico, name='repositorio_publico'),
+    path('repositorio-galeria-prueba/', views.repositorio_galeria_prueba, name='repositorio_galeria_prueba'),
     path('descargar/<int:id>/', views.descargar_documento, name='descargar_documento'),
     path('detalle/<int:id>/', views.ver_documento_detalle, name='detalle_documento'),
     

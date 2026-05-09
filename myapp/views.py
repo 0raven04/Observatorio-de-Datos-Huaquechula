@@ -870,6 +870,112 @@ def repositorio_publico(request):
     return render(request, 'myapp/repositorio.html', context)
 
 
+def repositorio_galeria_prueba(request):
+    """
+    Vista de prueba para mostrar el repositorio de documentos públicos 
+    como una galería cultural interactiva.
+    """
+    busqueda = request.GET.get('q', '')
+    tipo_filtro = request.GET.get('tipo', '')
+    
+    class DummyDocument:
+        def __init__(self, titulo, descripcion, tipo, url, icono):
+            from django.utils import timezone
+            self.titulo = titulo
+            self.descripcion = descripcion
+            self.tipo = tipo
+            self.url = url
+            self.fecha_carga = timezone.now()
+            self.icono_archivo = icono
+
+    documentos = Documento.objects.filter(clasificacion='publico')
+    es_demo = False
+    
+    if documentos.count() == 0:
+        es_demo = True
+        documentos = [
+            DummyDocument(
+                "Documento Histórico de Prueba", 
+                "Este es un documento de prueba autogenerado para mostrar cómo se ve el diseño. Muestra un archivo PDF ficticio.", 
+                "historico", 
+                "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", 
+                "fas fa-file-pdf"
+            ),
+            DummyDocument(
+                "Video Documental de Muestra", 
+                "Ejemplo de un video insertado en la galería. Al hacer clic podrás visualizar este video de prueba.", 
+                "video", 
+                "https://www.w3schools.com/html/mov_bbb.mp4", 
+                "fas fa-file-video"
+            ),
+            DummyDocument(
+                "Reporte de Observatorio 2024", 
+                "Un reporte anual simulado. Contiene información ficticia y un botón de descarga para probar la interfaz.", 
+                "reporte", 
+                "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", 
+                "fas fa-file-pdf"
+            ),
+            DummyDocument(
+                "Fotografía Antigua Muestra", 
+                "Una imagen de alta resolución que ilustra cómo se verían los archivos de imagen en el repositorio.", 
+                "historico", 
+                "https://picsum.photos/800/600?random=1", 
+                "fas fa-file-image"
+            )
+        ]
+        
+        if tipo_filtro:
+            documentos = [d for d in documentos if d.tipo == tipo_filtro]
+            
+        if busqueda:
+            q = busqueda.lower()
+            documentos = [d for d in documentos if q in d.titulo.lower() or q in d.descripcion.lower()]
+            
+        total_publicos = len(documentos)
+        stats_tipos = {
+            'videos': 1,
+            'reportes': 1,
+            'historicos': 2,
+            'total': 4
+        }
+    else:
+        if tipo_filtro in dict(Documento.TIPO_CHOICES):
+            documentos = documentos.filter(tipo=tipo_filtro)
+
+        if busqueda:
+            documentos = documentos.filter(
+                Q(titulo__icontains=busqueda) | 
+                Q(descripcion__icontains=busqueda)
+            )
+        
+        documentos = documentos.order_by('-fecha_carga')
+        total_publicos = Documento.objects.filter(clasificacion='publico').count()
+        qs_publicos = Documento.objects.filter(clasificacion='publico')
+        stats_tipos = {
+            'videos': qs_publicos.filter(tipo='video').count(),
+            'reportes': qs_publicos.filter(tipo='reporte').count(),
+            'historicos': qs_publicos.filter(tipo='historico').count(),
+            'total': total_publicos
+        }
+    
+    paginator = Paginator(documentos, 18) # 18 para cuadrícula de 3x6 o 2x9
+    page_number = request.GET.get('page')
+    documentos_paginados = paginator.get_page(page_number)
+
+
+    
+    context = {
+        'documentos': documentos_paginados,
+        'busqueda': busqueda,
+        'tipo_filtro': tipo_filtro,           
+        'tipos_choices': Documento.TIPO_CHOICES, 
+        'stats_tipos': stats_tipos,
+    }
+    
+    return render(request, 'myapp/repositorio_galeria_prueba.html', context)
+
+
+
 def descargar_documento(request, id):
     """Vista para descargar un documento"""
     documento = get_object_or_404(Documento, id_documento=id)
