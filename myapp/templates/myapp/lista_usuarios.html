@@ -1,0 +1,525 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block extra_css %}
+    <link href="{% static 'myapp/CSS/style_crud.css' %}" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Botones superiores y Filtro -->
+    <!-- Botones superiores -->
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <div>
+            <button
+                type="button"
+                class="btn boton bt-body"
+                data-bs-toggle="modal"
+                data-bs-target="#modalCrearUsuario"
+            >
+                <i class="fas fa-user-plus me-1"></i> Nuevo Usuario
+            </button>
+        </div>
+    </div>
+
+    <!-- Mensajes de alerta dinámicos -->
+    <div id="alertContainer"></div>
+
+    <!-- Tabla de Usuarios -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 text-center" style="background-color: #4A4A4A">
+            <h5 class="mb-0 text-white"><i class="fas fa-users-cog me-2"></i>Gestión de Usuarios</h5>
+        </div>
+
+        <!-- Filtros por botones -->
+        <div class="card-body p-3 bg-light border-bottom">
+            <div class="d-flex w-100 gap-2">
+                <button class="btn btn-outline-dark flex-fill active btn-filtro fw-bold" data-filtro="todos" style="border-radius: 8px;">Todos</button>
+                <button class="btn btn-outline-dark flex-fill btn-filtro fw-bold" data-filtro="admin" style="border-radius: 8px;">Administradores</button>
+                <button class="btn btn-outline-dark flex-fill btn-filtro fw-bold" data-filtro="encuestador" style="border-radius: 8px;">Encuestadores</button>
+                <button class="btn btn-outline-dark flex-fill btn-filtro fw-bold" data-filtro="propietario" style="border-radius: 8px;">Propietarios</button>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="text-white" style="background-color: #4A4A4A">
+                        <tr>
+                            <th class="text-center align-middle">ID</th>
+                            <th class="text-center align-middle">Usuario</th>
+                            <th class="text-center align-middle">Nombre Completo</th>
+                            <th class="text-center align-middle">Email</th>
+                            <th class="text-center align-middle">Rol (Tipo)</th>
+                            <th class="text-center align-middle col-detalle-propietario" style="display: none;">Detalle Propietario</th>
+                            <th class="text-center align-middle">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr class="align-middle fila-usuario" data-tipo="{{ u.tipo }}">
+                            <td class="text-center">{{ u.id_usuario }}</td>
+                            <td class="text-center fw-bold">{{ u.nombre_usuario }}</td>
+                            <td class="text-center">{{ u.nombre }} {{ u.ap }} {{ u.am|default_if_none:"" }}</td>
+                            <td class="text-center">{{ u.email }}</td>
+                            <td class="text-center">
+                                {% if u.tipo == 'admin' %}
+                                    <span class="badge bg-danger rounded-pill">Administrador</span>
+                                {% elif u.tipo == 'encuestador' %}
+                                    <span class="badge bg-primary rounded-pill px-3 py-2">Encuestador</span>
+                                {% elif u.tipo == 'propietario' %}
+                                    <span class="badge bg-success rounded-pill px-3 py-2">Propietario</span>
+                                {% else %}
+                                    <span class="badge bg-secondary rounded-pill px-3 py-2">{{ u.tipo|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center align-middle col-detalle-propietario" style="display: none;">
+                                {% if u.tipo == 'propietario' and u.propietario %}
+                                    {% if u.propietario.tipo_propiedad %}
+                                        <div class="fw-bold text-dark">{{ u.propietario.tipo_propiedad|title }}</div>
+                                        {% if u.propietario.tipo_comercio %}
+                                            <small class="text-muted">{{ u.propietario.tipo_comercio|title }}</small>
+                                        {% endif %}
+                                        <small class="text-primary d-block mt-1"><i class="fas fa-map-marker-alt"></i> {{ u.propietario.puntos_asignados.count }} asignados</small>
+                                    {% else %}
+                                        <span class="text-muted"><small>N/A</small></span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted"><small>-</small></span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary" title="Editar" 
+                                    onclick="abrirModalEditar(
+                                        {{ u.id_usuario }}, 
+                                        '{{ u.nombre_usuario|escapejs }}', 
+                                        '{{ u.nombre|escapejs }}', 
+                                        '{{ u.ap|escapejs }}', 
+                                        '{{ u.am|default_if_none:""|escapejs }}', 
+                                        '{{ u.email|escapejs }}', 
+                                        '{{ u.tipo|escapejs }}',
+                                        {% if u.tipo == 'propietario' and u.propietario %}'{{ u.propietario.tipo_propiedad|default_if_none:""|escapejs }}'{% else %}''{% endif %},
+                                        {% if u.tipo == 'propietario' and u.propietario %}'{{ u.propietario.tipo_comercio|default_if_none:""|escapejs }}'{% else %}''{% endif %},
+                                        '{% if u.tipo == "propietario" and u.propietario %}{% for p in u.propietario.puntos_asignados.all %}{{ p.id_punto }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}'
+                                    )">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if u.id_usuario != request.user.id_usuario %}
+                                <button class="btn btn-sm btn-outline-danger" title="Desactivar/Eliminar" onclick="confirmarEliminar({{ u.id_usuario }}, '{{ u.nombre_usuario }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">No hay usuarios registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Usuario -->
+<div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <form id="formCrearUsuario" class="modal-content">
+            {% csrf_token %}
+                <div class="modal-header text-white" style="background-color: #4A4A4A;">
+                    <h5 class="modal-title" id="modalCrearUsuarioLabel"><i class="fas fa-user-plus me-2"></i>Crear Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de Usuario (Login)</label>
+                        <input type="text" class="form-control" name="nombre_usuario" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre(s)</label>
+                        <input type="text" class="form-control" name="nombre" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Apellido Paterno</label>
+                            <input type="text" class="form-control" name="ap" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Apellido Materno</label>
+                            <input type="text" class="form-control" name="am">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rol del Usuario</label>
+                        <select class="form-select" name="tipo" id="selectTipoCrear" required>
+                            <option value="">Seleccione un rol...</option>
+                            <option value="encuestador">Encuestador</option>
+                            <option value="propietario">Propietario</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        <small class="text-muted">Nota: El rol no se podrá cambiar posteriormente.</small>
+                    </div>
+
+                    <!-- Campos Extras para Propietarios -->
+                    <div id="extraFieldsCrear" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-naranja-claro); margin-bottom: 1rem;">
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-bold">¿Qué tipo de propiedad posee?</label>
+                            <select class="form-select" name="tipo_propiedad" id="selectTipoPropiedadCrear">
+                                <option value="">Seleccione una opción...</option>
+                                <option value="ofrenda">Ofrenda</option>
+                                <option value="comercio">Comercio</option>
+                            </select>
+                        </div>
+                        <div class="mb-2" id="extraComercioCrear" style="display: none;">
+                            <label class="form-label text-dark fw-bold">¿Qué tipo de comercio es?</label>
+                            <select class="form-select" name="tipo_comercio" id="selectTipoComercioCrear">
+                                <option value="">Seleccione una opción...</option>
+                                <option value="estatico">Comercio Estático (Lugar Fijo)</option>
+                                <option value="temporal">Puesto Temporal (Por temporada)</option>
+                            </select>
+                        </div>
+                        <div class="mb-2 mt-3">
+                            <label class="form-label text-dark fw-bold">Puntos de Interés Asignados</label>
+                            <select class="form-select" name="puntos_asignados" id="selectPuntosCrear" multiple style="min-height: 100px;">
+                                {% for punto in puntos %}
+                                    <option value="{{ punto.id_punto }}">{{ punto.nombre }} ({{ punto.get_categoria_display }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: var(--color-naranja); border-color: var(--color-naranja);">Crear Usuario</button>
+                </div>
+            </form>
+    </div>
+</div>
+
+<!-- Modal Editar Usuario -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <form id="formEditarUsuario" class="modal-content">
+            {% csrf_token %}
+                <input type="hidden" id="edit_id_usuario">
+                <div class="modal-header text-white" style="background-color: #4A4A4A;">
+                    <h5 class="modal-title" id="modalEditarUsuarioLabel"><i class="fas fa-user-edit me-2"></i>Editar Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de Usuario (Login)</label>
+                        <input type="text" class="form-control bg-light" id="edit_nombre_usuario" readonly disabled>
+                        <small class="text-muted">El nombre de usuario no es editable.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rol del Usuario</label>
+                        <input type="text" class="form-control bg-light" id="edit_tipo" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre(s)</label>
+                        <input type="text" class="form-control" name="nombre" id="edit_nombre" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Apellido Paterno</label>
+                            <input type="text" class="form-control" name="ap" id="edit_ap" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Apellido Materno</label>
+                            <input type="text" class="form-control" name="am" id="edit_am">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" name="email" id="edit_email" required>
+                    </div>
+
+                    <!-- Campos Extras para Propietarios (Solo visibles si es propietario) -->
+                    <div id="extraFieldsEditar" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-naranja-claro); margin-bottom: 1rem;">
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-bold">¿Qué tipo de propiedad posee?</label>
+                            <select class="form-select" name="tipo_propiedad" id="selectTipoPropiedadEditar">
+                                <option value="">Seleccione una opción...</option>
+                                <option value="ofrenda">Ofrenda</option>
+                                <option value="comercio">Comercio</option>
+                            </select>
+                        </div>
+                        <div class="mb-2" id="extraComercioEditar" style="display: none;">
+                            <label class="form-label text-dark fw-bold">¿Qué tipo de comercio es?</label>
+                            <select class="form-select" name="tipo_comercio" id="selectTipoComercioEditar">
+                                <option value="">Seleccione una opción...</option>
+                                <option value="estatico">Comercio Estático (Lugar Fijo)</option>
+                                <option value="temporal">Puesto Temporal (Por temporada)</option>
+                            </select>
+                        </div>
+                        <div class="mb-2 mt-3">
+                            <label class="form-label text-dark fw-bold">Puntos de Interés Asignados</label>
+                            <select class="form-select" name="puntos_asignados" id="selectPuntosEditar" multiple style="min-height: 100px;">
+                                {% for punto in puntos %}
+                                    <option value="{{ punto.id_punto }}">{{ punto.nombre }} ({{ punto.get_categoria_display }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Nueva Contraseña (Opcional)</label>
+                        <input type="password" class="form-control" name="password" placeholder="Dejar en blanco para no cambiar">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: var(--color-naranja); border-color: var(--color-naranja);">Guardar Cambios</button>
+                </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        document.getElementById('alertContainer').innerHTML = alertHtml;
+        window.scrollTo(0, 0);
+    }
+
+    // Limpiar formulario al cerrar el modal
+    document.getElementById('modalCrearUsuario').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('formCrearUsuario').reset();
+    });
+
+    // Crear Usuario
+    document.getElementById('formCrearUsuario').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('{% url "crear_usuario" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Error al crear usuario');
+            }
+        })
+        .catch(error => alert('Error de conexión'));
+    });
+
+    // Lógica para mostrar/ocultar campos en "Crear Usuario"
+    const selectTipoCrear = document.getElementById('selectTipoCrear');
+    const extraFieldsCrear = document.getElementById('extraFieldsCrear');
+    const selectTipoPropiedadCrear = document.getElementById('selectTipoPropiedadCrear');
+    const extraComercioCrear = document.getElementById('extraComercioCrear');
+    const selectTipoComercioCrear = document.getElementById('selectTipoComercioCrear');
+
+    selectTipoCrear.addEventListener('change', function() {
+        if (this.value === 'propietario') {
+            extraFieldsCrear.style.display = 'block';
+            selectTipoPropiedadCrear.required = true;
+        } else {
+            extraFieldsCrear.style.display = 'none';
+            selectTipoPropiedadCrear.required = false;
+            selectTipoPropiedadCrear.value = '';
+            extraComercioCrear.style.display = 'none';
+            selectTipoComercioCrear.required = false;
+            selectTipoComercioCrear.value = '';
+        }
+    });
+
+    selectTipoPropiedadCrear.addEventListener('change', function() {
+        if (this.value === 'comercio') {
+            extraComercioCrear.style.display = 'block';
+            selectTipoComercioCrear.required = true;
+        } else {
+            extraComercioCrear.style.display = 'none';
+            selectTipoComercioCrear.required = false;
+            selectTipoComercioCrear.value = '';
+        }
+    });
+
+    // Lógica para mostrar/ocultar campos en "Editar Usuario"
+    const extraFieldsEditar = document.getElementById('extraFieldsEditar');
+    const selectTipoPropiedadEditar = document.getElementById('selectTipoPropiedadEditar');
+    const extraComercioEditar = document.getElementById('extraComercioEditar');
+    const selectTipoComercioEditar = document.getElementById('selectTipoComercioEditar');
+
+    selectTipoPropiedadEditar.addEventListener('change', function() {
+        if (this.value === 'comercio') {
+            extraComercioEditar.style.display = 'block';
+            selectTipoComercioEditar.required = true;
+        } else {
+            extraComercioEditar.style.display = 'none';
+            selectTipoComercioEditar.required = false;
+            selectTipoComercioEditar.value = '';
+        }
+    });
+
+    // Función para abrir modal de edición y llenar datos
+    function abrirModalEditar(id, nombre_usuario, nombre, ap, am, email, tipo, tipo_propiedad, tipo_comercio, puntos_asignados) {
+        document.getElementById('edit_id_usuario').value = id;
+        document.getElementById('edit_nombre_usuario').value = nombre_usuario;
+        document.getElementById('edit_nombre').value = nombre;
+        document.getElementById('edit_ap').value = ap;
+        document.getElementById('edit_am').value = am;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_tipo').value = tipo.toUpperCase();
+        
+        // Manejar campos extras si es propietario
+        const extraFields = document.getElementById('extraFieldsEditar');
+        const extraComercio = document.getElementById('extraComercioEditar');
+        const selectTipoPropiedad = document.getElementById('selectTipoPropiedadEditar');
+        const selectTipoComercio = document.getElementById('selectTipoComercioEditar');
+        const selectPuntos = document.getElementById('selectPuntosEditar');
+        
+        if (tipo.toLowerCase() === 'propietario') {
+            extraFields.style.display = 'block';
+            selectTipoPropiedad.value = tipo_propiedad || '';
+            
+            if (tipo_propiedad === 'comercio') {
+                extraComercio.style.display = 'block';
+                selectTipoComercio.value = tipo_comercio || '';
+            } else {
+                extraComercio.style.display = 'none';
+                selectTipoComercio.value = '';
+            }
+
+            // Seleccionar los puntos asignados
+            if (selectPuntos) {
+                // Limpiar selecciones previas
+                Array.from(selectPuntos.options).forEach(opt => opt.selected = false);
+                
+                if (puntos_asignados) {
+                    const puntosArray = String(puntos_asignados).split(',');
+                    Array.from(selectPuntos.options).forEach(opt => {
+                        if (puntosArray.includes(opt.value)) {
+                            opt.selected = true;
+                        }
+                    });
+                }
+            }
+        } else {
+            extraFields.style.display = 'none';
+            selectTipoPropiedad.value = '';
+            selectTipoComercio.value = '';
+            if (selectPuntos) {
+                Array.from(selectPuntos.options).forEach(opt => opt.selected = false);
+            }
+        }
+
+        // Limpiar el campo de password
+        document.querySelector('#formEditarUsuario input[name="password"]').value = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
+        modal.show();
+    }
+
+    // Editar Usuario
+    document.getElementById('formEditarUsuario').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit_id_usuario').value;
+        const formData = new FormData(this);
+        
+        fetch(`/usuarios/editar/${id}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Error al editar usuario');
+            }
+        })
+        .catch(error => alert('Error de conexión'));
+    });
+
+    // Eliminar/Desactivar Usuario
+    function confirmarEliminar(id, username) {
+        if (confirm(`¿Está seguro que desea desactivar/eliminar al usuario "${username}"?\nEsta acción no se puede deshacer y el usuario ya no podrá iniciar sesión.`)) {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            fetch(`/usuarios/eliminar/${id}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error al eliminar usuario');
+                }
+            })
+            .catch(error => alert('Error de conexión'));
+        }
+    }
+    // Filtro de usuarios por rol con botones
+    const botonesFiltro = document.querySelectorAll('.btn-filtro');
+    const colDetallePropietario = document.querySelectorAll('.col-detalle-propietario');
+    
+    botonesFiltro.forEach(boton => {
+        boton.addEventListener('click', function() {
+            // Remover estado activo de todos
+            botonesFiltro.forEach(b => b.classList.remove('active'));
+            // Añadir estado activo al clicado
+            this.classList.add('active');
+            
+            const filtro = this.dataset.filtro;
+            
+            // Mostrar/Ocultar columna extra "Detalle Propietario"
+            if (filtro === 'propietario') {
+                colDetallePropietario.forEach(col => col.style.display = '');
+            } else {
+                colDetallePropietario.forEach(col => col.style.display = 'none');
+            }
+
+            const filas = document.querySelectorAll('.fila-usuario');
+            
+            filas.forEach(fila => {
+                if (filtro === 'todos' || fila.getAttribute('data-tipo') === filtro) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

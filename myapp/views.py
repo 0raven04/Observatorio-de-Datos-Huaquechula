@@ -5,7 +5,7 @@ from pytz import timezone
 from myapp.models import (
     ArchivoKMZ, GeometriaEspacial, Punto_Interes, Categoria_Sitio, Galeria_Multimedia,
     Servicio, Ofrenda, Documento, Administrador, Sitio_turistico, Usuario, Encuestador,
-    RegistroVisita, ResenaGlobal
+    RegistroVisita, ResenaGlobal, Propietario
 )
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
@@ -124,11 +124,11 @@ def backup_database(request):
         db_host = settings.DATABASES['default']['HOST'] or 'localhost'
         
         # Crear nombre de archivo único con timestamp
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         backup_filename = f"backup_{timestamp}.sql"
         
-        # Directorio temporal para guardar el respaldo
-        temp_dir = "C:\\Descargas\\respaldo"
+        # Directorio temporal para guardar el respaldo (usando /tmp para Linux/Docker)
+        temp_dir = "/tmp/respaldo"
         os.makedirs(temp_dir, exist_ok=True)
         backup_path = os.path.join(temp_dir, backup_filename)
         
@@ -138,6 +138,7 @@ def backup_database(request):
             f'-h{db_host}',
             f'-u{db_user}',
             f'-p{db_pass}',
+            '--skip-ssl',
             db_name,
             f'--result-file={backup_path}'
         ]
@@ -164,6 +165,7 @@ def backup_database(request):
     
 
 
+@login_required
 @transaction.atomic
 def registro_visita(request):
     """
@@ -468,20 +470,43 @@ def editar_registro(request, id_registro):
     
     
 
-@login_required  
 @transaction.atomic  
 def formulario(request):  
     """  
-    Vista específica para que encuestadores puedan crear registros  
+    Vista específica para que encuestadores, administradores y usuarios independientes puedan crear registros  
     """
-    try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
-        if usuario.tipo != 'encuestador':  
-            return HttpResponseForbidden("No tienes permiso. Solo los encuestadores pueden acceder.")  
-          
-        encuestador = Encuestador.objects.get(id_usuario=usuario)  
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
-        return HttpResponse('Encuestador no encontrado.', status=404)  
+    encuestador = None
+    if request.user.is_authenticated:
+        try:  
+            usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
+            if usuario.tipo not in ['encuestador', 'admin', 'propietario']:  
+                return HttpResponseForbidden("No tienes permiso para acceder a esta página.")  
+              
+            if usuario.tipo == 'encuestador':  
+                encuestador = Encuestador.objects.get(id_usuario=usuario)  
+            else:  # admin o propietario  
+                encuestador, _ = Encuestador.objects.get_or_create(id_usuario=usuario)  
+        except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
+            return HttpResponse('Usuario o encuestador no encontrado.', status=404)  
+    else:
+        # Usuario no autenticado (Independiente)
+        try:
+            usuario_indep, created = Usuario.objects.get_or_create(
+                nombre_usuario='independiente',
+                defaults={
+                    'nombre': 'Independiente',
+                    'ap': 'Visitante',
+                    'email': 'independiente@observatorio.local',
+                    'tipo': 'encuestador'
+                }
+            )
+            if created:
+                usuario_indep.set_password('observatorio_indep_123')
+                usuario_indep.save()
+            
+            encuestador, _ = Encuestador.objects.get_or_create(id_usuario=usuario_indep)
+        except Exception as e:
+            return HttpResponse(f'Error al configurar acceso independiente: {e}', status=500)
   
     if request.method == 'POST':  
         # Función auxiliar para convertir valores a entero
@@ -2233,7 +2258,7 @@ def redirigir_por_tipo_usuario(request):
             return redirect('lista_registros')  
         elif usuario.tipo == 'propietario':  
             # Redirigir a una página específica para propietarios  
-            return redirect('vista_inicio')  # o donde corresponda  
+            return redirect('mis_propiedades')  # o donde corresponda  
         else:  
             # Tipo de usuario no reconocido  
             return redirect('login')  
@@ -2393,7 +2418,7 @@ def reportar_resena(request, resena_id):
 
 
 # =====================================================
-# GESTI�N DE RESE�AS � PANEL ADMINISTRATIVO
+# GESTI�N DE RESE�AS � PANEL ADMINISTRATIVO
 # =====================================================
 
 from django.contrib.auth.decorators import login_required
@@ -2454,3 +2479,252 @@ def accion_masiva_resenas(request):
         return JsonResponse({'error': 'Estado no valido'}, status=400)
     actualizadas = qs.update(estado=estado)
     return JsonResponse({'ok': True, 'actualizadas': actualizadas})
+
+# ==========================================
+# GESTIÓN DE USUARIOS (CRUD)
+# ==========================================
+
+@login_required
+def lista_usuarios(request):
+    if request.user.tipo != 'admin':
+        return HttpResponseForbidden("Acceso denegado. Solo administradores.")
+    
+    # Excluir usuarios inactivos
+    usuarios = Usuario.objects.filter(is_active=True).order_by('-fecha_registro')
+    # Puntos para el selector múltiple de propietarios
+    puntos = Punto_Interes.objects.filter(estado='activo').order_by('nombre')
+    
+    context = {
+        'usuarios': usuarios,
+        'puntos': puntos
+    }
+    return render(request, 'myapp/lista_usuarios.html', context)
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def crear_usuario(request):
+    if request.user.tipo != 'admin':
+        return JsonResponse({'error': 'Acceso denegado.'}, status=403)
+        
+    try:
+        nombre_usuario = request.POST.get('nombre_usuario')
+        nombre = request.POST.get('nombre')
+        ap = request.POST.get('ap')
+        am = request.POST.get('am', '')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        tipo = request.POST.get('tipo')
+        
+        if not all([nombre_usuario, nombre, ap, email, password, tipo]):
+            return JsonResponse({'error': 'Todos los campos obligatorios deben ser llenados'}, status=400)
+            
+        if Usuario.objects.filter(nombre_usuario=nombre_usuario).exists():
+            return JsonResponse({'error': 'El nombre de usuario ya existe'}, status=400)
+            
+        if Usuario.objects.filter(email=email).exists():
+            return JsonResponse({'error': 'El correo ya está registrado'}, status=400)
+            
+        if tipo not in ['admin', 'encuestador', 'propietario']:
+            return JsonResponse({'error': 'Tipo de usuario inválido'}, status=400)
+            
+        usuario = Usuario.objects.create_user(
+            nombre_usuario=nombre_usuario,
+            email=email,
+            password=password,
+            nombre=nombre,
+            ap=ap,
+            am=am,
+            tipo=tipo
+        )
+        
+        # Create related profile
+        if tipo == 'admin':
+            Administrador.objects.create(id_usuario=usuario)
+        elif tipo == 'encuestador':
+            Encuestador.objects.create(id_usuario=usuario)
+        elif tipo == 'propietario':
+            tipo_propiedad = request.POST.get('tipo_propiedad')
+            tipo_comercio = request.POST.get('tipo_comercio') if tipo_propiedad == 'comercio' else None
+            propietario = Propietario.objects.create(
+                id_usuario=usuario,
+                tipo_propiedad=tipo_propiedad,
+                tipo_comercio=tipo_comercio
+            )
+            
+            puntos_asignados = request.POST.getlist('puntos_asignados')
+            if puntos_asignados:
+                puntos_objs = Punto_Interes.objects.filter(id_punto__in=puntos_asignados)
+                for p in puntos_objs:
+                    p.propietarios.add(propietario)
+            
+        return JsonResponse({'success': True, 'message': 'Usuario creado exitosamente.'})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def editar_usuario(request, id_usuario):
+    if request.user.tipo != 'admin':
+        return JsonResponse({'error': 'Acceso denegado.'}, status=403)
+        
+    try:
+        usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+        
+        nombre = request.POST.get('nombre')
+        ap = request.POST.get('ap')
+        am = request.POST.get('am', '')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        if not all([nombre, ap, email]):
+            return JsonResponse({'error': 'Nombre, apellidos y correo son obligatorios'}, status=400)
+            
+        # Check email uniqueness except for current user
+        if Usuario.objects.filter(email=email).exclude(id_usuario=id_usuario).exists():
+            return JsonResponse({'error': 'El correo ya está registrado por otro usuario'}, status=400)
+            
+        usuario.nombre = nombre
+        usuario.ap = ap
+        usuario.am = am
+        usuario.email = email
+        
+        # Guardar cambios extras si el usuario es Propietario
+        if usuario.tipo == 'propietario':
+            if hasattr(usuario, 'propietario'):
+                tipo_propiedad = request.POST.get('tipo_propiedad')
+                tipo_comercio = request.POST.get('tipo_comercio') if tipo_propiedad == 'comercio' else None
+                usuario.propietario.tipo_propiedad = tipo_propiedad
+                usuario.propietario.tipo_comercio = tipo_comercio
+                usuario.propietario.save()
+                
+                puntos_asignados = request.POST.getlist('puntos_asignados')
+                if puntos_asignados is not None:
+                    # Limpiamos puntos actuales y añadimos los nuevos
+                    usuario.propietario.puntos_asignados.clear()
+                    if puntos_asignados:
+                        puntos_objs = Punto_Interes.objects.filter(id_punto__in=puntos_asignados)
+                        for p in puntos_objs:
+                            p.propietarios.add(usuario.propietario)
+        
+        # Solo actualiza la contraseña si se proporcionó una nueva
+        if password and len(password.strip()) > 0:
+            usuario.set_password(password)
+            
+        usuario.save()
+        return JsonResponse({'success': True, 'message': 'Usuario actualizado exitosamente.'})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def eliminar_usuario(request, id_usuario):
+    if request.user.tipo != 'admin':
+        return JsonResponse({'error': 'Acceso denegado.'}, status=403)
+        
+    try:
+        usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+        
+        # Don't allow deleting oneself
+        if usuario.id_usuario == request.user.id_usuario:
+            return JsonResponse({'error': 'No puedes eliminar tu propio usuario'}, status=400)
+            
+        # Soft delete (Desactivación)
+        usuario.is_active = False
+        usuario.save()
+        
+        return JsonResponse({'success': True, 'message': 'Usuario desactivado exitosamente.'})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# ==========================================
+# 8. VISTAS DEL PROPIETARIO
+# ==========================================
+
+@login_required
+def mis_propiedades(request):
+    if request.user.tipo != 'propietario':
+        return HttpResponseForbidden("Acceso denegado. Solo propietarios.")
+    
+    try:
+        propietario = request.user.propietario
+        puntos = propietario.puntos_asignados.all()
+    except Exception:
+        puntos = []
+        
+    context = {
+        'puntos': puntos
+    }
+    return render(request, 'myapp/mis_propiedades.html', context)
+
+@login_required
+@require_POST
+def editar_mi_propiedad(request, id_punto):
+    if request.user.tipo != 'propietario':
+        return JsonResponse({'success': False, 'error': 'Acceso denegado.'}, status=403)
+        
+    try:
+        propietario = request.user.propietario
+        punto = get_object_or_404(Punto_Interes, id_punto=id_punto, propietarios=propietario)
+        
+        # 1. Campos básicos permitidos
+        punto.nombre = request.POST.get('nombre_punto', punto.nombre)
+        punto.descripcion = request.POST.get('descripcion', '')
+        punto.imagen_portada = request.POST.get('imagen_portada', '') or None
+        
+        fecha_inicio = request.POST.get('fecha_inicio')
+        punto.fecha_inicio = fecha_inicio if fecha_inicio else None
+
+        fecha_fin = request.POST.get('fecha_fin')
+        punto.fecha_fin = fecha_fin if fecha_fin else None
+
+        hora_apertura = request.POST.get('hora_apertura')
+        punto.hora_apertura = hora_apertura if hora_apertura else None
+
+        hora_cierre = request.POST.get('hora_cierre')
+        punto.hora_cierre = hora_cierre if hora_cierre else None
+
+        dias_seleccionados = request.POST.getlist('dias_semana')
+        punto.dias_semana_list = dias_seleccionados
+        punto.save()
+        
+        # 2. Submodelos según categoría
+        categoria = punto.categoria
+        if categoria == 'ofrenda':
+            anfitrion = request.POST.get('anfitrion', '').strip()
+            if hasattr(punto, 'ofrenda'):
+                punto.ofrenda.anfitrion = anfitrion
+                punto.ofrenda.save()
+            else:
+                Ofrenda.objects.create(id_punto=punto, anfitrion=anfitrion)
+                
+        elif categoria == 'servicio':
+            tipo_servicio_val = request.POST.get('tipo_servicio', 'hospedaje')
+            contacto = request.POST.get('contacto', '')
+            tipo_pagos_sel = request.POST.getlist('tipo_pago')
+            str_pagos = ",".join(tipo_pagos_sel) if tipo_pagos_sel else 'efectivo'
+            
+            if hasattr(punto, 'servicio'):
+                punto.servicio.tipo_servicio = tipo_servicio_val
+                punto.servicio.contacto = contacto
+                punto.servicio.tipo_pago = str_pagos
+                punto.servicio.save()
+            else:
+                Servicio.objects.create(
+                    id_punto=punto,
+                    tipo_servicio=tipo_servicio_val,
+                    contacto=contacto,
+                    tipo_pago=str_pagos
+                )
+                
+        # Propietario no puede editar geometría ni borrar
+        
+        return JsonResponse({'success': True, 'message': 'Propiedad actualizada exitosamente.'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

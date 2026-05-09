@@ -21,7 +21,7 @@
     <style>
       /* Estilos específicos para la tabla de género y edad */
       .age-group-header {
-        background-color: #2c3e50;
+        background-color: var(--color-gris-oscuro);
         color: white;
         padding: 15px;
         font-weight: bold;
@@ -38,12 +38,12 @@
       }
       
       .age-group-table th {
-        background-color: #34495e;
+        background-color: var(--color-gris-oscuro);
         color: white;
         padding: 12px 8px;
         text-align: center;
         font-weight: bold;
-        border: 1px solid #2c3e50;
+        border: 1px solid var(--color-gris-oscuro);
       }
       
       .age-group-table td {
@@ -54,21 +54,22 @@
       }
       
       .age-group-table tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
+        background-color: var(--color-arena-claro);
       }
       
       .age-group-table tbody tr:hover {
-        background-color: #e8f4fc;
+        background-color: rgba(214, 206, 170, 0.4); /* arena-oscuro con opacidad */
       }
       
       .age-group-table tfoot th {
-        background-color: #16a085;
+        background-color: var(--color-gris-oscuro);
         color: white;
         font-weight: bold;
       }
       
       .age-group-table tfoot td {
-        background-color: #f1f8e9;
+        background-color: var(--color-arena-claro);
+        color: var(--color-gris-oscuro);
         font-weight: bold;
       }
       
@@ -76,7 +77,7 @@
         display: inline-block;
         min-width: 40px;
         padding: 5px 10px;
-        background-color: #3498db;
+        background-color: var(--color-naranja);
         color: white;
         border-radius: 3px;
         font-weight: bold;
@@ -90,12 +91,12 @@
       }
       
       .age-group-table input.form-control:focus {
-        border-color: #3498db;
-        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        border-color: var(--color-naranja-claro);
+        box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
       }
       
       .total-display {
-        background-color: #2ecc71;
+        background-color: var(--color-gris-oscuro);
         color: white;
         padding: 12px;
         font-weight: bold;
@@ -106,8 +107,8 @@
       }
       
       .total-display span {
-        background-color: white;
-        color: #2ecc71;
+        background-color: var(--color-naranja-claro);
+        color: white;
         padding: 4px 12px;
         border-radius: 20px;
         margin-left: 10px;
@@ -144,10 +145,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <form action="{% url 'logout' %}" method="post">
-          {% csrf_token %}
-          <button class="btn boton" type="submit">Cerrar sesión</button>
-        </form>
+        <a href="{% url 'vista_inicio' %}" class="btn boton text-decoration-none">Regresar</a>
       </div>
 
       <div
@@ -180,9 +178,10 @@
     <div class="caja container-fluid mt-3 p-5">
       <div class="d-flex justify-content-center">
         <img
-          src="{% static 'myapp/image/logo.png ' %}"
+          src="{% static 'myapp/image/huaquechulaLogo.png' %}"
           class="img-fluid logo"
           alt="Logo"
+          style="max-height: 100px;"
         />
       </div>
 
@@ -532,10 +531,6 @@
             <div class="invalid-feedback">Selecciona un país de origen</div>
           </div>
 
-          <!-- Campo oculto para la clave del encuestador -->
-          <input type="hidden" name="clave_encuestador" value="{{ request.user.id }}">
-          <!-- Campo oculto para id_encuestador (si es diferente) -->
-          <input type="hidden" name="id_encuestador" value="{{ request.user.id_encuestador|default:request.user.id }}">
 
           <div class="col-12 mt-4">
             <input

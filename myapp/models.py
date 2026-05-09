@@ -86,6 +86,15 @@ class Encuestador(models.Model):
 
 
 class Propietario(models.Model):
+    TIPO_PROPIEDAD_CHOICES = [
+        ('ofrenda', 'Ofrenda'),
+        ('comercio', 'Comercio'),
+    ]
+    TIPO_COMERCIO_CHOICES = [
+        ('estatico', 'Comercio Estático (Lugar Fijo)'),
+        ('temporal', 'Puesto Temporal (Por temporada)'),
+    ]
+
     clave_propietario = models.AutoField(primary_key=True)
     id_usuario = models.OneToOneField(
         Usuario,
@@ -93,6 +102,8 @@ class Propietario(models.Model):
         db_column='id_usuario',
         related_name='propietario'
     )
+    tipo_propiedad = models.CharField(max_length=20, choices=TIPO_PROPIEDAD_CHOICES, null=True, blank=True)
+    tipo_comercio = models.CharField(max_length=20, choices=TIPO_COMERCIO_CHOICES, null=True, blank=True)
     
     class Meta:
         db_table = 'Propietario'
@@ -563,6 +574,13 @@ class Punto_Interes(models.Model):
         related_name='puntos_creados'
     )
     fecha_registro = models.DateTimeField(default=timezone.now)
+    
+    # NUEVO CAMPO: Relación N:M con Propietarios
+    propietarios = models.ManyToManyField(
+        'Propietario',
+        blank=True,
+        related_name='puntos_asignados'
+    )
     
     class Meta:
         db_table = 'Punto_Interes'

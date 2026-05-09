@@ -29,17 +29,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-
-SECRET_KEY = 'django-insecure-)xzi6t)9&hsqo5&lzrx3vb(!7=@&h2eyaq9^a)2onl-#5dik%^'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)xzi6t)9&hsqo5&lzrx3vb(!7=@&h2eyaq9^a)2onl-#5dik%^')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
 # Application definition
 
@@ -90,15 +88,14 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'observatorio_de_datos',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': os.environ.get('DB_NAME', 'observatorio_de_datos'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES', innodb_strict_mode=1",
             'charset': 'utf8mb4',
@@ -135,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
 
@@ -145,9 +142,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
 STATIC_URL = '/static/'
-
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/vol/web/static')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -173,7 +169,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/vol/web/media')
 
 # Configuración para tipos de archivos permitidos
 ALLOWED_EXTENSIONS = {
@@ -189,12 +185,8 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 AUTH_USER_MODEL = 'myapp.Usuario'
 
-# Asegúrate de que el directorio media existe
-os.makedirs(MEDIA_ROOT, exist_ok=True)
-os.makedirs(os.path.join(MEDIA_ROOT, 'kmz_files'), exist_ok=True)
-
 # =====================================================
 # GOOGLE reCAPTCHA v2
 # =====================================================
-RECAPTCHA_SITE_KEY   = '6LcENtQsAAAAAOTnhbFqiK-67LfQGtWR3W_KCxaT'
-RECAPTCHA_SECRET_KEY = '6LcENtQsAAAAAKCqocNDvvCDqlBirSTPCiQcG9bU'
+RECAPTCHA_SITE_KEY   = os.environ.get('RECAPTCHA_SITE_KEY', '6LcENtQsAAAAAOTnhbFqiK-67LfQGtWR3W_KCxaT')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '6LcENtQsAAAAAKCqocNDvvCDqlBirSTPCiQcG9bU')

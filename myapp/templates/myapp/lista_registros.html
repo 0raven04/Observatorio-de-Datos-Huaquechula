@@ -157,9 +157,15 @@
                 </span>
             </td>
             <td class="text-center align-middle">
-                <span class="badge rounded-pill d-inline-block" style="background-color: #7f8c8d; color: white;">
-                    {{ r.clave_encuestador.clave_encuestador }}
+                {% if r.clave_encuestador.id_usuario.nombre_usuario == 'independiente' %}
+                <span class="badge rounded-pill d-inline-block" style="background-color: #17a2b8; color: white;" title="Encuesta realizada de forma independiente">
+                    Independiente
                 </span>
+                {% else %}
+                <span class="badge rounded-pill d-inline-block" style="background-color: #7f8c8d; color: white;" title="Usuario: {{ r.clave_encuestador.id_usuario.nombre_usuario }}">
+                    {{ r.clave_encuestador.id_usuario.nombre_usuario }}
+                </span>
+                {% endif %}
             </td>
 
             <!-- Botones de acciones -->
@@ -192,8 +198,9 @@
                     <!-- Fila 2: Eliminar -->
                     <div class="d-flex justify-content-center gap-1">
                         <!-- Botón Eliminar -->
-                        <button class="btn btn-sm"
-                                onclick="eliminarRegistro('{{ r.id_registro }}')"
+                        <button class="btn btn-sm btn-eliminar"
+                                data-id="{{ r.id_registro }}"
+                                data-delete-url="{% url 'eliminar_registro' r.id_registro %}"
                                 style="background-color: #e74c3c; border: none; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 50px; padding: 2px;"
                                 title="Eliminar registro">
                             <i class="fas fa-trash" style="font-size: 1rem;"></i>
@@ -288,7 +295,7 @@
         });
     });
 
-      function editarRegistro(id) {
+  function editarRegistro(id) {
       fetch(`/registros/editar/${id}/`)
           .then(res => {
               if (!res.ok) throw new Error("No se pudo cargar el registro");
@@ -324,6 +331,47 @@
               // Abrir el modal
               const modal = new bootstrap.Modal(document.getElementById("miModal"));
               modal.show();
+          })
+          .catch(err => {
+              alert("Error: " + err.message);
+          });
+  }
+
+  function verRegistro(id) {
+      fetch(`/registros/editar/${id}/`)
+          .then(res => {
+              if (!res.ok) throw new Error("No se pudo cargar el registro");
+              return res.json();
+          })
+          .then(data => {
+              // Llenar cada input por name
+              for (const campo in data) {
+                  const input = document.querySelector(`#formulario [name="${campo}"]`);
+                  if (input) {
+                      if (input.type === "checkbox") {
+                          input.checked = data[campo];
+                      } else {
+                          input.value = data[campo];
+                      }
+                      input.disabled = true; // Deshabilitar
+                  }
+              }
+
+              // Cambiar título del modal
+              document.getElementById("tituloModal").innerText = "Ver Registro";
+
+              // Ocultar botón Guardar y Mostrar el Modal
+              const btnGuardar = document.querySelector('#formulario button[type="submit"]');
+              if(btnGuardar) btnGuardar.style.display = 'none';
+
+              const modal = new bootstrap.Modal(document.getElementById("miModal"));
+              modal.show();
+
+              // Al cerrar, re-habilitar inputs y mostrar botón
+              document.getElementById('miModal').addEventListener('hidden.bs.modal', function () {
+                  document.querySelectorAll('#formulario input, #formulario select, #formulario textarea').forEach(el => el.disabled = false);
+                  if(btnGuardar) btnGuardar.style.display = 'block';
+              }, {once: true});
           })
           .catch(err => {
               alert("Error: " + err.message);
