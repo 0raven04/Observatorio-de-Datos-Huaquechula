@@ -1,16 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 echo "Ejecutando migraciones de la base de datos..."
 python manage.py migrate --noinput
 
 echo "Recolectando archivos estáticos..."
-python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput --clear
 
 echo "Asegurando que la carpeta media y subcarpetas existen..."
 mkdir -p /vol/web/media/kmz_files
 
-# El comando a continuación arrancará el servidor web para desarrollo.
-# Para producción se debería usar gunicorn o uWSGI.
-echo "Iniciando servidor de desarrollo Django..."
-exec python manage.py runserver 0.0.0.0:8000
+echo "Iniciando Gunicorn..."
+exec gunicorn mysite.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --timeout ${GUNICORN_TIMEOUT:-60}

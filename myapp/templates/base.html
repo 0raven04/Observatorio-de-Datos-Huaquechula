@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="origin-when-cross-origin">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Observatorio{% endblock %}</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -94,6 +95,30 @@
 
         {% endblock %}
     </main>
+
+    <!-- Chat Widget (fuera del main para posicionamiento fixed correcto) -->
+    <div id="chat-widget">
+        <div id="chat-window" role="dialog" aria-label="Asistente turístico">
+            <div id="chat-header">
+                <div class="chat-header-info">
+                    <i class="fas fa-robot chat-header-icon"></i>
+                    <span>Guía Turístico</span>
+                </div>
+                <button class="chat-close-btn" onclick="toggleChat()" aria-label="Cerrar chat">✖</button>
+            </div>
+            <div id="chat-messages">
+                <div class="msg-bot">¡Hola! Soy el asistente del Observatorio de Huaquechula. ¿Qué te gustaría saber sobre los lugares u ofrendas?</div>
+            </div>
+            <div id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Escribe tu pregunta..."
+                    onkeypress="if(event.key === 'Enter') enviarMensajeChat()">
+                <button id="chat-send" onclick="enviarMensajeChat()" aria-label="Enviar mensaje"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button id="chat-button" onclick="toggleChat()" aria-label="Abrir asistente turístico">
+            <i class="fas fa-comments"></i>
+        </button>
+    </div>
 
     <footer class="text-center p-4 text-white">
         <div class="container">

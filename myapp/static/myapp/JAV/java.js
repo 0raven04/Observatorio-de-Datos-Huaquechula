@@ -77,19 +77,13 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Comprueba Chart y Leaflet antes de usarlos
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js no cargado. Añade <script src="https://cdn.jsdelivr.net/npm/chart.js">');
-    }
+    // Si no hay elemento #map en esta página, salir silenciosamente.
+    // Leaflet solo se carga en la vista del mapa, no en todas las páginas.
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return;
 
     if (typeof L === 'undefined') {
-        console.error('Leaflet no está cargado. Añade leaflet.js antes de java.js');
-        return;
-    }
-
-    const mapEl = document.getElementById('map');
-    if (!mapEl) {
-        console.error('Elemento #map no encontrado en el DOM.');
+        console.warn('Leaflet no está cargado. Incluye leaflet.js antes de java.js en la página del mapa.');
         return;
     }
 
@@ -281,3 +275,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+function toggleChat() {
+    const win = document.getElementById('chat-window');
+    const isVisible = win.style.display === 'flex';
+    win.style.display = isVisible ? 'none' : 'flex';
+    if (!isVisible) {
+        // Pequeña animación de apertura
+        win.style.opacity = '0';
+        win.style.transform = 'translateY(10px) scale(0.97)';
+        setTimeout(() => {
+            win.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            win.style.opacity = '1';
+            win.style.transform = 'translateY(0) scale(1)';
+        }, 10);
+        document.getElementById('chat-input').focus();
+    }
+}
+
+async function enviarMensajeChat() {
+    const input = document.getElementById('chat-input');
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
+
+    const box = document.getElementById('chat-messages');
+
+    // Mostrar mensaje del usuario
+    const userDiv = document.createElement('div');
+    userDiv.className = 'msg-user';
+    userDiv.textContent = mensaje;
+    box.appendChild(userDiv);
+    input.value = '';
+    box.scrollTop = box.scrollHeight;
+
+    // Mostrar indicador de "Escribiendo..."
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'msg-bot msg-typing';
+    loadingDiv.innerHTML = '<span></span><span></span><span></span>';
+    box.appendChild(loadingDiv);
+    box.scrollTop = box.scrollHeight;
+
+    // Leer CSRF token del meta tag (compatible con archivos JS estáticos)
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    try {
+        const response = await fetch('/api/chatbot/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ pregunta: mensaje })
+        });
+        const data = await response.json();
+
+        // Reemplazar el "Escribiendo..." con la respuesta real
+        loadingDiv.classList.remove('msg-typing');
+        loadingDiv.textContent = data.respuesta || 'Sin respuesta del servidor.';
+    } catch (error) {
+        loadingDiv.classList.remove('msg-typing');
+        loadingDiv.textContent = 'Hubo un error de conexión. Intenta de nuevo.';
+    }
+    box.scrollTop = box.scrollHeight;
+}

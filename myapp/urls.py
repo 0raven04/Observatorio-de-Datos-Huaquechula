@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from .views import registro_visita
 from myapp.views import backup_database
 from . import views
@@ -109,4 +109,9 @@ urlpatterns = [
     path('resenas/<int:resena_id>/estado/', views.cambiar_estado_resena, name='cambiar_estado_resena'),
     path('resenas/<int:resena_id>/eliminar/', views.eliminar_resena_admin, name='eliminar_resena_admin'),
     path('resenas/accion-masiva/', views.accion_masiva_resenas, name='accion_masiva_resenas'),
+
+    # =====================================================
+    # CHATBOT CON IA
+    # ===================================================== 
+    path('api/chatbot/', views.chatbot_api, name='chatbot_api'),
 ]

@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, FileResponse
-from pytz import timezone
 from myapp.models import (
     ArchivoKMZ, GeometriaEspacial, Punto_Interes, Categoria_Sitio, Galeria_Multimedia,
     Servicio, Ofrenda, Documento, Administrador, Sitio_turistico, Usuario, Encuestador,
     RegistroVisita, ResenaGlobal, Propietario
 )
 from django.utils import timezone
+from django.utils import timezone as tz
+from datetime import timedelta
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError, transaction
 from django.contrib.auth import logout
@@ -43,10 +44,13 @@ from urllib.parse import urlparse
 import mimetypes
 from myapp.models import Categoria_Sitio
 
+from django.views.decorators.csrf import csrf_exempt
+import requests
+
 def registrar_usuario(request):
     """
     Vista para registrar nuevos usuarios:
-    - Valida que todos los campos requeridos estén presentes
+    - Valida que todos los campos requeridos estén presentesr
     - Crea un nuevo usuario con contraseña hasheada
     - Redirige al login después del registro exitoso
     """
@@ -2470,9 +2474,8 @@ def api_resenas_globales(request):
     if not _verificar_recaptcha(recaptcha_token):
         return JsonResponse({'error': 'Verifica que no eres un robot.'}, status=400)
 
-    # Rate limiting por IP: máx. 3 reseñas en 24h
-    from django.utils import timezone as tz
-    from datetime import timedelta
+
+
     ip = _obtener_ip(request)
     hace_24h = tz.now() - timedelta(hours=24)
     resenas_ip = ResenaGlobal.objects.filter(
@@ -2834,3 +2837,69 @@ def editar_mi_propiedad(request, id_punto):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+
+
+
+
+# Tus reglas estrictas para el chatbot de Huaquechula
+INSTRUCCIONES_SISTEMA = """
+Eres el asistente virtual oficial del 'Observatorio de Datos Huaquechula'. 
+Tu objetivo es ayudar a los turistas a entender el mapa, encontrar ofrendas, sitios turísticos y servicios.
+REGLA ESTRICTA 1: Solo puedes hablar sobre temas relacionados con turismo, Huaquechula, las ofrendas o tradiciones locales.
+REGLA ESTRICTA 2: Si el usuario te pregunta sobre otros temas, debes responder educadamente: "Lo siento, solo puedo ayudarte con información sobre el recorrido turístico del municipio."
+Sé amable y conciso.
+"""
+
+@csrf_exempt
+def chatbot_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        pregunta_usuario = data.get('pregunta', '')
+
+        # llave
+        API_KEY = os.getenv('GROQ_API_KEY')
+        
+        # Endpoint compatible con OpenAI que usa Groq
+        url = "https://api.groq.com/openai/v1/chat/completions"
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {API_KEY}'
+        }
+
+        # Payload formato Groq/OpenAI
+        payload = {
+            "model": "llama-3.1-8b-instant",  # El nombre exacto sacado de tu consola
+            "messages": [
+                {
+                    "role": "system",
+                    "content": INSTRUCCIONES_SISTEMA
+                },
+                {
+                    "role": "user",
+                    "content": pregunta_usuario
+                }
+            ]
+        }
+
+        respuesta_http = requests.post(url, headers=headers, json=payload, timeout=15)
+
+        if respuesta_http.status_code == 200:
+            datos = respuesta_http.json()
+            texto_respuesta = datos['choices'][0]['message']['content']
+            return JsonResponse({'respuesta': texto_respuesta})
+            
+        else:
+            print(f"[CHATBOT ERROR] Status: {respuesta_http.status_code}")
+            print(f"[CHATBOT ERROR] Body: {respuesta_http.text}")
+            return JsonResponse({'respuesta': 'El asistente no está disponible en este momento. Intenta más tarde.'})
+
+    except Exception as e:
+        print(f"[CHATBOT ERROR CRÍTICO] {e}")
+        return JsonResponse({'respuesta': 'Error interno del servidor.'})
+
