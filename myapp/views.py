@@ -11,7 +11,8 @@ import subprocess
 from django.conf import settings
 from datetime import datetime
 import os
-from .models import Eje, CategoriaIndicador, Indicador, Medicion
+from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
+from .forms import EncuestaResidenteForm, EncuestaComercioForm
 
 # Vista principal para el registro de visitas
 # - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
@@ -516,31 +517,145 @@ def repositorio(request):
 def dashboard_view(request):
     """
     Vista principal del Dashboard del Observatorio.
-    Muestra los indicadores agrupados por Eje y Categoría.
+    Muestra los indicadores agrupados por Eje y Categoría,
+    con datos de sparklines, tendencias y conteos para el dashboard premium.
     """
+    import json
+    
     ejes = Eje.objects.prefetch_related('categorias__indicadores__mediciones').all()
     
+    total_indicadores = 0
+    total_categorias = 0
+    
+    for eje in ejes:
+        eje_indicator_count = 0
+        for categoria in eje.categorias.all():
+            total_categorias += 1
+            for indicador in categoria.indicadores.all():
+                eje_indicator_count += 1
+                # Obtener mediciones ordenadas por período
+                mediciones = list(indicador.mediciones.all().order_by('periodo'))
+                values = [float(m.valor) for m in mediciones]
+                
+                # Sparkline data (JSON array of values)
+                indicador.sparkline_values = json.dumps(values) if len(values) > 1 else ''
+                
+                # Trend calculation
+                if len(values) >= 2:
+                    prev_val = values[-2]
+                    last_val = values[-1]
+                    if prev_val != 0:
+                        change = ((last_val - prev_val) / abs(prev_val)) * 100
+                        indicador.trend_percent = f"{abs(change):.1f}"
+                        if change > 0.5:
+                            indicador.trend_direction = 'up'
+                        elif change < -0.5:
+                            indicador.trend_direction = 'down'
+                        else:
+                            indicador.trend_direction = 'stable'
+                    else:
+                        indicador.trend_direction = 'stable'
+                        indicador.trend_percent = '0.0'
+                else:
+                    indicador.trend_direction = 'stable'
+                    indicador.trend_percent = '0.0'
+        
+        eje.indicator_count = eje_indicator_count
+        total_indicadores += eje_indicator_count
+    
     return render(request, 'myapp/dashboard.html', {
-        'ejes': ejes
+        'ejes': ejes,
+        'total_indicadores': total_indicadores,
+        'total_categorias': total_categorias,
     })
+
+@login_required
+def category_detail_view(request, category_id):
+    """
+    Vista detallada para una categoría de indicadores.
+    Muestra gráficas comparativas y detalles de todos sus indicadores.
+    """
+    import json
+    from django.shortcuts import get_object_or_404
+    
+    categoria = get_object_or_404(CategoriaIndicador.objects.prefetch_related('indicadores__mediciones', 'eje'), id=category_id)
+    
+    # Procesar datos para cada indicador (similar al dashboard)
+    indicadores = categoria.indicadores.all()
+    for indicador in indicadores:
+        mediciones = list(indicador.mediciones.all().order_by('periodo'))
+        values = [float(m.valor) for m in mediciones]
+        
+        indicador.sparkline_values = json.dumps(values) if len(values) > 1 else ''
+        
+        if len(values) >= 2:
+            prev_val = values[-2]
+            last_val = values[-1]
+            if prev_val != 0:
+                change = ((last_val - prev_val) / abs(prev_val)) * 100
+                indicador.trend_percent = f"{abs(change):.1f}"
+                if change > 0.5:
+                    indicador.trend_direction = 'up'
+                elif change < -0.5:
+                    indicador.trend_direction = 'down'
+                else:
+                    indicador.trend_direction = 'stable'
+            else:
+                indicador.trend_direction = 'stable'
+                indicador.trend_percent = '0.0'
+        else:
+            indicador.trend_direction = 'stable'
+            indicador.trend_percent = '0.0'
+            
+    return render(request, 'myapp/category_detail.html', {
+        'categoria': categoria,
+        'indicadores': indicadores,
+        'eje': categoria.eje,
+    })
+
 
 @require_http_methods(["GET"])
 def indicator_chart_data(request, indicator_id):
     """
     API endpoint para obtener datos históricos de un indicador.
     Formato optimizado para Chart.js.
+    Incluye fuente de datos para visualización.
     """
     try:
         indicador = Indicador.objects.get(id=indicator_id)
         mediciones = indicador.mediciones.all().order_by('periodo')
         
+        # Determinar la fuente de datos legible
+        source_labels = {
+            'manual': 'Datos locales (captura manual)',
+            'inegi': 'INEGI — Instituto Nacional de Estadística y Geografía',
+            'other': 'Fuente externa',
+        }
+        
+        # Determinar la última fecha de actualización
+        last_sync_date = indicador.last_sync
+        if last_sync_date:
+            from django.utils.timezone import localtime
+            last_updated_str = localtime(last_sync_date).strftime("%d/%m/%Y %H:%M")
+        else:
+            last_medicion = mediciones.last()
+            if last_medicion and last_medicion.fecha_registro:
+                last_updated_str = last_medicion.fecha_registro.strftime("%d/%m/%Y")
+            else:
+                last_updated_str = "Sin datos"
+                
         data = {
             'labels': [m.periodo for m in mediciones],
             'values': [float(m.valor) for m in mediciones],
             'indicator_name': indicador.nombre,
             'unit': indicador.unidad_medida,
             'category': indicador.categoria.nombre,
-            'axis': indicador.categoria.eje.nombre
+            'axis': indicador.categoria.eje.nombre,
+            'description': indicador.descripcion or '',
+            'data_source': indicador.data_source,
+            'data_source_label': source_labels.get(indicador.data_source, 'Desconocida'),
+            'inegi_id': indicador.inegi_indicator_id or '',
+            'last_updated': last_updated_str,
         }
         
         return JsonResponse(data)
@@ -670,3 +785,75 @@ def compare_municipalities_view(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+# --- PORTAL DEL ENCUESTADOR ---
+
+@login_required
+def encuestador_dashboard(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+        
+    return render(request, 'myapp/encuestador_dashboard.html')
+
+@login_required
+def nueva_encuesta_residente(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    # Intentar obtener el encuestador (puede no existir en la BD legada)
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = EncuestaResidenteForm(request.POST)
+        if form.is_valid():
+            encuesta = form.save(commit=False)
+            encuesta.encuestador = encuestador
+            encuesta.save()
+            messages.success(request, 'Encuesta a residente guardada exitosamente.')
+            return redirect('encuestador_dashboard')
+    else:
+        form = EncuestaResidenteForm()
+
+    return render(request, 'myapp/form_residente.html', {'form': form})
+
+@login_required
+def nueva_encuesta_comercio(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    # Intentar obtener el encuestador (puede no existir en la BD legada)
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = EncuestaComercioForm(request.POST)
+        if form.is_valid():
+            encuesta = form.save(commit=False)
+            encuesta.encuestador = encuestador
+            encuesta.save()
+            messages.success(request, 'Encuesta a comercio guardada exitosamente.')
+            return redirect('encuestador_dashboard')
+    else:
+        form = EncuestaComercioForm()
+
+    return render(request, 'myapp/form_comercio.html', {'form': form})
+

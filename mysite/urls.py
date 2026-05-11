@@ -43,9 +43,10 @@ urlpatterns = [
     path('backup/', backup_database, name='backup_database'),
     
     # URL raíz que incluye las URLs de la aplicación 'myapp'
-    # - Todas las URLs definidas en myapp.urls estarán bajo la raíz del proyecto
-    # - Ejemplo: la ruta 'visitas/' de myapp será accesible como '/visitas/'
     path('', include('myapp.urls')),
+
+    # API REST para la app móvil (JWT, CRUD visitas, indicadores)
+    path('', include('myapp.api_urls')),
 ]
 
 # Recomendaciones importantes:

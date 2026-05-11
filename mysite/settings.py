@@ -27,7 +27,7 @@ DEBUG = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/visitas/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 
 # Application definition
@@ -40,9 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'myapp',
     'django.contrib.staticfiles',
+    # API Móvil
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # CORS — debe ir primero
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -158,3 +163,31 @@ INEGI_API_BASE_URL = 'https://www.inegi.org.mx/app/api/indicadores/desarrollador
 INEGI_API_VERSION = '2.0'
 HUAQUECHULA_GEO_CODE = '21071'  # Puebla (21) + Huaquechula (071)
 
+# ============================================
+# API REST — Configuración para App Móvil
+# ============================================
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# CORS — Permitir conexiones desde la app Expo en desarrollo
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+    'http://10.0.2.2:8081',  # Emulador Android
+]
+CORS_ALLOW_CREDENTIALS = True

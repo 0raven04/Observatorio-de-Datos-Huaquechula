@@ -211,6 +211,11 @@ class INEGIService:
             )
             if created:
                 count += 1
+                
+        # Actualizar fecha de sincronización
+        from django.utils import timezone
+        indicador_model.last_sync = timezone.now()
+        indicador_model.save()
         
         logger.info(f"Sincronizados {count} nuevos registros para {indicador_model.nombre}")
         return count

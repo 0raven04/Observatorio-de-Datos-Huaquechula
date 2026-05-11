@@ -31,6 +31,7 @@ urlpatterns = [
     path('repositorio/', views.repositorio, name='repositorio'),
     path('estadistica/', views.graficos_indicadores, name='estadistica'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('dashboard/categoria/<int:category_id>/', views.category_detail_view, name='category_detail'),
     # path('graficas-ejemplo/', views.graficas_ejemplo, name='graficas_ejemplo'),  # Temporalmente comentado
     path('api/indicator/<int:indicator_id>/chart-data/', views.indicator_chart_data, name='indicator_chart_data'),
 
@@ -38,5 +39,10 @@ urlpatterns = [
     # JSON-stat endpoints
     path('api/indicator/<int:indicator_id>/jsonstat/', views.indicator_jsonstat_data, name='indicator_jsonstat'),
     path('api/compare-municipalities/', views.compare_municipalities_view, name='compare_municipalities'),
+
+    # Portal Encuestador
+    path('encuestador/', views.encuestador_dashboard, name='encuestador_dashboard'),
+    path('encuestador/residente/', views.nueva_encuesta_residente, name='nueva_encuesta_residente'),
+    path('encuestador/comercio/', views.nueva_encuesta_comercio, name='nueva_encuesta_comercio'),
 ]
 
