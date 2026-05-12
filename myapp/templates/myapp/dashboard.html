@@ -4,150 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Observatorio Territorial</title>
+    <title>Observatorio Territorial — Huaquechula</title>
+    <link rel="icon" href="{% static 'myapp/image/huaquechula_favicon.png' %}" type="image/png">
+    <meta name="description" content="Dashboard de indicadores estratégicos del Observatorio Territorial de Huaquechula. Datos de Bienestar Social, Tradición, Patrimonio y Turismo Comunitario.">
+
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS del proyecto -->
-    <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}">
-    <link rel="stylesheet" href="{% static 'myapp/CSS/style1.css' %}">
-    
-    <!-- Chart.js para gráficas -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <style>
-        /* Estilos específicos para el dashboard que respetan los tokens base */
-        .dashboard-header {
-            background-color: var(--color-arena-claro);
-            padding: 2rem 0;
-            border-bottom: 2px solid var(--color-arena-oscuro);
-            margin-bottom: 2rem;
-            margin-top: 80px;
-        }
-        
-        /* Sidebar Navigation */
-        .sidebar {
-            position: fixed;
-            top: 140px;
-            left: 0;
-            width: 280px;
-            height: calc(100vh - 140px);
-            background: white;
-            border-right: 2px solid var(--color-arena-oscuro);
-            padding: 2rem 1rem;
-            overflow-y: auto;
-            z-index: 100;
-        }
-        
-        .sidebar h5 {
-            color: var(--color-gris-oscuro);
-            margin-bottom: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .nav-section {
-            display: block;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.5rem;
-            color: var(--color-gris-oscuro);
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-        
-        .nav-section:hover {
-            background-color: var(--color-arena-claro);
-            border-left-color: var(--color-naranja);
-        }
-        
-        .nav-section.active {
-            background-color: var(--color-arena-oscuro);
-            border-left-color: var(--color-naranja);
-            font-weight: bold;
-        }
-        
-        /* Main content with sidebar offset */
-        .main-content {
-            margin-left: 300px;
-            padding: 0 2rem;
-        }
-        
-        .axis-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-            border: 1px solid var(--color-beige);
-            overflow: hidden;
-        }
-        
-        .axis-header {
-            background-color: var(--color-gris-oscuro);
-            color: white;
-            padding: 1rem;
-        }
-        
-        .category-section {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--color-arena-oscuro);
-        }
-        
-        .category-section:last-child {
-            border-bottom: none;
-        }
-        
-        .indicator-value {
-            font-weight: bold;
-            color: var(--color-naranja);
-            font-size: 1.1rem;
-        }
-        
-        .indicator-unit {
-            font-size: 0.8rem;
-            color: #666;
-        }
-        
-        body {
-            padding-top: 0;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
-                top: 0;
-            }
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
-    <!-- Navbar (Copiada de index.html para consistencia) -->
-    <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+<body class="dashboard-page">
+    <!-- ── Navbar ──────────────────────────────── -->
+    <nav class="navbar dashboard-navbar navbar-expand-md navbar-dark">
         <div class="container-fluid d-flex justify-content-between align-items-center">
-            <!-- Logo -->
-            <a class="navbar-brand" href="{% url 'vista_inicio' %}">
-                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo" style="height: 110px; width: auto;">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'vista_inicio' %}">
+                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo Huaquechula" style="height: 50px; width: auto;">
             </a>
 
-            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Menú horizontal -->
-            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-                <ul class="navbar-nav d-flex justify-content-around w-75 desktop-nav">
+            <div class="collapse navbar-collapse justify-content-center" id="dashboardNav">
+                <ul class="navbar-nav d-flex justify-content-around" style="gap: 0.25rem;">
                     <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
                     <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
                     {% if user.is_authenticated %}
-                         <li class="nav-item"><a class="nav-link" href="{% url 'eliminar_seleccionados' %}?next=dashboard">Cerrar Sesión</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'encuestador_dashboard' %}" style="color: var(--color-dorado) !important;"><i class="fas fa-clipboard-list me-1"></i>Portal Encuestador</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a></li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
                     {% endif %}
@@ -156,313 +54,255 @@
         </div>
     </nav>
 
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-        <h5><i class="fas fa-compass me-2"></i>Dimensiones</h5>
-        <nav>
-            <a href="#" class="nav-section active" data-section="all">
-                <i class="fas fa-th-large me-2"></i>Todas las dimensiones
-            </a>
-            <a href="#" class="nav-section" data-section="bienestar">
-                <i class="fas fa-heart me-2"></i>Índices de Bienestar – INEGI
-            </a>
-            <a href="#" class="nav-section" data-section="tradicion">
-                <i class="fas fa-landmark me-2"></i>Tradición – Patrimonio
-            </a>
-            <a href="#" class="nav-section" data-section="tbc">
-                <i class="fas fa-users me-2"></i>Turismo de Base Comunitaria
-            </a>
-        </nav>
-    </aside>
+    <div class="dashboard-layout">
+        <!-- ── Sidebar ─────────────────────────── -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-title">Dimensiones</div>
+            <nav>
+                <button class="sidebar-nav-item active" data-filter="all">
+                    <span class="sidebar-nav-icon"><i class="fas fa-th-large"></i></span>
+                    Todas las dimensiones
+                    <span class="sidebar-nav-badge">{{ total_indicadores }}</span>
+                </button>
 
-    <!-- Header del Dashboard -->
-    <header class="dashboard-header text-center">
-        <div class="container">
-            <h1 class="display-4 fw-bold" style="color: var(--color-gris-oscuro);">Observatorio Territorial</h1>
-            <p class="lead text-muted">Indicadores estratégicos de Huaquechula</p>
-        </div>
-    </header>
-
-    <main class="main-content mb-5">
-        {% if ejes %}
-            <div class="row">
                 {% for eje in ejes %}
-                <div class="col-md-12 axis-card-wrapper" data-dimension="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre or 'TBC' in eje.nombre %}tbc{% else %}other{% endif %}">
-                    <div class="axis-card">
-                        <div class="axis-header d-flex justify-content-between align-items-center">
-                            <h3 class="h4 mb-0"><i class="fas fa-chart-pie me-2"></i>{{ eje.nombre }}</h3>
-                            <span class="badge bg-light text-dark">{{ eje.categorias.count }} Categorías</span>
-                        </div>
-                        
-                        {% for categoria in eje.categorias.all %}
-                        <div class="category-section">
-                            <h4 class="h5 mb-3" style="color: var(--color-gris-oscuro); border-left: 4px solid var(--color-naranja); padding-left: 10px;">
-                                {{ categoria.nombre }}
-                            </h4>
-                            
-                            <div class="row">
-                                {% for indicador in categoria.indicadores.all %}
-                                <div class="col-md-6 mb-3">
-                                    <div class="p-3 bg-light rounded border">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="flex-grow-1">
-                                                <strong>{{ indicador.nombre }}</strong>
-                                                <p class="small text-muted mb-0">{{ indicador.descripcion|truncatechars:100 }}</p>
-                                            </div>
-                                            <div class="text-end ms-3">
-                                                {% with medicion=indicador.mediciones.last %}
-                                                    {% if medicion %}
-                                                        <div class="indicator-value">{{ medicion.valor }}</div>
-                                                        <div class="indicator-unit">{{ indicador.unidad_medida }}</div>
-                                                        <small class="text-muted" style="font-size: 0.7rem;">{{ medicion.periodo }}</small>
-                                                    {% else %}
-                                                        <span class="text-muted small">Sin datos</span>
-                                                    {% endif %}
-                                                {% endwith %}
-                                            </div>
-                                        </div>
-                                        {% if indicador.mediciones.count > 0 %}
-                                        <div class="mt-2">
-                                            <button class="btn btn-sm btn-outline-primary w-100" 
-                                                    onclick="showChart({{ indicador.id }}, '{{ indicador.nombre|escapejs }}')">
-                                                <i class="fas fa-chart-line me-1"></i> Ver Tendencia Histórica
-                                            </button>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% empty %}
-                                    <p class="text-muted">No hay indicadores en esta categoría.</p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="p-4 text-center text-muted">
-                            No hay categorías registradas en este eje.
-                        </div>
-                        {% endfor %}
+                <button class="sidebar-nav-item" data-filter="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}">
+                    <span class="sidebar-nav-icon">
+                        {% if 'Bienestar' in eje.nombre %}
+                            <i class="fas fa-heart"></i>
+                        {% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}
+                            <i class="fas fa-landmark"></i>
+                        {% elif 'Turismo' in eje.nombre %}
+                            <i class="fas fa-route"></i>
+                        {% else %}
+                            <i class="fas fa-chart-pie"></i>
+                        {% endif %}
+                    </span>
+                    {{ eje.nombre }}
+                    <span class="sidebar-nav-badge">{{ eje.indicator_count }}</span>
+                </button>
+                {% endfor %}
+            </nav>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-title">Resumen</div>
+            <div style="padding: 0 1rem; font-size: 0.8rem; color: var(--color-gris-medio);">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ejes</span>
+                    <strong>{{ ejes|length }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Categorías</span>
+                    <strong>{{ total_categorias }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Indicadores</span>
+                    <strong>{{ total_indicadores }}</strong>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ── Main Content ────────────────────── -->
+        <main class="dashboard-main">
+            <!-- Page Header -->
+            <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
+                <div>
+                    <h1><i class="fas fa-chart-line me-2" style="color: var(--color-naranja);"></i>Observatorio Territorial</h1>
+                    <p class="subtitle mb-0">Indicadores estratégicos del municipio de Huaquechula, Puebla</p>
+                </div>
+                
+                <!-- View Toggle -->
+                <div class="view-toggle-container d-none d-md-flex">
+                    <button class="view-toggle-btn active" data-view="grid" title="Vista de cuadrícula">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-toggle-btn" data-view="list" title="Vista de lista">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            {% if ejes %}
+            <!-- ── KPI Summary Cards ──────────── -->
+            <div class="kpi-grid">
+                {% for eje in ejes %}
+                <div class="kpi-card" data-eje="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}">
+                    <div class="kpi-icon-wrap">
+                        {% if 'Bienestar' in eje.nombre %}
+                            <i class="fas fa-heartbeat"></i>
+                        {% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}
+                            <i class="fas fa-monument"></i>
+                        {% elif 'Turismo' in eje.nombre %}
+                            <i class="fas fa-hiking"></i>
+                        {% else %}
+                            <i class="fas fa-chart-bar"></i>
+                        {% endif %}
+                    </div>
+                    <div class="kpi-label">{{ eje.nombre }}</div>
+                    <div style="display: flex; align-items: baseline; gap: 6px;">
+                        <span class="kpi-value" data-target="{{ eje.indicator_count }}">0</span>
+                        <span class="kpi-unit">indicadores</span>
+                    </div>
+                    <div class="kpi-trend stable">
+                        <i class="fas fa-layer-group"></i>
+                        {{ eje.categorias.count }} categorías
                     </div>
                 </div>
                 {% endfor %}
             </div>
-        {% else %}
-            <div class="alert alert-warning text-center">
-                <h4 class="alert-heading">No hay datos configurados</h4>
-                <p>Aún no se han configurado los Ejes e Indicadores en el sistema.</p>
-                <hr>
-                <p class="mb-0">Por favor, contacte al administrador para cargar los datos iniciales.</p>
+
+            <!-- ── Indicator Sections by Eje ──── -->
+            {% for eje in ejes %}
+            <section class="axis-section" data-eje="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}" id="eje-{{ eje.id }}">
+                <div class="axis-title-bar">
+                    <div class="axis-title-icon">
+                        {% if 'Bienestar' in eje.nombre %}
+                            <i class="fas fa-heartbeat"></i>
+                        {% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}
+                            <i class="fas fa-monument"></i>
+                        {% elif 'Turismo' in eje.nombre %}
+                            <i class="fas fa-hiking"></i>
+                        {% else %}
+                            <i class="fas fa-chart-bar"></i>
+                        {% endif %}
+                    </div>
+                    <span class="axis-title-text">{{ eje.nombre }}</span>
+                    <span class="axis-title-count">{{ eje.indicator_count }} indicadores</span>
+                </div>
+
+                {% for categoria in eje.categorias.all %}
+                <div class="category-block">
+                    <h4 class="category-name">
+                        <a href="{% url 'category_detail' categoria.id %}" style="text-decoration: none; color: inherit;">
+                            {{ categoria.nombre }} <i class="fas fa-chevron-right ms-2" style="font-size: 0.8rem; color: var(--color-gris-claro);"></i>
+                        </a>
+                    </h4>
+                    <div class="indicators-grid">
+                        {% for indicador in categoria.indicadores.all %}
+                        <div class="indicator-card" onclick="showIndicatorChart({{ indicador.id }}, '{{ indicador.nombre|escapejs }}')" id="indicator-{{ indicador.id }}">
+                            <div class="indicator-card-header">
+                                <span class="indicator-name">{{ indicador.nombre }}</span>
+                                <span class="indicator-source-badge {% if indicador.data_source == 'inegi' %}inegi{% else %}local{% endif %}">
+                                    {{ indicador.data_source|upper }}
+                                </span>
+                            </div>
+
+                            {% with last_med=indicador.mediciones.last %}
+                            {% if last_med %}
+                            <div class="indicator-value-row">
+                                <span class="indicator-main-value">{{ last_med.valor }}</span>
+                                <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
+                            </div>
+                            <div class="indicator-period">
+                                <i class="far ঢাক me-1"></i>Período {{ last_med.periodo }}
+                            </div>
+                            {% else %}
+                            <div class="indicator-value-row">
+                                <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 1rem;">Sin datos</span>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+
+                            <!-- Sparkline -->
+                            {% if indicador.sparkline_values %}
+                            <div class="indicator-sparkline">
+                                <canvas data-values="{{ indicador.sparkline_values }}" data-color="{% if 'Bienestar' in eje.nombre %}#2980B9{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}#8E44AD{% else %}#27AE60{% endif %}" height="40"></canvas>
+                            </div>
+                            {% endif %}
+
+                            <div class="indicator-trend-row">
+                                {% if indicador.trend_direction == 'up' %}
+                                <span class="indicator-trend up"><i class="fas fa-arrow-up"></i> {{ indicador.trend_percent }}%</span>
+                                {% elif indicador.trend_direction == 'down' %}
+                                <span class="indicator-trend down"><i class="fas fa-arrow-down"></i> {{ indicador.trend_percent }}%</span>
+                                {% else %}
+                                <span class="indicator-trend stable"><i class="fas fa-minus"></i> Estable</span>
+                                {% endif %}
+                                <span class="indicator-view-btn">Ver gráfica <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p style="color: var(--color-gris-claro); font-size: 0.875rem;">No hay indicadores en esta categoría.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endfor %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-chart-area"></i></div>
+                <h3>No hay datos configurados</h3>
+                <p>Aún no se han registrado los Ejes e Indicadores del observatorio. Contacte al administrador para cargar los datos iniciales.</p>
             </div>
-        {% endif %}
-    </main>
+            {% endif %}
+        </main>
+    </div>
 
-    <footer class="text-center p-4 text-white" style="background-color: var(--color-gris-oscuro);">
-        <div class="container">
-            <p class="mb-2">&copy; 2025 Observatorio Turístico de Huaquechula</p>
-        </div>
-    </footer>
-
-    <!-- Modal para mostrar gráfica -->
-    <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+    <!-- ── Chart Modal ─────────────────────────── -->
+    <div class="modal fade chart-modal" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header" style="background-color: var(--color-gris-oscuro); color: white;">
+                <div class="modal-header">
                     <h5 class="modal-title" id="chartModalLabel">
-                        <i class="fas fa-chart-line me-2"></i>Tendencia Histórica del Indicador
+                        <i class="fas fa-chart-line me-2"></i>Indicador
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <canvas id="indicatorChart" style="max-height: 400px;"></canvas>
-                        </div>
+                    <!-- Skeleton Loader -->
+                    <div class="modal-skeleton" id="chartModalSkeleton">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-chart"></div>
+                        <div class="skeleton skeleton-meta"></div>
                     </div>
-                    <div id="chartMetadata" class="mt-4 p-3 bg-light rounded">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <strong><i class="fas fa-tag me-1"></i>Categoría:</strong> 
-                                <span id="metaCategory"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <strong><i class="fas fa-ruler me-1"></i>Unidad:</strong> 
-                                <span id="metaUnit"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <strong><i class="fas fa-layer-group me-1"></i>Eje:</strong> 
-                                <span id="metaAxis"></span>
-                            </div>
-                        </div>
+                    
+                    <!-- Content (Hidden while loading) -->
+                    <div id="chartModalContent" style="display: none;">
+                        <!-- Chart Type Switcher -->
+                        <div class="chart-type-switcher">
+                        <button class="chart-type-btn active" data-type="line" onclick="switchChartType('line')">
+                            <i class="fas fa-chart-line me-1"></i> Línea
+                        </button>
+                        <button class="chart-type-btn" data-type="bar" onclick="switchChartType('bar')">
+                            <i class="fas fa-chart-bar me-1"></i> Barras
+                        </button>
+                        <button class="chart-type-btn" data-type="doughnut" onclick="switchChartType('doughnut')">
+                            <i class="fas fa-chart-pie me-1"></i> Dona
+                        </button>
+                    </div>
+
+                    <!-- Chart Canvas -->
+                    <div style="position: relative; height: 380px;">
+                        <canvas id="mainChartCanvas"></canvas>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div id="chartMetadata"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-sm" onclick="downloadChartPDF()" style="background: var(--color-naranja); color: #fff; border: none; border-radius: 8px; padding: 6px 18px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition-base);">
+                        <i class="fas fa-file-pdf"></i> Descargar PDF
+                    </button>
+                    <button type="button" class="btn btn-sm" style="background: var(--color-arena-claro); color: var(--color-gris-oscuro); border-radius: 8px; padding: 6px 18px; font-weight: 500; font-size: 0.85rem;" data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ── Footer ──────────────────────────────── -->
+    <footer class="dashboard-footer">
+        <p class="mb-0">&copy; 2025 Observatorio Turístico de Huaquechula · Datos actualizados periódicamente</p>
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Sidebar navigation filtering
-        document.addEventListener('DOMContentLoaded', function() {
-            const navSections = document.querySelectorAll('.nav-section');
-            const axisCards = document.querySelectorAll('.axis-card-wrapper');
-            
-            navSections.forEach(section => {
-                section.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Update active state
-                    navSections.forEach(s => s.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const selectedSection = this.getAttribute('data-section');
-                    
-                    // Filter cards
-                    axisCards.forEach(card => {
-                        if (selectedSection === 'all') {
-                            card.style.display = 'block';
-                        } else {
-                            const cardDimension = card.getAttribute('data-dimension');
-                            card.style.display = cardDimension === selectedSection ? 'block' : 'none';
-                        }
-                    });
-                });
-            });
-        });
-
-        // Chart visualization
-        let currentChart = null;
-        let chartModal = null;
-
-        function showChart(indicatorId, indicatorName) {
-            // Mostrar loading
-            const modalElement = document.getElementById('chartModal');
-            if (!chartModal) {
-                chartModal = new bootstrap.Modal(modalElement);
-            }
-            
-            // Obtener datos del indicador
-            fetch(`/api/indicator/${indicatorId}/chart-data/`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error al cargar los datos');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Destruir gráfica anterior si existe
-                    if (currentChart) {
-                        currentChart.destroy();
-                    }
-                    
-                    // Actualizar título del modal
-                    document.getElementById('chartModalLabel').innerHTML = 
-                        `<i class="fas fa-chart-line me-2"></i>Tendencia Histórica: ${data.indicator_name}`;
-                    
-                    // Actualizar metadatos
-                    document.getElementById('metaCategory').textContent = data.category;
-                    document.getElementById('metaUnit').textContent = data.unit;
-                    document.getElementById('metaAxis').textContent = data.axis;
-                    
-                    // Crear nueva gráfica
-                    const ctx = document.getElementById('indicatorChart').getContext('2d');
-                    currentChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                label: data.indicator_name,
-                                data: data.values,
-                                borderColor: '#D35400',
-                                backgroundColor: 'rgba(211, 84, 0, 0.1)',
-                                borderWidth: 3,
-                                tension: 0.4,
-                                fill: true,
-                                pointRadius: 5,
-                                pointHoverRadius: 7,
-                                pointBackgroundColor: '#D35400',
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            plugins: {
-                                title: {
-                                    display: false
-                                },
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(74, 74, 74, 0.9)',
-                                    titleColor: '#fff',
-                                    bodyColor: '#fff',
-                                    borderColor: '#D35400',
-                                    borderWidth: 1,
-                                    padding: 12,
-                                    displayColors: false,
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `${context.parsed.y} ${data.unit}`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: false,
-                                    title: {
-                                        display: true,
-                                        text: data.unit,
-                                        font: {
-                                            size: 14,
-                                            weight: 'bold'
-                                        },
-                                        color: '#4A4A4A'
-                                    },
-                                    grid: {
-                                        color: 'rgba(0, 0, 0, 0.05)'
-                                    },
-                                    ticks: {
-                                        color: '#4A4A4A'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Período',
-                                        font: {
-                                            size: 14,
-                                            weight: 'bold'
-                                        },
-                                        color: '#4A4A4A'
-                                    },
-                                    grid: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        color: '#4A4A4A'
-                                    }
-                                }
-                            },
-                            interaction: {
-                                intersect: false,
-                                mode: 'index'
-                            }
-                        }
-                    });
-                    
-                    // Mostrar modal
-                    chartModal.show();
-                })
-                .catch(error => {
-                    console.error('Error loading chart data:', error);
-                    alert('Error al cargar los datos de la gráfica. Por favor, intente nuevamente.');
-                });
-        }
-    </script>
+    <script src="{% static 'myapp/JAV/dashboard.js' %}"></script>
 </body>
 </html>

@@ -28,7 +28,6 @@ def load_data():
     cat_ingresos, _ = CategoriaIndicador.objects.get_or_create(eje=eje_social, nombre="Ingresos")
     cat_empleo, _ = CategoriaIndicador.objects.get_or_create(eje=eje_social, nombre="Empleo")
     cat_seguridad, _ = CategoriaIndicador.objects.get_or_create(eje=eje_social, nombre="Seguridad")
-    cat_seguridad, _ = CategoriaIndicador.objects.get_or_create(eje=eje_social, nombre="Seguridad")
     cat_medio_ambiente, _ = CategoriaIndicador.objects.get_or_create(eje=eje_social, nombre="Medio Ambiente")
     cat_migracion, _ = CategoriaIndicador.objects.get_or_create(eje=eje_social, nombre="Migración")
 
@@ -274,74 +273,166 @@ def load_data():
         unidad_medida="Índice"
     )
 
-    # 4. Create Measurements
-    # Salud
-    Medicion.objects.get_or_create(indicador=ind_esp_vida, periodo="2023", defaults={'valor': 75.5})
-    Medicion.objects.get_or_create(indicador=ind_salud_auto, periodo="2023", defaults={'valor': 68.2})
-    Medicion.objects.get_or_create(indicador=ind_obesidad, periodo="2023", defaults={'valor': 33.4})
-    Medicion.objects.get_or_create(indicador=ind_mortalidad, periodo="2023", defaults={'valor': 5.8})
-    Medicion.objects.get_or_create(indicador=ind_mort_materna, periodo="2023", defaults={'valor': 34.5})
-    
-    # Accesibilidad a servicios
-    Medicion.objects.get_or_create(indicador=ind_acceso_salud, periodo="2023", defaults={'valor': 82.3})
-    Medicion.objects.get_or_create(indicador=ind_banda_ancha, periodo="2023", defaults={'valor': 56.7})
-    Medicion.objects.get_or_create(indicador=ind_servicios_basicos, periodo="2023", defaults={'valor': 91.2})
-    
-    # Educación
-    Medicion.objects.get_or_create(indicador=ind_niveles_educacion, periodo="2023", defaults={'valor': 45.8})
-    Medicion.objects.get_or_create(indicador=ind_desercion_escolar, periodo="2023", defaults={'valor': 8.3})
-    Medicion.objects.get_or_create(indicador=ind_anios_escolaridad, periodo="2023", defaults={'valor': 9.2})
-    
-    # Vivienda
-    Medicion.objects.get_or_create(indicador=ind_habitaciones_persona, periodo="2023", defaults={'valor': 1.2})
-    Medicion.objects.get_or_create(indicador=ind_techos_resistentes, periodo="2023", defaults={'valor': 87.5})
-    
-    # Ingresos
-    Medicion.objects.get_or_create(indicador=ind_gini, periodo="2023", defaults={'valor': 0.42})
-    Medicion.objects.get_or_create(indicador=ind_ingreso_equiv, periodo="2023", defaults={'valor': 8750.50})
-    Medicion.objects.get_or_create(indicador=ind_pobreza_ingresos, periodo="2023", defaults={'valor': 12500})
-    Medicion.objects.get_or_create(indicador=ind_pobreza_extrema, periodo="2023", defaults={'valor': 3200})
-    
-    # Empleo
-    Medicion.objects.get_or_create(indicador=ind_condiciones_criticas, periodo="2023", defaults={'valor': 12.8})
-    Medicion.objects.get_or_create(indicador=ind_informalidad, periodo="2023", defaults={'valor': 56.3})
-    Medicion.objects.get_or_create(indicador=ind_desocupacion, periodo="2023", defaults={'valor': 3.5})
-    Medicion.objects.get_or_create(indicador=ind_participacion_econ, periodo="2023", defaults={'valor': 58.7})
-    
-    # Seguridad
-    Medicion.objects.get_or_create(indicador=ind_homicidios, periodo="2023", defaults={'valor': 15.2})
-    Medicion.objects.get_or_create(indicador=ind_confianza_policia, periodo="2023", defaults={'valor': 42.5})
-    Medicion.objects.get_or_create(indicador=ind_percepcion_inseguridad, periodo="2023", defaults={'valor': 68.9})
-    Medicion.objects.get_or_create(indicador=ind_incidencia_delictiva, periodo="2023", defaults={'valor': 320.5})
-    
-    # Medio ambiente
-    Medicion.objects.get_or_create(indicador=ind_contaminacion_aire, periodo="2023", defaults={'valor': 28.3})
-    Medicion.objects.get_or_create(indicador=ind_disposicion_residuos, periodo="2023", defaults={'valor': 78.5})
-    Medicion.objects.get_or_create(indicador=ind_gestion_ambiental, periodo="2023", defaults={'valor': 5})
-    
-    # Migración
-    Medicion.objects.get_or_create(indicador=ind_intensidad_migratoria, periodo="2023", defaults={'valor': 1.8})
-    
-    # Tradición y Patrimonio - PCI
-    Medicion.objects.get_or_create(indicador=ind_tension_poblacion, periodo="2023", defaults={'valor': 2.3})
-    Medicion.objects.get_or_create(indicador=ind_acceso_servicios_tradicion, periodo="2023", defaults={'valor': 65.4})
-    Medicion.objects.get_or_create(indicador=ind_tensiones_fisicas, periodo="2023", defaults={'valor': 1.8})
-    
-    # Tradición y Patrimonio - Salvaguardia
-    Medicion.objects.get_or_create(indicador=ind_procesos_salvaguardia, periodo="2023", defaults={'valor': 3})
-    Medicion.objects.get_or_create(indicador=ind_seguimiento_salvaguardia, periodo="2023", defaults={'valor': 2.5})
-    Medicion.objects.get_or_create(indicador=ind_difusion_pci, periodo="2023", defaults={'valor': 8})
-    Medicion.objects.get_or_create(indicador=ind_relacion_comunidad_pci, periodo="2023", defaults={'valor': 3.2})
-    
-    # Turismo Comunitario - Participación y gobernanza
-    Medicion.objects.get_or_create(indicador=ind_participacion_decisiones, periodo="2023", defaults={'valor': 45.3})
-    Medicion.objects.get_or_create(indicador=ind_capacitacion_info, periodo="2023", defaults={'valor': 2.8})
-    Medicion.objects.get_or_create(indicador=ind_regulacion, periodo="2023", defaults={'valor': 2.1})
-    
-    # Turismo Comunitario - Gestión del turismo
-    Medicion.objects.get_or_create(indicador=ind_herramientas_gestion, periodo="2023", defaults={'valor': 4})
-    Medicion.objects.get_or_create(indicador=ind_proyectos_turisticos, periodo="2023", defaults={'valor': 6})
-    Medicion.objects.get_or_create(indicador=ind_integracion_territorial, periodo="2023", defaults={'valor': 2.7})
+    # 4. Create Measurements — Multi-year data (2020-2024) for trends & sparklines
+    # Helper to bulk-create measurements for multiple periods
+    def create_multi_year(indicador, data_by_year):
+        """data_by_year: dict like {'2020': 73.2, '2021': 74.0, ...}"""
+        for periodo, valor in data_by_year.items():
+            Medicion.objects.get_or_create(
+                indicador=indicador, periodo=periodo, defaults={'valor': valor}
+            )
+
+    # ── Salud ──────────────────────────────────────────
+    create_multi_year(ind_esp_vida, {
+        '2020': 73.2, '2021': 73.8, '2022': 74.5, '2023': 75.5, '2024': 75.9
+    })
+    create_multi_year(ind_salud_auto, {
+        '2020': 62.5, '2021': 64.1, '2022': 66.0, '2023': 68.2, '2024': 69.8
+    })
+    create_multi_year(ind_obesidad, {
+        '2020': 30.1, '2021': 31.2, '2022': 32.5, '2023': 33.4, '2024': 34.0
+    })
+    create_multi_year(ind_mortalidad, {
+        '2020': 6.5, '2021': 7.2, '2022': 6.1, '2023': 5.8, '2024': 5.5
+    })
+    create_multi_year(ind_mort_materna, {
+        '2020': 42.0, '2021': 39.5, '2022': 37.0, '2023': 34.5, '2024': 32.8
+    })
+
+    # ── Accesibilidad a servicios ──────────────────────
+    create_multi_year(ind_acceso_salud, {
+        '2020': 74.5, '2021': 76.8, '2022': 79.2, '2023': 82.3, '2024': 84.1
+    })
+    create_multi_year(ind_banda_ancha, {
+        '2020': 38.2, '2021': 42.5, '2022': 48.3, '2023': 56.7, '2024': 62.4
+    })
+    create_multi_year(ind_servicios_basicos, {
+        '2020': 85.3, '2021': 87.1, '2022': 89.0, '2023': 91.2, '2024': 92.8
+    })
+
+    # ── Educación ──────────────────────────────────────
+    create_multi_year(ind_niveles_educacion, {
+        '2020': 40.2, '2021': 41.8, '2022': 43.5, '2023': 45.8, '2024': 47.3
+    })
+    create_multi_year(ind_desercion_escolar, {
+        '2020': 11.5, '2021': 10.8, '2022': 9.6, '2023': 8.3, '2024': 7.5
+    })
+    create_multi_year(ind_anios_escolaridad, {
+        '2020': 8.2, '2021': 8.5, '2022': 8.8, '2023': 9.2, '2024': 9.5
+    })
+
+    # ── Vivienda ───────────────────────────────────────
+    create_multi_year(ind_habitaciones_persona, {
+        '2020': 1.0, '2021': 1.05, '2022': 1.1, '2023': 1.2, '2024': 1.25
+    })
+    create_multi_year(ind_techos_resistentes, {
+        '2020': 80.2, '2021': 82.5, '2022': 84.8, '2023': 87.5, '2024': 89.3
+    })
+
+    # ── Ingresos ───────────────────────────────────────
+    create_multi_year(ind_gini, {
+        '2020': 0.46, '2021': 0.45, '2022': 0.44, '2023': 0.42, '2024': 0.41
+    })
+    create_multi_year(ind_ingreso_equiv, {
+        '2020': 6800.00, '2021': 7200.00, '2022': 7850.00, '2023': 8750.50, '2024': 9200.00
+    })
+    create_multi_year(ind_pobreza_ingresos, {
+        '2020': 15200, '2021': 14500, '2022': 13600, '2023': 12500, '2024': 11800
+    })
+    create_multi_year(ind_pobreza_extrema, {
+        '2020': 4500, '2021': 4100, '2022': 3700, '2023': 3200, '2024': 2900
+    })
+
+    # ── Empleo ─────────────────────────────────────────
+    create_multi_year(ind_condiciones_criticas, {
+        '2020': 16.5, '2021': 15.2, '2022': 14.0, '2023': 12.8, '2024': 11.5
+    })
+    create_multi_year(ind_informalidad, {
+        '2020': 62.5, '2021': 60.8, '2022': 58.5, '2023': 56.3, '2024': 54.2
+    })
+    create_multi_year(ind_desocupacion, {
+        '2020': 5.2, '2021': 4.8, '2022': 4.1, '2023': 3.5, '2024': 3.2
+    })
+    create_multi_year(ind_participacion_econ, {
+        '2020': 52.3, '2021': 54.1, '2022': 56.5, '2023': 58.7, '2024': 60.2
+    })
+
+    # ── Seguridad ──────────────────────────────────────
+    create_multi_year(ind_homicidios, {
+        '2020': 18.5, '2021': 17.2, '2022': 16.1, '2023': 15.2, '2024': 14.0
+    })
+    create_multi_year(ind_confianza_policia, {
+        '2020': 35.2, '2021': 37.5, '2022': 39.8, '2023': 42.5, '2024': 45.0
+    })
+    create_multi_year(ind_percepcion_inseguridad, {
+        '2020': 78.5, '2021': 75.2, '2022': 72.0, '2023': 68.9, '2024': 66.3
+    })
+    create_multi_year(ind_incidencia_delictiva, {
+        '2020': 410.0, '2021': 385.5, '2022': 350.2, '2023': 320.5, '2024': 298.0
+    })
+
+    # ── Medio ambiente ─────────────────────────────────
+    create_multi_year(ind_contaminacion_aire, {
+        '2020': 32.5, '2021': 31.0, '2022': 29.8, '2023': 28.3, '2024': 27.1
+    })
+    create_multi_year(ind_disposicion_residuos, {
+        '2020': 68.5, '2021': 71.2, '2022': 74.8, '2023': 78.5, '2024': 81.3
+    })
+    create_multi_year(ind_gestion_ambiental, {
+        '2020': 2, '2021': 3, '2022': 3, '2023': 5, '2024': 6
+    })
+
+    # ── Migración ──────────────────────────────────────
+    create_multi_year(ind_intensidad_migratoria, {
+        '2020': 2.3, '2021': 2.1, '2022': 2.0, '2023': 1.8, '2024': 1.7
+    })
+
+    # ── Tradición y Patrimonio — PCI ───────────────────
+    create_multi_year(ind_tension_poblacion, {
+        '2020': 3.1, '2021': 2.8, '2022': 2.6, '2023': 2.3, '2024': 2.1
+    })
+    create_multi_year(ind_acceso_servicios_tradicion, {
+        '2020': 55.0, '2021': 58.2, '2022': 61.5, '2023': 65.4, '2024': 68.0
+    })
+    create_multi_year(ind_tensiones_fisicas, {
+        '2020': 2.5, '2021': 2.3, '2022': 2.0, '2023': 1.8, '2024': 1.6
+    })
+
+    # ── Tradición y Patrimonio — Salvaguardia ──────────
+    create_multi_year(ind_procesos_salvaguardia, {
+        '2020': 1, '2021': 2, '2022': 2, '2023': 3, '2024': 4
+    })
+    create_multi_year(ind_seguimiento_salvaguardia, {
+        '2020': 1.5, '2021': 1.8, '2022': 2.1, '2023': 2.5, '2024': 2.9
+    })
+    create_multi_year(ind_difusion_pci, {
+        '2020': 4, '2021': 5, '2022': 6, '2023': 8, '2024': 10
+    })
+    create_multi_year(ind_relacion_comunidad_pci, {
+        '2020': 2.2, '2021': 2.5, '2022': 2.8, '2023': 3.2, '2024': 3.5
+    })
+
+    # ── Turismo Comunitario — Participación y gobernanza
+    create_multi_year(ind_participacion_decisiones, {
+        '2020': 32.0, '2021': 36.5, '2022': 40.8, '2023': 45.3, '2024': 49.0
+    })
+    create_multi_year(ind_capacitacion_info, {
+        '2020': 1.5, '2021': 1.8, '2022': 2.2, '2023': 2.8, '2024': 3.2
+    })
+    create_multi_year(ind_regulacion, {
+        '2020': 1.2, '2021': 1.5, '2022': 1.8, '2023': 2.1, '2024': 2.5
+    })
+
+    # ── Turismo Comunitario — Gestión del turismo ──────
+    create_multi_year(ind_herramientas_gestion, {
+        '2020': 2, '2021': 2, '2022': 3, '2023': 4, '2024': 5
+    })
+    create_multi_year(ind_proyectos_turisticos, {
+        '2020': 3, '2021': 4, '2022': 4, '2023': 6, '2024': 7
+    })
+    create_multi_year(ind_integracion_territorial, {
+        '2020': 1.5, '2021': 1.8, '2022': 2.2, '2023': 2.7, '2024': 3.1
+    })
 
     print("Sample data loaded successfully!")
 

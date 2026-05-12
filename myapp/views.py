@@ -1,15 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.http import require_POST
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, FileResponse
+from django.views.decorators.http import require_POST, require_http_methods
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
 from django.contrib import messages
-from .models import Usuario, RegistroVisita, PersonaVisita, Encuestador, Documento
-from .models import Eje, CategoriaIndicador, Indicador, Medicion
-from django.db.models import Sum
+from .models import Usuario, RegistroVisita, PersonaVisita, Encuestador, Documento, Categoria, Lugar
+from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
+from .forms import EncuestaResidenteForm, EncuestaComercioForm
+from django.db.models import Sum, Q
 import subprocess
 import os
-from .models import Lugar
+from datetime import datetime
 
 # Vista principal para el registro de visitas
 # - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
@@ -498,11 +501,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from .models import Documento, Categoria
-import os
-from django.conf import settings
-from django.db.models import Q
-
 def repositorio(request):
     """Vista principal del repositorio"""
     categoria_id = request.GET.get('categoria', None)
@@ -676,43 +674,346 @@ def obtener_documentos_categoria(request, categoria_id):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
-    return render(request, 'myapp/repositorio.html')
-
-from .models import Eje, Medicion
 
 @login_required
 def dashboard_view(request):
     """
     Vista principal del Dashboard del Observatorio.
-    Muestra los indicadores agrupados por Eje y Categoría.
+    Muestra los indicadores agrupados por Eje y Categoría,
+    con datos de sparklines, tendencias y conteos para el dashboard premium.
     """
+    import json
+    
     ejes = Eje.objects.prefetch_related('categorias__indicadores__mediciones').all()
     
+    total_indicadores = 0
+    total_categorias = 0
+    
+    for eje in ejes:
+        eje_indicator_count = 0
+        for categoria in eje.categorias.all():
+            total_categorias += 1
+            for indicador in categoria.indicadores.all():
+                eje_indicator_count += 1
+                # Obtener mediciones ordenadas por período
+                mediciones = list(indicador.mediciones.all().order_by('periodo'))
+                values = [float(m.valor) for m in mediciones]
+                
+                # Sparkline data (JSON array of values)
+                indicador.sparkline_values = json.dumps(values) if len(values) > 1 else ''
+                
+                # Trend calculation
+                if len(values) >= 2:
+                    prev_val = values[-2]
+                    last_val = values[-1]
+                    if prev_val != 0:
+                        change = ((last_val - prev_val) / abs(prev_val)) * 100
+                        indicador.trend_percent = f"{abs(change):.1f}"
+                        if change > 0.5:
+                            indicador.trend_direction = 'up'
+                        elif change < -0.5:
+                            indicador.trend_direction = 'down'
+                        else:
+                            indicador.trend_direction = 'stable'
+                    else:
+                        indicador.trend_direction = 'stable'
+                        indicador.trend_percent = '0.0'
+                else:
+                    indicador.trend_direction = 'stable'
+                    indicador.trend_percent = '0.0'
+        
+        eje.indicator_count = eje_indicator_count
+        total_indicadores += eje_indicator_count
+    
     return render(request, 'myapp/dashboard.html', {
-        'ejes': ejes
+        'ejes': ejes,
+        'total_indicadores': total_indicadores,
+        'total_categorias': total_categorias,
     })
 
 @login_required
+def category_detail_view(request, category_id):
+    """
+    Vista detallada para una categoría de indicadores.
+    Muestra gráficas comparativas y detalles de todos sus indicadores.
+    """
+    import json
+    from django.shortcuts import get_object_or_404
+    
+    categoria = get_object_or_404(CategoriaIndicador.objects.prefetch_related('indicadores__mediciones', 'eje'), id=category_id)
+    
+    # Procesar datos para cada indicador (similar al dashboard)
+    indicadores = categoria.indicadores.all()
+    for indicador in indicadores:
+        mediciones = list(indicador.mediciones.all().order_by('periodo'))
+        values = [float(m.valor) for m in mediciones]
+        
+        indicador.sparkline_values = json.dumps(values) if len(values) > 1 else ''
+        
+        if len(values) >= 2:
+            prev_val = values[-2]
+            last_val = values[-1]
+            if prev_val != 0:
+                change = ((last_val - prev_val) / abs(prev_val)) * 100
+                indicador.trend_percent = f"{abs(change):.1f}"
+                if change > 0.5:
+                    indicador.trend_direction = 'up'
+                elif change < -0.5:
+                    indicador.trend_direction = 'down'
+                else:
+                    indicador.trend_direction = 'stable'
+            else:
+                indicador.trend_direction = 'stable'
+                indicador.trend_percent = '0.0'
+        else:
+            indicador.trend_direction = 'stable'
+            indicador.trend_percent = '0.0'
+            
+    return render(request, 'myapp/category_detail.html', {
+        'categoria': categoria,
+        'indicadores': indicadores,
+        'eje': categoria.eje,
+    })
+
+
+@require_http_methods(["GET"])
 def indicator_chart_data(request, indicator_id):
     """
     API endpoint para obtener datos históricos de un indicador.
     Formato optimizado para Chart.js.
+    Incluye fuente de datos para visualización.
     """
     try:
         indicador = Indicador.objects.get(id=indicator_id)
         mediciones = indicador.mediciones.all().order_by('periodo')
         
+        # Determinar la fuente de datos legible
+        source_labels = {
+            'manual': 'Datos locales (captura manual)',
+            'inegi': 'INEGI — Instituto Nacional de Estadística y Geografía',
+            'other': 'Fuente externa',
+        }
+        
+        # Determinar la última fecha de actualización
+        last_sync_date = indicador.last_sync
+        if last_sync_date:
+            from django.utils.timezone import localtime
+            last_updated_str = localtime(last_sync_date).strftime("%d/%m/%Y %H:%M")
+        else:
+            last_medicion = mediciones.last()
+            if last_medicion and last_medicion.fecha_registro:
+                last_updated_str = last_medicion.fecha_registro.strftime("%d/%m/%Y")
+            else:
+                last_updated_str = "Sin datos"
+                
         data = {
             'labels': [m.periodo for m in mediciones],
             'values': [float(m.valor) for m in mediciones],
             'indicator_name': indicador.nombre,
             'unit': indicador.unidad_medida,
             'category': indicador.categoria.nombre,
-            'axis': indicador.categoria.eje.nombre
+            'axis': indicador.categoria.eje.nombre,
+            'description': indicador.descripcion or '',
+            'data_source': indicador.data_source,
+            'data_source_label': source_labels.get(indicador.data_source, 'Desconocida'),
+            'inegi_id': indicador.inegi_indicator_id or '',
+            'last_updated': last_updated_str,
         }
         
         return JsonResponse(data)
         
     except Indicador.DoesNotExist:
         return JsonResponse({'error': 'Indicador no encontrado'}, status=404)
+
+
+# ============================================
+# JSON-stat API Endpoints
+# ============================================
+
+@require_http_methods(["GET"])
+def indicator_jsonstat_data(request, indicator_id):
+    """
+    API endpoint que devuelve datos de un indicador en formato JSON-stat 2.0.
+    
+    Uso:
+        GET /api/indicator/5/jsonstat/
+    
+    Returns:
+        JsonResponse con estructura JSON-stat
+    """
+    from myapp.services.jsonstat_utils import build_simple_timeseries
+    from myapp.services.inegi_service import get_inegi_service
+    
+    try:
+        # Obtener el indicador
+        indicador = get_object_or_404(Indicador, id=indicator_id)
+        
+        # Si no tiene ID de INEGI, construir desde BD local
+        if not indicador.inegi_indicator_id:
+            mediciones = indicador.mediciones.all().order_by('periodo')
+            periods = [m.periodo for m in mediciones]
+            values = [float(m.valor) for m in mediciones]
+            
+            jsonstat_data = build_simple_timeseries(
+                indicator_name=indicador.nombre,
+                periods=periods,
+                values=values,
+                unit=indicador.unidad_medida,
+                source="Local"
+            )
+        else:
+            # Obtener de INEGI en formato JSON-stat
+            service = get_inegi_service()
+            if not service:
+                return JsonResponse(
+                    {'error': 'Servicio INEGI no disponible'}, 
+                    status=500
+                )
+            
+            jsonstat_data = service.fetch_jsonstat_data(indicador.inegi_indicator_id)
+            
+            if not jsonstat_data:
+                return JsonResponse(
+                    {'error': 'No se pudieron obtener datos'}, 
+                    status=404
+                )
+        
+        return JsonResponse(jsonstat_data)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def compare_municipalities_view(request):
+    """
+    API endpoint para comparar un indicador entre múltiples municipios.
+    
+    Uso:
+        GET /api/compare-municipalities/?indicator_id=6207019048&areas=21071,21114,21156
+    
+    Query params:
+        - indicator_id: ID del indicador en INEGI
+        - areas: Códigos de municipios separados por coma
+    
+    Returns:
+        JsonResponse con datos JSON-stat multidimensionales [area, time]
+    """
+    from myapp.services.inegi_service import get_inegi_service
+    
+    try:
+        # Obtener parámetros
+        indicator_id = request.GET.get('indicator_id')
+        areas_param = request.GET.get('areas', '')
+        
+        # Validar parámetros
+        if not indicator_id or not areas_param:
+            return JsonResponse(
+                {'error': 'Parámetros indicator_id y areas son requeridos'}, 
+                status=400
+            )
+        
+        # Parsear códigos de municipios
+        municipality_codes = [code.strip() for code in areas_param.split(',')]
+        
+        if len(municipality_codes) < 2:
+            return JsonResponse(
+                {'error': 'Se requieren al menos 2 municipios para comparar'}, 
+                status=400
+            )
+        
+        # Obtener servicio INEGI
+        service = get_inegi_service()
+        if not service:
+            return JsonResponse(
+                {'error': 'Servicio INEGI no disponible'}, 
+                status=500
+            )
+        
+        # Obtener datos comparativos
+        jsonstat_data = service.compare_municipalities(
+            indicator_id=indicator_id,
+            municipality_codes=municipality_codes
+        )
+        
+        if not jsonstat_data:
+            return JsonResponse(
+                {'error': 'No se pudieron obtener datos comparativos'}, 
+                status=404
+            )
+        
+        return JsonResponse(jsonstat_data)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# --- PORTAL DEL ENCUESTADOR ---
+
+@login_required
+def encuestador_dashboard(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+        
+    return render(request, 'myapp/encuestador_dashboard.html')
+
+@login_required
+def nueva_encuesta_residente(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    # Intentar obtener el encuestador (puede no existir en la BD legada)
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = EncuestaResidenteForm(request.POST)
+        if form.is_valid():
+            encuesta = form.save(commit=False)
+            encuesta.encuestador = encuestador
+            encuesta.save()
+            messages.success(request, 'Encuesta a residente guardada exitosamente.')
+            return redirect('encuestador_dashboard')
+    else:
+        form = EncuestaResidenteForm()
+
+    return render(request, 'myapp/form_residente.html', {'form': form})
+
+@login_required
+def nueva_encuesta_comercio(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    # Intentar obtener el encuestador (puede no existir en la BD legada)
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = EncuestaComercioForm(request.POST)
+        if form.is_valid():
+            encuesta = form.save(commit=False)
+            encuesta.encuestador = encuestador
+            encuesta.save()
+            messages.success(request, 'Encuesta a comercio guardada exitosamente.')
+            return redirect('encuestador_dashboard')
+    else:
+        form = EncuestaComercioForm()
+
+    return render(request, 'myapp/form_comercio.html', {'form': form})

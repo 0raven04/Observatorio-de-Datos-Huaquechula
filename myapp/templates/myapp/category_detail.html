@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ categoria.nombre }} - Detalle de Categoría</title>
+    <meta name="description" content="Detalle de categoría de indicadores territoriales: {{ categoria.nombre }}">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--color-gris-medio);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: var(--space-xl);
+            transition: var(--transition-base);
+        }
+        .back-btn:hover {
+            color: var(--color-naranja);
+        }
+        
+        .category-header-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-2xl);
+            border-top: 4px solid var(--eje-bienestar);
+        }
+        
+        .category-header-card[data-eje="bienestar"] { border-color: var(--eje-bienestar); }
+        .category-header-card[data-eje="tradicion"] { border-color: var(--eje-tradicion); }
+        .category-header-card[data-eje="turismo"] { border-color: var(--eje-turismo); }
+        
+        .category-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--color-gris-oscuro);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .category-meta {
+            color: var(--color-gris-medio);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .comparative-chart-container {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-2xl);
+            height: 400px;
+        }
+        
+        /* Modifying dashboard-main specifically for this detail page (no sidebar) */
+        .detail-main {
+            padding: var(--space-xl) max(5vw, calc((100vw - 1200px) / 2));
+            margin-top: 75px;
+            min-height: calc(100vh - 75px);
+            background: var(--color-arena-claro);
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+    <!-- ── Navbar ──────────────────────────────── -->
+    <nav class="navbar dashboard-navbar navbar-expand-md navbar-dark">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'vista_inicio' %}">
+                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo Huaquechula" style="height: 50px; width: auto;">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-center" id="dashboardNav">
+                <ul class="navbar-nav d-flex justify-content-around" style="gap: 0.25rem;">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="detail-main">
+        <a href="{% url 'dashboard' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+        </a>
+        
+        <div class="category-header-card" data-eje="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}">
+            <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-naranja); margin-bottom: 8px;">
+                {{ eje.nombre }}
+            </div>
+            <h1 class="category-title">{{ categoria.nombre }}</h1>
+            <div class="category-meta">
+                <span><i class="fas fa-layer-group me-1"></i> {{ indicadores.count }} indicadores</span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.print()" style="margin-left: auto;">
+                    <i class="fas fa-print"></i> Imprimir Reporte
+                </button>
+            </div>
+        </div>
+        
+        <h3 class="mb-4" style="font-weight: 700; color: var(--color-gris-oscuro);">Indicadores de la Categoría</h3>
+        
+        <div class="indicators-grid mb-5">
+            {% for indicador in indicadores %}
+            <div class="indicator-card" onclick="showIndicatorChart({{ indicador.id }}, '{{ indicador.nombre|escapejs }}')">
+                <div class="indicator-card-header">
+                    <span class="indicator-name">{{ indicador.nombre }}</span>
+                    <span class="indicator-source-badge {% if indicador.data_source == 'inegi' %}inegi{% else %}local{% endif %}">
+                        {{ indicador.data_source|upper }}
+                    </span>
+                </div>
+
+                {% with last_med=indicador.mediciones.last %}
+                {% if last_med %}
+                <div class="indicator-value-row">
+                    <span class="indicator-main-value">{{ last_med.valor }}</span>
+                    <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
+                </div>
+                <div class="indicator-period">
+                    <i class="far fa-calendar-alt me-1"></i>Período {{ last_med.periodo }}
+                </div>
+                {% else %}
+                <div class="indicator-value-row">
+                    <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 1rem;">Sin datos</span>
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <!-- Sparkline -->
+                {% if indicador.sparkline_values %}
+                <div class="indicator-sparkline">
+                    <canvas data-values="{{ indicador.sparkline_values }}" data-color="{% if 'Bienestar' in eje.nombre %}#2980B9{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}#8E44AD{% else %}#27AE60{% endif %}" height="40"></canvas>
+                </div>
+                {% endif %}
+
+                <div class="indicator-trend-row">
+                    {% if indicador.trend_direction == 'up' %}
+                    <span class="indicator-trend up"><i class="fas fa-arrow-up"></i> {{ indicador.trend_percent }}%</span>
+                    {% elif indicador.trend_direction == 'down' %}
+                    <span class="indicator-trend down"><i class="fas fa-arrow-down"></i> {{ indicador.trend_percent }}%</span>
+                    {% else %}
+                    <span class="indicator-trend stable"><i class="fas fa-minus"></i> Estable</span>
+                    {% endif %}
+                    <span class="indicator-view-btn">Ver detalle <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info w-100">No hay indicadores registrados para esta categoría.</div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- ── Chart Modal ─────────────────────────── -->
+    <div class="modal fade chart-modal" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chartModalLabel">
+                        <i class="fas fa-chart-line me-2"></i>Indicador
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="chart-type-switcher">
+                        <button class="chart-type-btn active" data-type="line" onclick="switchChartType('line')">
+                            <i class="fas fa-chart-line me-1"></i> Línea
+                        </button>
+                        <button class="chart-type-btn" data-type="bar" onclick="switchChartType('bar')">
+                            <i class="fas fa-chart-bar me-1"></i> Barras
+                        </button>
+                        <button class="chart-type-btn" data-type="doughnut" onclick="switchChartType('doughnut')">
+                            <i class="fas fa-chart-pie me-1"></i> Dona
+                        </button>
+                    </div>
+
+                    <div style="position: relative; height: 380px;">
+                        <canvas id="mainChartCanvas"></canvas>
+                    </div>
+
+                    <div id="chartMetadata"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm" onclick="downloadChartPDF()" style="background: var(--color-naranja); color: #fff; border: none; border-radius: 8px; padding: 6px 18px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-file-pdf"></i> Descargar PDF
+                    </button>
+                    <button type="button" class="btn btn-sm" style="background: var(--color-arena-claro); color: var(--color-gris-oscuro); border-radius: 8px; padding: 6px 18px; font-weight: 500; font-size: 0.85rem;" data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Footer ──────────────────────────────── -->
+    <footer class="dashboard-footer" style="margin-left: 0;">
+        <p class="mb-0">&copy; 2025 Observatorio Turístico de Huaquechula · Datos actualizados periódicamente</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'myapp/JAV/dashboard.js' %}"></script>
+</body>
+</html>

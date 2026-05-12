@@ -1,4 +1,38 @@
+# Python / Django
 venv/
-"__pycache__/" 
-"__pycache__/" 
-"*.pyc" 
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.egg-info/
+dist/
+build/
+*.log
+
+# Secretos
+.env
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Expo / React Native
+ObservatorioMovil/node_modules/
+ObservatorioMovil/node_modules_old/
+ObservatorioMovil/.expo/
+ObservatorioMovil/android/
+ObservatorioMovil/ios/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Regresión / archivos temporales
+regresion_lineal_resultado.png

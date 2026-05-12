@@ -27,7 +27,7 @@ DEBUG = True
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 
 # Application definition
@@ -40,9 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'myapp',
     'django.contrib.staticfiles',
+    # API Móvil
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # CORS — debe ir primero
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -150,14 +155,6 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',    # para mantener el backend default (opcional)
 ]
 
-#prueba 
-
-# settings.py
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -170,4 +167,38 @@ ALLOWED_EXTENSIONS = {
 }
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
-# Asegúrate de que INSTALLED_APPS incluya tu app
+# INEGI API Configuration
+# Obtén tu token registrándote en: https://www.inegi.org.mx/app/api/indicadores/
+INEGI_API_TOKEN = '142a3684-a55f-b0d4-b991-26843e97642d'
+INEGI_API_BASE_URL = 'https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/INDICATOR'
+INEGI_API_VERSION = '2.0'
+HUAQUECHULA_GEO_CODE = '21071'  # Puebla (21) + Huaquechula (071)
+
+# ============================================
+# API REST — Configuración para App Móvil
+# ============================================
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# CORS — Permitir conexiones desde la app Expo en desarrollo
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+    'http://10.0.2.2:8081',  # Emulador Android
+]
+CORS_ALLOW_CREDENTIALS = True
