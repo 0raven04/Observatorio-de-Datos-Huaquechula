@@ -453,7 +453,6 @@
 {% endblock %}
 
 
-
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
@@ -499,7 +498,12 @@
             if (mapContainer) { mapContainer.innerHTML = ''; }
 
             var map = L.map('map', {
-                center: centroHuaquechula, zoom: 16, minZoom: 14, maxZoom: 18
+                center: centroHuaquechula, 
+                zoom: 16, 
+                minZoom: 14, 
+                maxZoom: 18,
+                maxBounds: limitesMapa,
+                maxBoundsViscosity: 1.0
             });
             window._leaflet_map_instance = map;
 
@@ -694,8 +698,6 @@
             // ==========================================
             // 5. CONTROL DE FILTROS EN LA UI (Sin Cambios)
             // ==========================================
-            // ... (Tu código de control de filtros se queda intacto aquí, asumiendo que ya lo tienes arriba en tu archivo) ...
-            // SI COPIASTE Y PEGASTE ENCIMA, ASEGÚRATE DE DEJAR TU LÓGICA DE FILTROS AQUÍ
 
             // ==========================================
             // PANEL FLOTANTE DEL MARCADOR
@@ -818,7 +820,7 @@
                 panel.classList.add('panel-visible');
             };
 
-        }); // <-- FIN DEL DOMContentLoaded
+        }); 
 
         // ==========================================
         // 6. SISTEMA DE RUTAS Y SIMULADOR
@@ -831,6 +833,50 @@
 
         const latitudSimulada = 18.768500;
         const longitudSimulada = -98.543200;
+
+        /*
+        // ==========================================
+        // MODO PRODUCCIÓN: GPS REAL CON FALLO SILENCIOSO
+        // Descomenta esto cuando el sitio tenga HTTPS y esté listo
+        // ==========================================
+        window.obtenerPuntoDePartida = function(callbackExito) {
+            if (!navigator.geolocation) {
+                // Si el navegador es muy antiguo, solo mostramos el mapa
+                return; 
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(posicion) {
+                    var ubicacionReal = L.latLng(posicion.coords.latitude, posicion.coords.longitude);
+
+                    // Verificamos si está en Huaquechula (usando tus limitesMapa ya definidos)
+                    if (limitesMapa.contains(ubicacionReal)) {
+                        callbackExito(ubicacionReal);
+                    } else {
+                        // Si está fuera de la zona, avisamos pero dejamos ver el mapa
+                        alert("Navegación limitada: Te encuentras fuera de la zona de recorridos de Huaquechula.");
+                        // Opcionalmente centramos el mapa en el pueblo
+                        window._leaflet_map_instance.setView([18.769895, -98.544040], 16);
+                    }
+                },
+                function(error) {
+                    // Si el usuario deniega el permiso (error.PERMISSION_DENIED)
+                    // o hay un fallo de señal, no mostramos alertas.
+                    // El mapa simplemente se queda donde está, permitiendo exploración manual.
+                    
+                    console.warn("Acceso a ubicación denegado o no disponible. Modo exploración manual activado.");
+                    
+                    // Aseguramos que el mapa esté en el centro de Huaquechula por defecto
+                    window._leaflet_map_instance.setView([18.769895, -98.544040], 16);
+                },
+                { 
+                    enableHighAccuracy: true, // Mayor precisión para rutas peatonales
+                    timeout: 8000,            // Esperar 8 segundos antes de desistir
+                    maximumAge: 0             // No usar ubicaciones guardadas viejas
+                }
+            );
+        };
+        */
 
         window.ocultarOtrosMarcadoresPorId = function (idCapaTarget) {
             if (!window._leaflet_map_instance) return;
@@ -850,6 +896,31 @@
             });
             if (window.aplicarFiltros) window.aplicarFiltros();
         };
+
+        /*
+        window.trazarRuta = function (idCapaDestino) {
+            if (typeof L.Routing === 'undefined') return;
+
+            var marcadorDestino = window.todosLosMarcadores.find(m => m.id === idCapaDestino);
+            if (!marcadorDestino) return;
+
+            // En lugar de usar el punto simulado directamente, llamamos a la función del GPS
+            window.obtenerPuntoDePartida(function(puntoOrigenReal) {
+                
+                var destinoDinamico = window.obtenerPuntoMasCercanoDeCapa(marcadorDestino.layer, puntoOrigenReal);
+                window.ocultarOtrosMarcadoresPorId(idCapaDestino);
+
+                // ... (El resto de tu limpieza de ruta, _simulacionInterval, etc. va aquí adentro exactamente igual) ...
+
+                window._controlRutaActual = L.Routing.control({
+                    waypoints: [puntoOrigenReal, destinoDinamico], // Usamos el punto real
+                    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1', profile: 'walking', language: 'es' }),
+                    // ...
+                }).addTo(window._leaflet_map_instance);
+
+            }); // <-- Fin del callback del GPS
+        };
+        */
 
         window.trazarRuta = function (idCapaDestino) {
             if (typeof L.Routing === 'undefined') return;
@@ -882,11 +953,6 @@
                 var ruta = e.routes[0];
                 var coordenadasLinea = ruta.coordinates;
                 var pasos = ruta.instructions;
-
-                // Removemos el original logic htmlOriginal
-                // if (marcadorDestino && !marcadorDestino.htmlOriginal) {
-                //     marcadorDestino.htmlOriginal = marcadorDestino.layer.getPopup().getContent();
-                // }
 
                 window._lineaRecorrida = L.polyline([], { color: '#6c757d', weight: 6, opacity: 0.6, dashArray: '5, 10' }).addTo(window._leaflet_map_instance);
                 window._lineaRestante = L.polyline(coordenadasLinea, { color: '#0000FF', weight: 6, opacity: 0.8 }).addTo(window._leaflet_map_instance);
@@ -934,7 +1000,6 @@
                 }
 
                 actualizarInterfaz();
-                // marcadorDestino.layer.openPopup(); Ya no usamos popup
 
                 window._simulacionInterval = setInterval(function () {
                     indiceActual += 2;
@@ -962,10 +1027,6 @@
 
                             document.getElementById('marker-panel-instructions').innerHTML = '';
                             document.getElementById('marker-panel-actions').style.display = 'block';
-                            // if (marcadorDestino && marcadorDestino.htmlOriginal) {
-                            //     marcadorDestino.layer.setPopupContent(marcadorDestino.htmlOriginal);
-                            //     window._leaflet_map_instance.closePopup();
-                            // }
                         }, 1000);
                     } else {
                         window._marcadorUsuario.setLatLng(coordenadasLinea[indiceActual]);
@@ -1016,6 +1077,7 @@
     }
 
 </script>
+
 
 <script>
 // @ts-nocheck

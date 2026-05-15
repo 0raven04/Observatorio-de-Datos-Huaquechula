@@ -4,6 +4,11 @@
     --color-arena-oscuro: #D6CEAA;
     --color-beige: #B3B3B3;
     --font-sans: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* Variables de accesibilidad de tamaño de texto */
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-large: 18px;
 }
 
 /* Reset ligero */

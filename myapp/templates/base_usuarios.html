@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Panel Administrativo{% endblock %}</title>
 
+    <!-- Anti-parpadeo: aplicar tema ANTES de pintar la página -->
+    <script>(function(){var t=localStorage.getItem('observatorio_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+
     <style>
         /* Forzar actualización del submenú para evitar la caché del navegador */
         .nav-item.has-submenu:hover .submenu,
@@ -17,6 +20,8 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <link rel="stylesheet" href="{% static 'myapp/CSS/base_usuarios.css' %}" />
@@ -25,6 +30,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="{% static 'myapp/JAV/accessibility.js' %}" defer></script>
+    <script src="{% static 'myapp/JAV/settings.js' %}" defer></script>
     <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
     <script src="{% static 'myapp/JAV/js_lista_registro.js' %}" defer></script>
     
@@ -32,7 +39,7 @@
     
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" data-authenticated="true">
     <header>
         <nav class="navbar custom-navbar navbar-expand-md fixed-top custom-navbar-bg" aria-label="Navegación principal">
             <div class="container-fluid d-flex justify-content-between align-items-center">
