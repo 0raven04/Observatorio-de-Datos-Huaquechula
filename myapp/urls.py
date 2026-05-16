@@ -66,6 +66,15 @@ urlpatterns = [
     
 
 
+    path('subir-documento/', views.subir_documento, name='subir_documento'),
+    path('descargar/<int:documento_id>/', views.descargar_documento, name='descargar_documento'),
+    path('eliminar/<int:documento_id>/', views.eliminar_documento, name='eliminar_documento'),
+    path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),
+    path('repositorio/', views.repositorio, name='repositorio'),
+    path('estadistica/', views.graficos_indicadores, name='estadistica'),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('dashboard/categoria/<int:category_id>/', views.category_detail_view, name='category_detail'),
+    path('api/indicator/<int:indicator_id>/chart-data/', views.indicator_chart_data, name='indicator_chart_data'),
     
     path('registros/', views.registro_visita, name='lista_registros'),  # Cambia 'registro' a 'lista_registros' si es necesario
     path('registros/crear/', views.formulario, name='crear_registro'),  # Nueva URL para crear registro

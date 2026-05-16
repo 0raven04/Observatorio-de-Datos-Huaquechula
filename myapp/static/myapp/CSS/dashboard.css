@@ -452,7 +452,7 @@
 .indicator-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: var(--space-sm);
     gap: var(--space-sm);
 }
@@ -487,7 +487,7 @@
 
 .indicator-value-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-xs);
     margin-bottom: var(--space-sm);
 }
@@ -828,34 +828,62 @@
 
 .indicators-grid.list-view .indicator-card {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 150px;
+    grid-template-columns: 2fr 70px 80px 90px 100px 80px 120px;
     align-items: center;
-    gap: 20px;
-    padding: 16px 24px;
+    gap: 8px;
+    padding: 10px 16px;
+    width: 100%;
 }
 
-.indicators-grid.list-view .indicator-card-header {
-    margin-bottom: 0;
+@media (min-width: 992px) {
+    .indicators-grid.list-view .indicator-card-header,
+    .indicators-grid.list-view .indicator-value-row,
+    .indicators-grid.list-view .indicator-trend-row {
+        display: contents;
+    }
 }
 
 .indicators-grid.list-view .indicator-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
 }
 
-.indicators-grid.list-view .indicator-value-row {
-    margin-bottom: 0;
+.indicators-grid.list-view .indicator-source-badge {
+    justify-self: start;
+}
+
+.indicators-grid.list-view .indicator-main-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: left;
+    justify-self: start;
+}
+
+.indicators-grid.list-view .indicator-main-unit {
+    font-size: 0.8rem;
+    color: var(--color-gris-claro);
 }
 
 .indicators-grid.list-view .indicator-period {
-    margin-bottom: 0;
-    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-gris-claro);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: start;
+    white-space: nowrap;
 }
 
-.indicators-grid.list-view .indicator-trend-row {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-    justify-content: flex-end;
+.indicators-grid.list-view .indicator-trend {
+    justify-self: start;
+}
+
+.indicators-grid.list-view .indicator-view-btn {
+    justify-self: end;
+}
+
+.indicators-grid.list-view .indicator-sparkline {
+    display: none;
 }
 
 .indicators-grid.list-view .indicator-sparkline {

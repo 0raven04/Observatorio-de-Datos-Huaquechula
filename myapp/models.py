@@ -904,6 +904,99 @@ class UsuarioBackend(BaseBackend):
         except User.DoesNotExist:
             return None# Modelos del Observatorio Territorial
 
+class Lugar(models.Model):
+    nombre = models.CharField(max_length=100)
+    latitud = models.FloatField()
+    longitud = models.FloatField()
+
+    def __str__(self):
+        return self.nombre
+    
+#prueba 
+# models.py
+from django.db import models
+from django.utils import timezone
+
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=100)
+    icono = models.CharField(max_length=50, default='fas fa-folder')
+    orden = models.IntegerField(default=0)
+    
+    class Meta:
+        verbose_name_plural = "Categorías"
+        ordering = ['orden', 'nombre']
+    
+    def __str__(self):
+        return self.nombre
+    
+    def contar_documentos(self):
+        return self.documento_set.count()
+
+class Documento(models.Model):
+    titulo = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    archivo = models.FileField(upload_to='documentos/%Y/%m/')
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='documentos')
+    fecha_subida = models.DateTimeField(default=timezone.now)
+    tamaño = models.IntegerField(default=0)  # en bytes
+    tipo_archivo = models.CharField(max_length=10, blank=True)
+    es_publico = models.BooleanField(default=True)
+    descargas = models.IntegerField(default=0)
+    
+    class Meta:
+        ordering = ['-fecha_subida']
+        verbose_name_plural = "Documentos"
+    
+    def __str__(self):
+        return self.titulo
+    
+    def save(self, *args, **kwargs):
+        if self.archivo:
+            self.tipo_archivo = self.archivo.name.split('.')[-1].lower()
+            self.tamaño = self.archivo.size
+        super().save(*args, **kwargs)
+    
+    def tamaño_formateado(self):
+        """Retorna el tamaño en formato legible"""
+        bytes = self.tamaño
+        if bytes == 0:
+            return '0 Bytes'
+        k = 1024
+        sizes = ['Bytes', 'KB', 'MB', 'GB']
+        i = 0
+        while bytes >= k and i < len(sizes) - 1:
+            bytes /= k
+            i += 1
+        return f"{bytes:.2f} {sizes[i]}"
+    
+    def es_video(self):
+        return self.tipo_archivo in ['mp4', 'avi', 'mov', 'wmv', 'mkv']
+    
+    def es_imagen(self):
+        return self.tipo_archivo in ['jpg', 'jpeg', 'png', 'gif', 'bmp']
+    
+    def es_pdf(self):
+        return self.tipo_archivo == 'pdf'
+    
+    def icono_archivo(self):
+        """Retorna el ícono FontAwesome apropiado"""
+        if self.es_video():
+            return 'fas fa-file-video'
+        elif self.es_imagen():
+            return 'fas fa-file-image'
+        elif self.es_pdf():
+            return 'fas fa-file-pdf'
+        elif self.tipo_archivo in ['doc', 'docx']:
+            return 'fas fa-file-word'
+        elif self.tipo_archivo in ['xls', 'xlsx']:
+            return 'fas fa-file-excel'
+        elif self.tipo_archivo in ['ppt', 'pptx']:
+            return 'fas fa-file-powerpoint'
+        else:
+            return 'fas fa-file'
+
+# Modelos del Observatorio Territorial
+
 class Eje(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
@@ -922,7 +1015,7 @@ class Indicador(models.Model):
     categoria = models.ForeignKey(CategoriaIndicador, on_delete=models.CASCADE, related_name='indicadores')
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
-    unidad_medida = models.CharField(max_length=50, blank=True)
+    unidad_medida = models.CharField(max_length=50, blank=True) # e.g., "Porcentaje", "Años", "Cantidad"
     
     # Campos para integración con INEGI
     inegi_indicator_id = models.CharField(max_length=50, blank=True, null=True, help_text="ID del indicador en la API del INEGI")
@@ -938,14 +1031,12 @@ class Indicador(models.Model):
 
 class Medicion(models.Model):
     indicador = models.ForeignKey(Indicador, on_delete=models.CASCADE, related_name='mediciones')
-    periodo = models.CharField(max_length=50)
+    periodo = models.CharField(max_length=50) # e.g., "2024", "2024-Q1"
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_registro = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.indicador.nombre} ({self.periodo}): {self.valor}"
-
-
 # --- NUEVOS MODELOS DE ENCUESTAS (ALIMENTACIÓN MANUAL DEL OBSERVATORIO) ---
 
 class EncuestaResidente(models.Model):

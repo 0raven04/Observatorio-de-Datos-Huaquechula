@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, FileResponse
 from myapp.models import (
@@ -48,6 +49,111 @@ import mimetypes
 from myapp.models import Categoria_Sitio
 from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
 from .forms import EncuestaResidenteForm, EncuestaComercioForm
+from django.views.decorators.http import require_POST, require_http_methods
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
+from django.contrib import messages
+from .models import Usuario, RegistroVisita, PersonaVisita, Encuestador, Documento, Categoria, Lugar
+from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
+from .forms import EncuestaResidenteForm, EncuestaComercioForm
+from django.db.models import Sum, Q
+import subprocess
+import os
+from datetime import datetime
+
+# Vista principal para el registro de visitas
+# - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
+# - Requiere autenticación y que el usuario sea encuestador
+@login_required
+@transaction.atomic  # Garantiza que todas las operaciones de base de datos se completen exitosamente o se reviertan
+def registro_visita(request):
+    """
+    Vista principal para el CRUD de registros de visitas:
+    1. Verifica que el usuario autenticado sea un encuestador
+    2. Para solicitudes POST: procesa el formulario y crea un nuevo registro
+    3. Para solicitudes GET: muestra todos los registros existentes
+    
+    Funcionamiento:
+    - Primero valida los permisos del usuario
+    - En POST:
+        * Convierte los datos del formulario a los tipos adecuados
+        * Crea el registro principal en RegistroVisita
+        * Crea los registros asociados en PersonaVisita
+        * Maneja errores en la conversión de datos
+    - En GET:
+        * Recupera todos los registros de visitas
+        * Muestra la plantilla con los registros
+    """
+    
+    #1.- Verificar que el usuario es un administrador  
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso. Solo los administradores pueden acceder.")  
+
+        if usuario.tipo == 'encuestador':  
+            encuestador = Encuestador.objects.get(id_usuario=usuario)  
+        else:  # admin  
+            encuestador, created = Encuestador.objects.get_or_create(  
+                clave_encuestador=f'ADMIN_{usuario.id_usuario}',  
+                defaults={'id_usuario': usuario}  
+        )  
+    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    # 2. Procesar solicitudes POST (creación de nuevo registro)
+    if request.method == 'POST':
+        # Función auxiliar para convertir valores a enteros con manejo de errores
+        def to_int(value, default=None):
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return default
+
+        # Obtener y procesar datos del formulario
+        es_extranjero = request.POST.get('esExtranjero') == 'si'  # Convertir a booleano
+        tamanio_grupo = to_int(request.POST.get('numPersonas'), default=1)
+        estancia_dias = to_int(request.POST.get('numDias'), default=1)
+        numero_visitas = to_int(request.POST.get('numVisitas'), default=1)
+        motivo_visita = request.POST.get('motivo') or None
+        tipo_transporte = request.POST.get('transporte') or None
+
+        # Crear el registro principal de visita
+        registro = RegistroVisita.objects.create(
+            tamanio_grupo=tamanio_grupo,
+            es_extranjero=es_extranjero,
+            pais_origen=request.POST.get('pais') if es_extranjero else None,  # País solo para extranjeros
+            procedencia=request.POST.get('procedencia'),
+            tipo_transporte=tipo_transporte,
+            motivo_visita=motivo_visita,
+            estancia_dias=estancia_dias,
+            numero_visitas=numero_visitas,
+            id_encuestador=encuestador
+        )
+        
+        # Crear registros para cada persona en el grupo
+        personas = []
+        for i in range(1, tamanio_grupo + 1):
+            edad = to_int(request.POST.get(f'edad{i}'))
+            sexo = request.POST.get(f'genero{i}')
+            # Validar que los datos de la persona sean correctos
+            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:
+                personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))
+
+        # Crear todas las personas de una vez (optimizado)
+        if personas:
+            PersonaVisita.objects.bulk_create(personas)
+            
+        # Redirigir a la lista de registros después de crear
+        return redirect('lista_registros')   
+    
+    # 3. Manejar solicitudes GET (mostrar registros existentes)
+    registros = RegistroVisita.objects.all()
+    mensaje = request.GET.get('mensaje', '')  # Mensaje opcional para mostrar al usuario
+    return render(request, 'myapp/lista_registros.html', {
+        'registros': registros, 
+        'mensaje': mensaje
+    })
 
 from django.views.decorators.csrf import csrf_exempt
 import requests
@@ -3015,6 +3121,179 @@ def repositorio(request):
         'documentos': [],
         'mensaje': 'Funcionalidad en desarrollo'
     })
+def repositorio(request):
+    """Vista principal del repositorio"""
+    categoria_id = request.GET.get('categoria', None)
+    busqueda = request.GET.get('q', '')
+    
+    # Filtrar documentos
+    documentos = Documento.objects.filter(es_publico=True)
+    
+    if categoria_id:
+        documentos = documentos.filter(categoria_id=categoria_id)
+    
+    if busqueda:
+        documentos = documentos.filter(
+            Q(titulo__icontains=busqueda) | 
+            Q(descripcion__icontains=busqueda)
+        )
+    
+    categorias = Categoria.objects.all()
+    
+    context = {
+        'documentos': documentos,
+        'categorias': categorias,
+        'categoria_actual': categoria_id,
+        'busqueda': busqueda,
+    }
+    return render(request, 'myapp/repositorio.html', context)
+
+@require_http_methods(["POST"])
+def subir_documento(request):
+    """Vista para subir documentos"""
+    try:
+        # Validar que venga el archivo
+        if 'archivo' not in request.FILES:
+            return JsonResponse({'error': 'No se recibió ningún archivo'}, status=400)
+        
+        archivo = request.FILES['archivo']
+        titulo = request.POST.get('titulo', '')
+        categoria_id = request.POST.get('categoria', '')
+        descripcion = request.POST.get('descripcion', '')
+        es_publico = request.POST.get('es_publico', 'on') == 'on'
+        
+        # Validaciones
+        if not titulo:
+            return JsonResponse({'error': 'El título es obligatorio'}, status=400)
+        
+        if not categoria_id:
+            return JsonResponse({'error': 'Debes seleccionar una categoría'}, status=400)
+        
+        # Validar tipo de archivo
+        extension = archivo.name.split('.')[-1].lower()
+        if extension not in settings.ALLOWED_EXTENSIONS:
+            return JsonResponse({
+                'error': f'Tipo de archivo no permitido. Extensiones permitidas: {", ".join(settings.ALLOWED_EXTENSIONS)}'
+            }, status=400)
+        
+        # Validar tamaño
+        if archivo.size > settings.MAX_FILE_SIZE:
+            max_size_mb = settings.MAX_FILE_SIZE / (1024 * 1024)
+            return JsonResponse({
+                'error': f'El archivo es demasiado grande. Tamaño máximo: {max_size_mb}MB'
+            }, status=400)
+        
+        # Obtener categoría
+        try:
+            categoria = Categoria.objects.get(id=categoria_id)
+        except Categoria.DoesNotExist:
+            return JsonResponse({'error': 'Categoría no válida'}, status=400)
+        
+        # Crear documento
+        documento = Documento(
+            titulo=titulo,
+            descripcion=descripcion,
+            archivo=archivo,
+            categoria=categoria,
+            es_publico=es_publico
+        )
+        documento.save()
+        
+        return JsonResponse({
+            'mensaje': 'Documento subido correctamente',
+            'documento_id': documento.id,
+            'titulo': documento.titulo,
+            'url': documento.archivo.url
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error al subir el documento: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def descargar_documento(request, documento_id):
+    """Vista para descargar documentos"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Incrementar contador de descargas
+        documento.descargas += 1
+        documento.save(update_fields=['descargas'])
+        
+        # Verificar que el archivo existe
+        if not os.path.exists(documento.archivo.path):
+            return JsonResponse({'error': 'Archivo no encontrado en el servidor'}, status=404)
+        
+        # Servir el archivo
+        response = FileResponse(
+            open(documento.archivo.path, 'rb'),
+            as_attachment=True,
+            filename=os.path.basename(documento.archivo.name)
+        )
+        return response
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Error al descargar: {str(e)}'}, status=500)
+
+@require_http_methods(["POST"])
+def eliminar_documento(request, documento_id):
+    """Vista para eliminar documentos"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Guardar información antes de eliminar
+        titulo = documento.titulo
+        
+        # Eliminar archivo físico
+        if documento.archivo:
+            try:
+                if os.path.isfile(documento.archivo.path):
+                    os.remove(documento.archivo.path)
+            except Exception as e:
+                print(f"Error al eliminar archivo físico: {e}")
+        
+        # Eliminar registro de la base de datos
+        documento.delete()
+        
+        return JsonResponse({
+            'mensaje': f'Documento "{titulo}" eliminado correctamente'
+        })
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Error al eliminar: {str(e)}'}, status=500)
+
+def obtener_documentos_categoria(request, categoria_id):
+    """API para obtener documentos de una categoría específica"""
+    try:
+        if categoria_id == 'all':
+            documentos = Documento.objects.filter(es_publico=True)
+        else:
+            documentos = Documento.objects.filter(
+                categoria_id=categoria_id,
+                es_publico=True
+            )
+        
+        documentos_data = [{
+            'id': doc.id,
+            'titulo': doc.titulo,
+            'descripcion': doc.descripcion,
+            'url': doc.archivo.url,
+            'tipo': doc.tipo_archivo,
+            'tamaño': doc.tamaño_formateado(),
+            'fecha': doc.fecha_subida.strftime('%d/%m/%Y'),
+            'icono': doc.icono_archivo(),
+            'es_video': doc.es_video(),
+            'es_imagen': doc.es_imagen(),
+            'es_pdf': doc.es_pdf(),
+        } for doc in documentos]
+        
+        return JsonResponse({'documentos': documentos_data})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
 def dashboard_view(request):
@@ -3165,7 +3444,6 @@ def indicator_chart_data(request, indicator_id):
         
     except Indicador.DoesNotExist:
         return JsonResponse({'error': 'Indicador no encontrado'}, status=404)
-
 
 
 # ============================================
