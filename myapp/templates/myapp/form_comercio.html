@@ -1,64 +1,65 @@
+{% extends 'myapp/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <title>Encuesta: Comercio / Artesano</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Estilos generales -->
-    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
-</head>
-<body style="background-color: #f8f9fa;">
-    <!-- Navbar -->
-    <nav class="navbar sticky-top" style="background-color: #f39c12">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'encuestador_dashboard' %}">
-                <h2 class="text-white mb-0" style="font-size: 1.25rem;"><i class="fas fa-arrow-left me-2"></i>Nueva Encuesta: Comercio</h2>
-            </a>
-        </div>
-    </nav>
 
-    <!-- Contenido -->
-    <div class="container mt-4 mb-5">
-        <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 800px; margin: 0 auto;">
-            <div class="card-body p-4 p-md-5">
-                <form method="POST">
-                    {% csrf_token %}
-                    
-                    <h4 class="mb-4 text-warning border-bottom pb-2" style="color: #d35400 !important;">Perfil del Establecimiento</h4>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Tipo de Comercio / Actividad</label>
-                            {{ form.tipo_comercio }}
-                        </div>
-                    </div>
+{% block title %}Encuesta: Comercio / Artesano{% endblock %}
 
-                    <h4 class="mb-4 text-warning border-bottom pb-2 mt-5" style="color: #d35400 !important;">Gobernanza y Gestión Turística</h4>
-                    <div class="row g-3 mb-4">
-                        <div class="col-12">
-                            <label class="form-label fw-bold">{{ form.participacion_decisiones.label }}</label>
-                            {{ form.participacion_decisiones }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">{{ form.capacitacion_turistica.label }}</label>
-                            {{ form.capacitacion_turistica }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">{{ form.integracion_turistica.label }}</label>
-                            {{ form.integracion_turistica }}
-                        </div>
-                    </div>
-
-                    <div class="mt-5 text-end">
-                        <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
-                        <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #e67e22;">Guardar Encuesta</button>
-                    </div>
-                </form>
+{% block content %}
+    <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4 p-md-5">
+            <div class="mb-4">
+                <a href="{% url 'encuestador_dashboard' %}" class="text-decoration-none text-muted">
+                    <i class="fas fa-arrow-left me-2"></i>Regresar al Portal
+                </a>
             </div>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <h2 class="mb-4" style="color: var(--color-naranja); border-bottom: 2px solid var(--color-naranja); pb-2; font-weight: 800;">
+                    <i class="fas fa-store me-2"></i>Nueva Encuesta: Comercio
+                </h2>
+                
+                <h4 class="mb-3 mt-4" style="color: var(--color-gris-oscuro); font-weight: 600;">Perfil del Establecimiento</h4>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Tipo de Comercio / Actividad</label>
+                        {{ form.tipo_comercio }}
+                    </div>
+                </div>
+
+                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">Gobernanza y Gestión Turística</h4>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">{{ form.participacion_decisiones.label }}</label>
+                        {{ form.participacion_decisiones }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">{{ form.capacitacion_turistica.label }}</label>
+                        {{ form.capacitacion_turistica }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">{{ form.integracion_turistica.label }}</label>
+                        {{ form.integracion_turistica }}
+                    </div>
+                </div>
+
+                <div class="mt-5 text-end">
+                    <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: var(--color-naranja); border: none;">Guardar Encuesta</button>
+                </div>
+            </form>
         </div>
     </div>
-</body>
-</html>
+    
+    <style>
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--color-arena-oscuro);
+            padding: 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(211, 84, 0, 0.25);
+            border-color: var(--color-naranja);
+        }
+    </style>
+{% endblock %}

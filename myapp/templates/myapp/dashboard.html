@@ -1,59 +1,38 @@
+{% extends 'myapp/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Observatorio Territorial — Huaquechula</title>
+
+{% block title %}Observatorio Territorial — Huaquechula{% endblock %}
+
+{% block extra_head %}
     <link rel="icon" href="{% static 'myapp/image/huaquechula_favicon.png' %}" type="image/png">
     <meta name="description" content="Dashboard de indicadores estratégicos del Observatorio Territorial de Huaquechula. Datos de Bienestar Social, Tradición, Patrimonio y Turismo Comunitario.">
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
     <!-- Dashboard CSS -->
     <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}">
-
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- jsPDF for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</head>
-<body class="dashboard-page">
-    <!-- ── Navbar ──────────────────────────────── -->
-    <nav class="navbar dashboard-navbar navbar-expand-md navbar-dark">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'vista_inicio' %}">
-                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo Huaquechula" style="height: 50px; width: auto;">
-            </a>
+    <style>
+        /* Ajustes para integrar con base.html */
+        .dashboard-layout { margin-top: 0; min-height: auto; }
+        .dashboard-sidebar { top: 140px; height: calc(100vh - 140px); background: #fff; z-index: 900; }
+        .dashboard-main { padding-top: 0; }
+        @media (max-width: 768px) {
+            .dashboard-sidebar { top: 0; position: relative; height: auto; }
+            .dashboard-main { margin-left: 0; }
+        }
+        /* Forzar paleta de base.css */
+        :root {
+            --color-naranja: #D35400;
+            --color-gris-oscuro: #4A4A4A;
+            --color-arena-claro: #EDEBE3;
+            --color-arena-oscuro: #D6CEAA;
+        }
+        body { background-color: var(--color-arena-claro) !important; }
+    </style>
+{% endblock %}
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse justify-content-center" id="dashboardNav">
-                <ul class="navbar-nav d-flex justify-content-around" style="gap: 0.25rem;">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                    {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'encuestador_dashboard' %}" style="color: var(--color-dorado) !important;"><i class="fas fa-clipboard-list me-1"></i>Portal Encuestador</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a></li>
-                    {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
+{% block content %}
     <div class="dashboard-layout">
         <!-- ── Sidebar ─────────────────────────── -->
         <aside class="dashboard-sidebar">
@@ -108,7 +87,7 @@
             <!-- Page Header -->
             <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
                 <div>
-                    <h1><i class="fas fa-chart-line me-2" style="color: var(--color-naranja);"></i>Observatorio Territorial</h1>
+                    <h1 style="color: var(--color-gris-oscuro); font-weight: 800;"><i class="fas fa-chart-line me-2" style="color: var(--color-naranja);"></i>Observatorio Territorial</h1>
                     <p class="subtitle mb-0">Indicadores estratégicos del municipio de Huaquechula, Puebla</p>
                 </div>
                 
@@ -189,19 +168,23 @@
                             </div>
 
                             {% with last_med=indicador.mediciones.last %}
-                            {% if last_med %}
                             <div class="indicator-value-row">
-                                <span class="indicator-main-value">{{ last_med.valor }}</span>
-                                <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
+                                {% if last_med %}
+                                    <span class="indicator-main-value">{{ last_med.valor }}</span>
+                                    <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
+                                {% else %}
+                                    <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 0.9rem;">Sin datos</span>
+                                    <span class="indicator-main-unit"></span>
+                                {% endif %}
                             </div>
+                            
                             <div class="indicator-period">
-                                <i class="far ঢাক me-1"></i>Período {{ last_med.periodo }}
+                                {% if last_med %}
+                                    <i class="far fa-clock me-1"></i>{{ last_med.periodo }}
+                                {% else %}
+                                    <span style="color: transparent;">-</span>
+                                {% endif %}
                             </div>
-                            {% else %}
-                            <div class="indicator-value-row">
-                                <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 1rem;">Sin datos</span>
-                            </div>
-                            {% endif %}
                             {% endwith %}
 
                             <!-- Sparkline -->
@@ -295,14 +278,8 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <!-- ── Footer ──────────────────────────────── -->
-    <footer class="dashboard-footer">
-        <p class="mb-0">&copy; 2025 Observatorio Turístico de Huaquechula · Datos actualizados periódicamente</p>
-    </footer>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
     <script src="{% static 'myapp/JAV/dashboard.js' %}"></script>
-</body>
-</html>
+{% endblock %}
