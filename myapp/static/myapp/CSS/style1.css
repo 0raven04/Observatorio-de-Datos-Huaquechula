@@ -652,3 +652,19 @@ footer {
     border-color: transparent !important;
     transform: translateX(8px);
 }
+
+/* ========================================
+   DIALOGFLOW MESSENGER — Estilo del sistema
+   ======================================== */
+df-messenger {
+    --df-messenger-button-titlebar-color: var(--color-gris-oscuro);
+    --df-messenger-button-titlebar-font-color: white;
+    --df-messenger-chat-background-color: var(--color-arena-claro);
+    --df-messenger-font-color: var(--color-gris-oscuro);
+    --df-messenger-send-icon: var(--color-gris-oscuro);
+    --df-messenger-user-message: var(--color-arena-oscuro);
+    --df-messenger-user-message-font-color: var(--color-gris-oscuro);
+    --df-messenger-bot-message: white;
+    --df-messenger-bot-message-font-color: var(--color-gris-oscuro);
+    z-index: 99999;
+}

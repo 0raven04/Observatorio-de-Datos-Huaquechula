@@ -1,556 +1,484 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}Galería Cultural - Repositorio{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    /* System Colors reference (from existing UI) */
     :root {
-        --primary-bg: #f8f9fa;
-        --card-bg: #ffffff;
-        --shadow-color: rgba(0, 0, 0, 0.08);
-        --hover-shadow: rgba(0, 0, 0, 0.15);
-        --transition-speed: 0.3s;
+        --gallery-bg: #f3efe7;
+        --gallery-card: #ffffff;
+        --gallery-text: #2f2a25;
+        --gallery-muted: #6f6459;
+        --gallery-line: rgba(74, 58, 44, 0.12);
+        --gallery-shadow: 0 8px 30px rgba(46, 36, 28, 0.08);
     }
 
     body {
-        background-color: var(--primary-bg);
+        background:
+            radial-gradient(circle at top, rgba(214, 206, 170, 0.22), transparent 26%),
+            linear-gradient(180deg, #f7f2e9 0%, var(--gallery-bg) 100%);
     }
 
-    .gallery-header {
-        background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #2c3e50 100%);
-        color: white;
-        padding: 7rem 0 3rem 0;
-        border-radius: 0 0 1.5rem 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 20px var(--shadow-color);
+    .galeria-hero {
         position: relative;
         overflow: hidden;
+        border-radius: 0 0 28px 28px;
+        background:
+            linear-gradient(135deg, rgba(38, 34, 30, 0.94), rgba(59, 50, 43, 0.9)),
+            url('{% static "myapp/image/ofrenda1.jpg" %}') center/cover;
+        color: #fff;
+        padding: 72px 20px 34px;
+        box-shadow: var(--gallery-shadow);
     }
 
-    .gallery-header::before {
+    .galeria-hero::after {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="2" fill="rgba(255,255,255,0.05)"/></svg>');
-        z-index: 1;
+        inset: 0;
+        background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+        background-size: 18px 18px;
+        opacity: .25;
+        pointer-events: none;
     }
 
-    .gallery-header-content {
+    .galeria-hero-inner {
+        position: relative;
+        z-index: 1;
+        max-width: 980px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .galeria-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .35rem .8rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.14);
+        font-size: .82rem;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .galeria-title {
+        margin: 14px 0 8px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        letter-spacing: -.03em;
+    }
+
+    .galeria-subtitle {
+        margin: 0 auto;
+        max-width: 760px;
+        color: rgba(255,255,255,.82);
+        font-size: 1.02rem;
+        line-height: 1.6;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: .75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .55rem .95rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.1);
+        border: 1px solid rgba(255,255,255,.14);
+        font-size: .9rem;
+    }
+
+    .gallery-shell {
+        max-width: 1180px;
+        margin: -18px auto 0;
+        padding: 0 18px 40px;
         position: relative;
         z-index: 2;
     }
 
-    .gallery-title {
+    .feature-banner {
+        background: linear-gradient(135deg, #fff, #f5efe4);
+        border: 1px solid var(--gallery-line);
+        border-radius: 22px;
+        box-shadow: var(--gallery-shadow);
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+    .feature-banner img {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .feature-copy {
+        padding: 18px 20px 20px;
+    }
+
+    .feature-copy h2 {
+        margin: 0 0 6px;
+        color: var(--gallery-text);
+        font-size: 1.15rem;
         font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.5px;
     }
 
-    .gallery-subtitle {
-        font-weight: 300;
-        font-size: 1.1rem;
-        opacity: 0.9;
+    .feature-copy p {
+        margin: 0;
+        color: var(--gallery-muted);
+        line-height: 1.55;
     }
 
-    .filter-bar {
-        background: var(--card-bg);
-        border-radius: 1rem;
-        padding: 1rem;
-        box-shadow: 0 2px 10px var(--shadow-color);
-        margin-top: -3rem;
-        position: relative;
-        z-index: 10;
+    .toolbar {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 12px;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        background: rgba(255,255,255,.86);
+        border: 1px solid var(--gallery-line);
+        border-radius: 18px;
+        padding: 14px 16px;
+        box-shadow: var(--gallery-shadow);
+        backdrop-filter: blur(8px);
+        margin-bottom: 18px;
     }
 
-    .filter-buttons {
+    .filter-group {
         display: flex;
-        gap: 0.5rem;
+        gap: 8px;
         flex-wrap: wrap;
     }
 
-    .btn-filter {
-        border-radius: 2rem;
-        padding: 0.5rem 1.25rem;
-        font-weight: 500;
-        transition: all var(--transition-speed) ease;
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .55rem .9rem;
+        border-radius: 999px;
+        background: #ede5d7;
+        color: var(--gallery-text);
+        text-decoration: none;
         border: 1px solid transparent;
-        background-color: var(--color-beige, #f1e9d2);
-        color: var(--color-gris-oscuro, #343a40);
-    }
-    
-    .btn-filter:hover {
-        background-color: var(--color-arena-oscuro, #d8c3a5);
-        color: var(--color-gris-oscuro);
-        transform: translateY(-2px);
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+        font-size: .93rem;
     }
 
-    .btn-filter.active {
-        background-color: var(--color-naranja, #e67e22);
-        color: white;
-        box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+    .filter-chip:hover {
+        transform: translateY(-1px);
+        color: var(--gallery-text);
+    }
+
+    .filter-chip.active {
+        background: #d6ceaa;
+        border-color: rgba(74, 58, 44, .12);
     }
 
     .search-box {
+        min-width: min(100%, 320px);
         position: relative;
-        min-width: 250px;
-    }
-
-    .search-box input {
-        border-radius: 2rem;
-        padding-left: 2.5rem;
-        border: 1px solid #dee2e6;
-        box-shadow: none !important;
-        transition: all var(--transition-speed);
-    }
-
-    .search-box input:focus {
-        border-color: var(--color-naranja);
     }
 
     .search-box i {
         position: absolute;
-        left: 1rem;
         top: 50%;
+        left: 14px;
         transform: translateY(-50%);
-        color: #adb5bd;
+        color: #9a8f83;
+    }
+
+    .search-box input {
+        width: 100%;
+        border-radius: 999px;
+        border: 1px solid var(--gallery-line);
+        padding: .72rem 1rem .72rem 2.6rem;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .section-label {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        color: var(--gallery-text);
+        margin: 0 0 12px;
+        font-size: 1rem;
+        font-weight: 700;
     }
 
     .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 2rem;
-        padding: 2rem 0;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 18px;
     }
 
-    .cultural-card {
-        background: var(--card-bg);
-        border-radius: 1rem;
+    .doc-card {
+        min-height: 320px;
+        border-radius: 20px;
         overflow: hidden;
-        border: none;
-        box-shadow: 0 4px 15px var(--shadow-color);
-        transition: all var(--transition-speed) cubic-bezier(0.25, 0.8, 0.25, 1);
-        display: flex;
-        flex-direction: column;
-        height: 350px;
         position: relative;
+        background: var(--gallery-card);
+        border: 1px solid var(--gallery-line);
+        box-shadow: var(--gallery-shadow);
+        transition: transform .22s ease, box-shadow .22s ease;
     }
 
-    .cultural-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 24px var(--hover-shadow);
+    .doc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(46, 36, 28, 0.12);
     }
 
-    .card-thumbnail {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(120deg, var(--color-beige) 0%, var(--color-arena-oscuro) 100%);
+    .doc-cover {
+        min-height: 180px;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
-        z-index: 1;
+        position: relative;
+        color: #fff;
+        padding: 18px;
     }
 
-    .card-thumbnail.video {
-        background: linear-gradient(120deg, #2c3e50 0%, #3498db 100%);
-    }
-
-    .card-thumbnail.historico {
-        background: linear-gradient(120deg, #8e44ad 0%, #c0392b 100%);
-    }
-
-    .card-thumbnail.reporte {
-        background: linear-gradient(120deg, #16a085 0%, #27ae60 100%);
-    }
-
-    .thumbnail-icon {
-        font-size: 4rem;
-        color: rgba(255, 255, 255, 0.8);
-        transition: transform var(--transition-speed);
-    }
-
-    .cultural-card:hover .thumbnail-icon {
-        transform: scale(1.1);
-    }
-
-    .card-badge {
+    .doc-cover::after {
+        content: '';
         position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        backdrop-filter: blur(4px);
-        z-index: 3;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.32));
     }
 
-    .card-body-custom {
+    .doc-cover.video { background: linear-gradient(135deg, #2e4b66, #4f84ad); }
+    .doc-cover.historico { background: linear-gradient(135deg, #74507c, #b26b58); }
+    .doc-cover.reporte { background: linear-gradient(135deg, #2f6d5f, #4aa06e); }
+    .doc-cover.imagen { background: linear-gradient(135deg, #7b6b54, #d1b98b); }
+
+    .doc-type {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        padding: 1.5rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
+        top: 14px;
+        left: 14px;
         z-index: 2;
-        transition: padding var(--transition-speed);
+        padding: .3rem .7rem;
+        border-radius: 999px;
+        background: rgba(20,20,20,.55);
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
     }
 
-    .card-meta {
-        font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 0.5rem;
+    .doc-icon {
+        position: relative;
+        z-index: 1;
+        font-size: 3.4rem;
+        opacity: .96;
+    }
+
+    .doc-body {
+        padding: 16px 16px 14px;
+    }
+
+    .doc-meta {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--gallery-muted);
+        font-size: .82rem;
+        margin-bottom: 8px;
     }
 
-    .card-title-custom {
-        font-size: 1.25rem;
+    .doc-title {
+        margin: 0 0 8px;
+        color: var(--gallery-text);
+        font-size: 1.02rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .doc-desc {
+        margin: 0;
+        color: var(--gallery-muted);
+        font-size: .92rem;
+        line-height: 1.5;
+        min-height: 68px;
+    }
+
+    .doc-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .btn-open,
+    .btn-download {
+        flex: 1;
+        border-radius: 12px;
+        padding: .6rem .85rem;
+        text-align: center;
+        text-decoration: none;
+        border: 1px solid transparent;
         font-weight: 600;
-        color: white;
-        margin-bottom: 0.75rem;
-        line-height: 1.3;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        font-size: .92rem;
     }
 
-    .card-hidden-content {
-        max-height: 0;
-        opacity: 0;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-        display: flex;
-        flex-direction: column;
+    .btn-open {
+        background: #3f3a35;
+        color: #fff;
     }
 
-    .cultural-card:hover .card-hidden-content {
-        max-height: 250px;
-        opacity: 1;
-        margin-top: 1rem;
+    .btn-download {
+        background: #ede5d7;
+        color: var(--gallery-text);
     }
 
-    .card-text-custom {
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 1.5rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    .empty-state {
+        background: rgba(255,255,255,.86);
+        border: 1px dashed rgba(74,58,44,.22);
+        border-radius: 20px;
+        padding: 36px 20px;
+        text-align: center;
+        color: var(--gallery-muted);
+        box-shadow: var(--gallery-shadow);
     }
 
-    .card-footer-custom {
-        padding: 0;
-        background: transparent;
-        border-top: 1px solid rgba(255,255,255,0.2);
-        padding-top: 1.25rem;
-        margin-top: auto;
+    .pagination .page-link {
+        color: var(--gallery-text);
     }
 
-    .btn-view-content {
-        width: 100%;
-        border-radius: 0.5rem;
-        background-color: var(--color-gris-oscuro);
-        color: white;
-        font-weight: 500;
-        padding: 0.6rem;
-        transition: background-color var(--transition-speed);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        text-decoration: none;
-    }
+    @media (max-width: 768px) {
+        .galeria-hero {
+            padding-top: 64px;
+        }
 
-    .btn-view-content:hover {
-        background-color: var(--color-naranja);
-        color: white;
-    }
+        .feature-banner img {
+            height: 220px;
+        }
 
-    .btn-download-content {
-        border-radius: 0.5rem;
-        background-color: var(--color-beige);
-        color: var(--color-gris-oscuro);
-        font-weight: 500;
-        padding: 0.6rem;
-        transition: all var(--transition-speed);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        text-decoration: none;
-    }
+        .toolbar {
+            padding: 12px;
+        }
 
-    .btn-download-content:hover {
-        background-color: var(--color-arena-oscuro);
-        color: var(--color-gris-oscuro);
-    }
-
-    /* Stats summary */
-    .stats-summary {
-        display: flex;
-        gap: 1.5rem;
-        justify-content: center;
-        margin-top: 1.5rem;
-    }
-
-    .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(255,255,255,0.1);
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
-        backdrop-filter: blur(5px);
+        .gallery-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Header Hero Section -->
-<div class="gallery-header text-center">
-    <div class="container gallery-header-content">
-        <h1 class="gallery-title">Galería Cultural de Huaquechula</h1>
-        <p class="gallery-subtitle">Explora nuestro patrimonio a través de documentos, videos y reportes históricos.</p>
-        
-        <div class="stats-summary">
-            <div class="stat-item" title="Videos Disponibles">
-                <i class="fas fa-video"></i> {{ stats_tipos.videos }} Videos
-            </div>
-            <div class="stat-item" title="Documentos Históricos">
-                <i class="fas fa-landmark"></i> {{ stats_tipos.historicos }} Históricos
-            </div>
-            <div class="stat-item" title="Reportes y Documentos">
-                <i class="fas fa-file-alt"></i> {{ stats_tipos.reportes }} Reportes
-            </div>
+<section class="galeria-hero">
+    <div class="galeria-hero-inner">
+        <div class="galeria-kicker">
+            <i class="fas fa-landmark"></i>
+            Archivo cultural en exploración
+        </div>
+        <h1 class="galeria-title">Galería Cultural de Huaquechula</h1>
+        <p class="galeria-subtitle">
+            Una vista de prueba para presentar documentos, videos e historicos con una identidad cultural sobria, sin perder la función de repositorio.
+        </p>
+        <div class="stats-row">
+            <div class="stat-pill"><i class="fas fa-video"></i> {{ stats_tipos.videos|default:0 }} Videos</div>
+            <div class="stat-pill"><i class="fas fa-book-open"></i> {{ stats_tipos.historicos|default:0 }} Históricos</div>
+            <div class="stat-pill"><i class="fas fa-file-alt"></i> {{ stats_tipos.reportes|default:0 }} Reportes</div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="container mb-5">
-    <!-- Carousel de Imágenes Aleatorias -->
-    <div class="row justify-content-center mb-5">
-        <div class="col-lg-10">
-            <div id="galleryCarousel" class="carousel slide shadow rounded-4 overflow-hidden" data-bs-ride="carousel">
-                <div class="carousel-indicators">
-                    <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                    <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                    <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-                </div>
-                <div class="carousel-inner">
-                    <div class="carousel-item active" data-bs-interval="4000">
-                        <img src="{% static 'myapp/image/ofrenda1.jpg' %}" class="d-block w-100" style="height: 300px; object-fit: cover; object-position: center;" alt="Ofrenda Huaquechula">
-                        <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border-radius: 10px; padding: 1rem; right: 5%; left: auto; bottom: 10%; text-align: right; max-width: 400px; border: 1px solid rgba(255,255,255,0.1);">
-                            <h5 class="fw-bold text-white mb-1">Tradición Viva</h5>
-                            <p class="text-white-50 mb-0">Conoce nuestras majestuosas ofrendas monumentales.</p>
-                        </div>
-                    </div>
-                    <div class="carousel-item" data-bs-interval="4000">
-                        <img src="https://picsum.photos/1200/400?random=1" class="d-block w-100" style="height: 300px; object-fit: cover;" alt="Cultura">
-                        <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border-radius: 10px; padding: 1rem; right: 5%; left: auto; bottom: 10%; text-align: right; max-width: 400px; border: 1px solid rgba(255,255,255,0.1);">
-                            <h5 class="fw-bold text-white mb-1">Patrimonio Cultural</h5>
-                            <p class="text-white-50 mb-0">Descubre los documentos y reportes que preservan nuestra historia.</p>
-                        </div>
-                    </div>
-                    <div class="carousel-item" data-bs-interval="4000">
-                        <img src="https://picsum.photos/1200/400?random=2" class="d-block w-100" style="height: 300px; object-fit: cover;" alt="Historia">
-                        <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border-radius: 10px; padding: 1rem; right: 5%; left: auto; bottom: 10%; text-align: right; max-width: 400px; border: 1px solid rgba(255,255,255,0.1);">
-                            <h5 class="fw-bold text-white mb-1">Memorias de Huaquechula</h5>
-                            <p class="text-white-50 mb-0">Explora archivos históricos y galerías multimedia.</p>
-                        </div>
-                    </div>
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Anterior</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Siguiente</span>
-                </button>
-            </div>
+<div class="gallery-shell">
+    <div class="feature-banner">
+        <img src="{% static 'myapp/image/ofrenda1.jpg' %}" alt="Patrimonio cultural de Huaquechula">
+        <div class="feature-copy">
+            <h2>Patrimonio cultural y archivo documental</h2>
+            <p>Esta maqueta mantiene la función de consulta, pero presenta el contenido con una lectura más amable y cultural: tarjetas, categorías y una portada que sugieren memoria regional sin saturar la interfaz.</p>
         </div>
     </div>
 
-    <!-- Filter and Search Bar -->
-    <div class="filter-bar" style="margin-top: 0;">
-        <div class="filter-buttons">
-            <a href="?q={{ busqueda }}" class="btn-filter text-decoration-none {% if not tipo_filtro %}active{% endif %}">
-                Todos
-            </a>
+    <div class="toolbar">
+        <div class="filter-group">
+            <a href="?q={{ busqueda }}" class="filter-chip {% if not tipo_filtro %}active{% endif %}"><i class="fas fa-layer-group"></i> Todos</a>
             {% for choice_val, choice_label in tipos_choices %}
-            <a href="?tipo={{ choice_val }}&q={{ busqueda }}" 
-               class="btn-filter text-decoration-none {% if tipo_filtro == choice_val %}active{% endif %}">
-                {% if choice_val == 'video' %}<i class="fas fa-play-circle me-1"></i>{% endif %}
-                {% if choice_val == 'historico' %}<i class="fas fa-book-open me-1"></i>{% endif %}
-                {% if choice_val == 'reporte' %}<i class="fas fa-file-pdf me-1"></i>{% endif %}
+            <a href="?tipo={{ choice_val }}&q={{ busqueda }}" class="filter-chip {% if tipo_filtro == choice_val %}active{% endif %}">
+                {% if choice_val == 'video' %}<i class="fas fa-play-circle"></i>{% elif choice_val == 'historico' %}<i class="fas fa-book-open"></i>{% else %}<i class="fas fa-file-pdf"></i>{% endif %}
                 {{ choice_label }}
             </a>
             {% endfor %}
         </div>
-        
+
         <form action="{% url 'repositorio_galeria_prueba' %}" method="get" class="search-box">
             {% if tipo_filtro %}<input type="hidden" name="tipo" value="{{ tipo_filtro }}">{% endif %}
             <i class="fas fa-search"></i>
-            <input type="text" name="q" value="{{ busqueda }}" class="form-control" placeholder="Buscar en la galería...">
+            <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por nombre, tema o descripción...">
         </form>
     </div>
 
-    <!-- Gallery Grid -->
     {% if documentos %}
+    <h2 class="section-label"><i class="fas fa-swatchbook"></i> Contenido disponible</h2>
     <div class="gallery-grid">
         {% for doc in documentos %}
-        <div class="cultural-card">
-            <!-- Thumbnail visual basado en el tipo -->
-            <div class="card-thumbnail {{ doc.tipo }}">
-                <!-- Etiqueta de clasificación -->
-                <span class="card-badge">
-                    <i class="fas fa-globe-americas me-1"></i>Público
-                </span>
-                
-                <!-- Ícono central -->
-                <div class="thumbnail-icon">
-                    {% if doc.tipo == 'video' %}
-                        <i class="fas fa-play"></i>
-                    {% elif doc.tipo == 'historico' %}
-                        <i class="fas fa-monument"></i>
+        <article class="doc-card">
+            <div class="doc-cover {% if doc.tipo == 'video' %}video{% elif doc.tipo == 'historico' %}historico{% elif doc.tipo == 'reporte' %}reporte{% else %}imagen{% endif %}">
+                <span class="doc-type">{{ doc.get_tipo_display|default:doc.tipo }}</span>
+                <div class="doc-icon">
+                    {% if doc.tipo == 'video' %}<i class="fas fa-play"></i>{% elif doc.tipo == 'historico' %}<i class="fas fa-monument"></i>{% elif doc.tipo == 'reporte' %}<i class="fas fa-file-pdf"></i>{% else %}<i class="{{ doc.icono_archivo|default:'fas fa-file' }}"></i>{% endif %}
+                </div>
+            </div>
+            <div class="doc-body">
+                <div class="doc-meta">
+                    <span><i class="far fa-calendar-alt"></i> {{ doc.fecha_carga|date:"d M Y" }}</span>
+                    <span><i class="fas fa-globe-americas"></i> Público</span>
+                </div>
+                <h3 class="doc-title">{{ doc.titulo }}</h3>
+                <p class="doc-desc">{% if doc.descripcion %}{{ doc.descripcion|truncatechars:120 }}{% else %}Archivo disponible en el repositorio cultural.{% endif %}</p>
+                <div class="doc-actions">
+                    {% if doc.url %}
+                    <a href="{{ doc.url }}" target="_blank" rel="noopener noreferrer" class="btn-open">
+                        {% if doc.tipo == 'video' %}<i class="fas fa-play-circle"></i> Ver video{% elif doc.tipo == 'historico' %}<i class="fas fa-book-reader"></i> Abrir{% else %}<i class="fas fa-external-link-alt"></i> Ver{% endif %}
+                    </a>
+                    <a href="{{ doc.url }}" class="btn-download" download><i class="fas fa-download"></i></a>
                     {% else %}
-                        <i class="{{ doc.icono_archivo }}"></i>
+                    <span class="btn-open" style="opacity:.6; cursor:not-allowed;">No disponible</span>
                     {% endif %}
                 </div>
             </div>
-            
-            <div class="card-body-custom">
-                <div class="card-meta">
-                    <i class="far fa-calendar-alt"></i> {{ doc.fecha_carga|date:"d M, Y" }}
-                    <span class="ms-auto d-flex align-items-center">
-                        {% if doc.tipo == 'video' %}<i class="fas fa-video ms-1 text-muted"></i>{% endif %}
-                    </span>
-                </div>
-                
-                <h3 class="card-title-custom" title="{{ doc.titulo }}">{{ doc.titulo }}</h3>
-                
-                <div class="card-hidden-content">
-                    <p class="card-text-custom">
-                        {% if doc.descripcion %}
-                            {{ doc.descripcion }}
-                        {% else %}
-                            <em class="text-muted">Sin descripción curatorial disponible para este elemento.</em>
-                        {% endif %}
-                    </p>
-                    
-                    <div class="card-footer-custom d-flex gap-2">
-                        {% if doc.url %}
-                        <a href="{{ doc.url }}" target="_blank" class="btn-view-content flex-grow-1" title="Ver Contenido">
-                            {% if doc.tipo == 'video' %}
-                                <i class="fas fa-play-circle"></i> Ver
-                            {% elif doc.tipo == 'historico' %}
-                                <i class="fas fa-book-reader"></i> Explorar
-                            {% else %}
-                                <i class="fas fa-external-link-alt"></i> Ver
-                            {% endif %}
-                        </a>
-                        <a href="{{ doc.url }}" download class="btn-download-content" title="Descargar archivo">
-                            <i class="fas fa-download"></i>
-                        </a>
-                        {% else %}
-                        <button class="btn-view-content bg-secondary w-100" disabled>
-                            <i class="fas fa-unlink"></i> No disponible
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+        </article>
         {% endfor %}
     </div>
-    
-    <!-- Paginación con estilo -->
+
     {% if documentos.has_other_pages %}
-    <nav class="mt-4" aria-label="Navegación de galería">
-        <ul class="pagination justify-content-center">
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center flex-wrap gap-1">
             {% if documentos.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ documentos.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" style="color: var(--color-gris-oscuro);">
-                    <i class="fas fa-chevron-left me-1"></i> Anterior
-                </a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?page={{ documentos.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">Anterior</a></li>
             {% endif %}
-            
             {% for i in documentos.paginator.page_range %}
                 {% if documentos.number == i %}
-                <li class="page-item active">
-                    <span class="page-link" style="background-color: var(--color-naranja); border-color: var(--color-naranja);">
-                        {{ i }}
-                    </span>
-                </li>
-                {% elif i > documentos.number|add:'-3' and i < documentos.number|add:'3' %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" style="color: var(--color-gris-oscuro);">
-                        {{ i }}
-                    </a>
-                </li>
+                <li class="page-item active"><span class="page-link" style="background:#d6ceaa; border-color:#d6ceaa; color:#2f2a25;">{{ i }}</span></li>
+                {% elif i > documentos.number|add:'-2' and i < documentos.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ i }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">{{ i }}</a></li>
                 {% endif %}
             {% endfor %}
-            
             {% if documentos.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ documentos.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" style="color: var(--color-gris-oscuro);">
-                    Siguiente <i class="fas fa-chevron-right ms-1"></i>
-                </a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?page={{ documentos.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">Siguiente</a></li>
             {% endif %}
         </ul>
     </nav>
     {% endif %}
 
     {% else %}
-    <!-- Estado vacío -->
-    <div class="text-center py-5 my-5 bg-white rounded-3 shadow-sm border">
-        <div class="mb-4">
-            <span class="fa-stack fa-3x" style="color: var(--color-beige);">
-                <i class="fas fa-circle fa-stack-2x"></i>
-                <i class="fas fa-image fa-stack-1x fa-inverse" style="color: var(--color-arena-oscuro);"></i>
-            </span>
-        </div>
-        <h3 class="h4" style="color: var(--color-gris-oscuro);">No se encontraron obras en la galería</h3>
-        <p class="text-muted mx-auto" style="max-width: 500px;">
-            {% if busqueda or tipo_filtro %}
-                No hay elementos que coincidan con tus filtros de búsqueda. Intenta con otros términos o elimina los filtros.
-                <div class="mt-3">
-                    <a href="{% url 'repositorio_galeria_prueba' %}" class="btn btn-outline-secondary rounded-pill">
-                        <i class="fas fa-times me-1"></i> Limpiar filtros
-                    </a>
-                </div>
-            {% else %}
-                Actualmente no hay elementos disponibles en la galería cultural pública.
-            {% endif %}
-        </p>
+    <div class="empty-state">
+        <i class="fas fa-folder-open fa-3x mb-3" style="color:#c7b899;"></i>
+        <h3 class="h5 mb-2" style="color: var(--gallery-text);">No hay contenido para mostrar</h3>
+        <p class="mb-3">{% if busqueda or tipo_filtro %}Prueba con otros filtros o limpia la búsqueda.{% else %}Aún no hay elementos públicos en esta vista de prueba.{% endif %}</p>
+        {% if busqueda or tipo_filtro %}
+        <a href="{% url 'repositorio_galeria_prueba' %}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-eraser me-1"></i> Limpiar filtros</a>
+        {% endif %}
     </div>
     {% endif %}
 </div>
