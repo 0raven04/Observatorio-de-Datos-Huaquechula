@@ -2843,7 +2843,7 @@ def editar_mi_propiedad(request, id_punto):
 
 
 
-# Tus reglas estrictas para el chatbot de Huaquechula
+# Reglas estrictas para el chatbot de Huaquechula
 INSTRUCCIONES_SISTEMA = """
 Eres el asistente virtual oficial del 'Observatorio de Datos Huaquechula'. 
 Tu objetivo es ayudar a los turistas a entender el mapa, encontrar ofrendas, sitios turísticos y servicios.
