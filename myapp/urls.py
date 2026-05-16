@@ -1,4 +1,4 @@
-﻿from django.urls import path
+from django.urls import path
 from .views import registro_visita
 from myapp.views import backup_database
 from . import views
@@ -115,29 +115,19 @@ urlpatterns = [
     # CHATBOT CON IA
     # ===================================================== 
     path('api/chatbot/', views.chatbot_api, name='chatbot_api'),
-]
-    # URL para eliminar múltiples registros seleccionados
-    path('visitas/eliminar-seleccionados/', eliminar_seleccionados, name='eliminar_seleccionados'),
-    path('inicio/', views.vista_inicio, name='vista_inicio'),
-    path('vista_graficas/', views.vista_graficas, name='vista_graficas'),
-    path('redirigir/', views.redirigir_por_tipo_usuario, name='redirigir_usuario'),
-    path('formulario/', views.formulario, name='formulario'),
-    path('registro/', views.formulario, name='registro'),
-    path("mapa/", views.mapa, name="mapa"),
-    path('', views.vista_inicio, name='vista_inicio'),
-    path('repositorio/', views.repositorio, name='repositorio'),
-    path('estadistica/', views.graficos_indicadores, name='estadistica'),
+
+    # =====================================================
+    # INEGI y Dashboard
+    # =====================================================
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('dashboard/categoria/<int:category_id>/', views.category_detail_view, name='category_detail'),
-    # path('graficas-ejemplo/', views.graficas_ejemplo, name='graficas_ejemplo'),  # Temporalmente comentado
     path('api/indicator/<int:indicator_id>/chart-data/', views.indicator_chart_data, name='indicator_chart_data'),
-
-    
-    # JSON-stat endpoints
     path('api/indicator/<int:indicator_id>/jsonstat/', views.indicator_jsonstat_data, name='indicator_jsonstat'),
     path('api/compare-municipalities/', views.compare_municipalities_view, name='compare_municipalities'),
 
+    # =====================================================
     # Portal Encuestador
+    # =====================================================
     path('encuestador/', views.encuestador_dashboard, name='encuestador_dashboard'),
     path('encuestador/residente/', views.nueva_encuesta_residente, name='nueva_encuesta_residente'),
     path('encuestador/comercio/', views.nueva_encuesta_comercio, name='nueva_encuesta_comercio'),

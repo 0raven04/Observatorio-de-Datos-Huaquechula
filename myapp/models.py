@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 import os
@@ -871,7 +870,6 @@ class ResenaGlobal(models.Model):
 
     # IP para rate limiting
     ip_visitante = models.GenericIPAddressField(null=True, blank=True)
-    return f"Persona en Visita {self.id_registro.id_registro} - Edad: {self.edad}, Sexo: {self.sexo}"
 
     class Meta:
         db_table = 'Resena_Global'
@@ -888,6 +886,8 @@ class ResenaGlobal(models.Model):
         if self.id_usuario:
             return self.id_usuario.nombre_usuario
         return self.nombre_visitante or 'Visitante'
+from django.contrib.auth.backends import BaseBackend
+
 class UsuarioBackend(BaseBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:

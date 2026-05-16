@@ -11,7 +11,7 @@ from django.utils import timezone as tz
 from datetime import timedelta
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_http_methods
-from .models import RegistroVisita, PersonaVisita, Encuestador, Usuario
+from .models import RegistroVisita, Encuestador, Usuario
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError, transaction
 from django.contrib.auth import logout
@@ -48,100 +48,6 @@ import mimetypes
 from myapp.models import Categoria_Sitio
 from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
 from .forms import EncuestaResidenteForm, EncuestaComercioForm
-
-# Vista principal para el registro de visitas
-# - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
-# - Requiere autenticación y que el usuario sea encuestador
-@login_required
-@transaction.atomic  # Garantiza que todas las operaciones de base de datos se completen exitosamente o se reviertan
-def registro_visita(request):
-    """
-    Vista principal para el CRUD de registros de visitas:
-    1. Verifica que el usuario autenticado sea un encuestador
-    2. Para solicitudes POST: procesa el formulario y crea un nuevo registro
-    3. Para solicitudes GET: muestra todos los registros existentes
-    
-    Funcionamiento:
-    - Primero valida los permisos del usuario
-    - En POST:
-        * Convierte los datos del formulario a los tipos adecuados
-        * Crea el registro principal en RegistroVisita
-        * Crea los registros asociados en PersonaVisita
-        * Maneja errores en la conversión de datos
-    - En GET:
-        * Recupera todos los registros de visitas
-        * Muestra la plantilla con los registros
-    """
-    
-    #1.- Verificar que el usuario es un administrador  
-    try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
-        if usuario.tipo not in ['encuestador', 'admin']:  
-            return HttpResponseForbidden("No tienes permiso. Solo los administradores pueden acceder.")  
-
-        if usuario.tipo == 'encuestador':  
-            encuestador = Encuestador.objects.get(id_usuario=usuario)  
-        else:  # admin  
-            encuestador, created = Encuestador.objects.get_or_create(  
-                clave_encuestador=f'ADMIN_{usuario.id_usuario}',  
-                defaults={'id_usuario': usuario}  
-        )  
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
-        return HttpResponse('Usuario no encontrado.', status=404)
-
-    # 2. Procesar solicitudes POST (creación de nuevo registro)
-    if request.method == 'POST':
-        # Función auxiliar para convertir valores a enteros con manejo de errores
-        def to_int(value, default=None):
-            try:
-                return int(value)
-            except (TypeError, ValueError):
-                return default
-
-        # Obtener y procesar datos del formulario
-        es_extranjero = request.POST.get('esExtranjero') == 'si'  # Convertir a booleano
-        tamanio_grupo = to_int(request.POST.get('numPersonas'), default=1)
-        estancia_dias = to_int(request.POST.get('numDias'), default=1)
-        numero_visitas = to_int(request.POST.get('numVisitas'), default=1)
-        motivo_visita = request.POST.get('motivo') or None
-        tipo_transporte = request.POST.get('transporte') or None
-
-        # Crear el registro principal de visita
-        registro = RegistroVisita.objects.create(
-            tamanio_grupo=tamanio_grupo,
-            es_extranjero=es_extranjero,
-            pais_origen=request.POST.get('pais') if es_extranjero else None,  # País solo para extranjeros
-            procedencia=request.POST.get('procedencia'),
-            tipo_transporte=tipo_transporte,
-            motivo_visita=motivo_visita,
-            estancia_dias=estancia_dias,
-            numero_visitas=numero_visitas,
-            id_encuestador=encuestador
-        )
-        
-        # Crear registros para cada persona en el grupo
-        personas = []
-        for i in range(1, tamanio_grupo + 1):
-            edad = to_int(request.POST.get(f'edad{i}'))
-            sexo = request.POST.get(f'genero{i}')
-            # Validar que los datos de la persona sean correctos
-            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:
-                personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))
-
-        # Crear todas las personas de una vez (optimizado)
-        if personas:
-            PersonaVisita.objects.bulk_create(personas)
-            
-        # Redirigir a la lista de registros después de crear
-        return redirect('lista_registros')   
-    
-    # 3. Manejar solicitudes GET (mostrar registros existentes)
-    registros = RegistroVisita.objects.all()
-    mensaje = request.GET.get('mensaje', '')  # Mensaje opcional para mostrar al usuario
-    return render(request, 'myapp/lista_registros.html', {
-        'registros': registros, 
-        'mensaje': mensaje
-    })
 
 from django.views.decorators.csrf import csrf_exempt
 import requests
@@ -402,7 +308,7 @@ def eliminar_registro(request, id_registro):
     """  
     # Verificar permisos  
     try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
         if usuario.tipo not in ['encuestador', 'admin']:  
             return HttpResponseForbidden("No tienes permiso para eliminar registros.")  
     except Usuario.DoesNotExist:  
@@ -470,7 +376,6 @@ def editar_registro(request, id_registro):
     """
     try:  
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
         if usuario.tipo not in ['encuestador', 'admin']:  
             return HttpResponseForbidden("No tienes permiso para editar registros.")  
         
@@ -478,18 +383,14 @@ def editar_registro(request, id_registro):
             encuestador = Encuestador.objects.get(id_usuario=usuario)  
         else:  # admin  
             encuestador, created = Encuestador.objects.get_or_create(  
-                clave_encuestador=usuario.id_usuario,
+                id_usuario=usuario,
                 defaults={
-                    'id_usuario': usuario,
-                    'fecha_registro': timezone.now()
+                    'clave_encuestador': usuario.id_usuario
                 }  
             )  
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
+    except Usuario.DoesNotExist:  
         return HttpResponse('Usuario no encontrado.', status=404)
-                clave_encuestador=f'ADMIN_{usuario.id_usuario}',  
-                defaults={'id_usuario': usuario}  
-            )  
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
+    except Encuestador.DoesNotExist:  
         return HttpResponse('Encuestador no encontrado.', status=404)
 
     # Obtener registro a editar
@@ -3050,7 +2951,7 @@ def eliminar_seleccionados(request):
         return HttpResponse("No se seleccionaron registros para eliminar", status=400)  
       
     try:    
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)    
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)    
         if usuario.tipo not in ['encuestador', 'admin']:    
             return HttpResponseForbidden("No tienes permiso para eliminar registros.")    
     except Usuario.DoesNotExist:    
@@ -3078,7 +2979,7 @@ def redirigir_por_tipo_usuario(request):
     Vista que redirige a los usuarios según su tipo después del login  
     """  
     try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
           
         if usuario.tipo == 'encuestador':  
             # Redirigir al formulario de registro para encuestadores  
@@ -3097,72 +2998,6 @@ def redirigir_por_tipo_usuario(request):
     except Usuario.DoesNotExist:  
         return redirect('login')
     
-
-
-@login_required  
-@transaction.atomic  
-def formulario(request):  
-    """  
-    Vista específica para que encuestadores puedan crear registros  
-    """  
-    try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
-        if usuario.tipo != 'encuestador':  
-            return HttpResponseForbidden("No tienes permiso. Solo los encuestadores pueden acceder.")  
-          
-        encuestador = Encuestador.objects.get(id_usuario=usuario)  
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
-        return HttpResponse('Encuestador no encontrado.', status=404)  
-  
-    if request.method == 'POST':  
-        # Usar el mismo código de procesamiento que registro_visita  
-        def to_int(value, default=None):  
-            try:  
-                return int(value)  
-            except (TypeError, ValueError):  
-                return default  
-  
-        es_extranjero = request.POST.get('esExtranjero') == 'si'  
-        tamanio_grupo = to_int(request.POST.get('numPersonas'), default=1)  
-        estancia_dias = to_int(request.POST.get('numDias'), default=1)  
-        numero_visitas = to_int(request.POST.get('numVisitas'), default=1)  
-        motivo_visita = request.POST.get('motivo') or None  
-        tipo_transporte = request.POST.get('transporte') or None  
-  
-        # Crear registro  
-        registro = RegistroVisita.objects.create(  
-            tamanio_grupo=tamanio_grupo,  
-            es_extranjero=es_extranjero,  
-            pais_origen=request.POST.get('pais') if es_extranjero else None,  
-            procedencia=request.POST.get('procedencia'),  
-            tipo_transporte=tipo_transporte,  
-            motivo_visita=motivo_visita,  
-            estancia_dias=estancia_dias,  
-            numero_visitas=numero_visitas,  
-            id_encuestador=encuestador  
-        )  
-          
-        # Crear personas  
-        personas = []  
-        for i in range(1, tamanio_grupo + 1):  
-            edad = to_int(request.POST.get(f'edad{i}'))  
-            sexo = request.POST.get(f'genero{i}')  
-            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:  
-                personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))  
-  
-        if personas:  
-            PersonaVisita.objects.bulk_create(personas)  
-
-        return redirect('formulario')  
-
-    return render(request, 'myapp/formulario.html')
-
-
-
-def mapa(request):
-    return render(request, "myapp/mapa.html")
-
-#prueba
 
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404
@@ -3459,7 +3294,7 @@ def compare_municipalities_view(request):
 @login_required
 def encuestador_dashboard(request):
     try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
         if usuario.tipo not in ['encuestador', 'admin']:  
             return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")  
     except Usuario.DoesNotExist:
@@ -3470,7 +3305,7 @@ def encuestador_dashboard(request):
 @login_required
 def nueva_encuesta_residente(request):
     try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
         if usuario.tipo not in ['encuestador', 'admin']:  
             return HttpResponseForbidden("No tienes permiso.")  
     except Usuario.DoesNotExist:
@@ -3499,7 +3334,7 @@ def nueva_encuesta_residente(request):
 @login_required
 def nueva_encuesta_comercio(request):
     try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
         if usuario.tipo not in ['encuestador', 'admin']:  
             return HttpResponseForbidden("No tienes permiso.")  
     except Usuario.DoesNotExist:

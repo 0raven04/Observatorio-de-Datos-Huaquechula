@@ -1,5 +1,5 @@
 from django import forms
-from .models import RegistroVisita, PersonaVisita, EncuestaResidente, EncuestaComercio 
+from .models import RegistroVisita, EncuestaResidente, EncuestaComercio 
 from django.forms import inlineformset_factory
 
 class RegistroVisitaForm(forms.ModelForm):
@@ -195,13 +195,7 @@ class RegistroVisitaForm(forms.ModelForm):
         self.fields['pais_origen'].required = False
         exclude = ['id_encuestador', 'fecha']
 
-PersonaFormSet = inlineformset_factory(
-    RegistroVisita,
-    PersonaVisita,
-    fields=('edad', 'sexo'),
-    extra=1,
-    can_delete=False
-)
+
 
 class EncuestaResidenteForm(forms.ModelForm):
     class Meta:
