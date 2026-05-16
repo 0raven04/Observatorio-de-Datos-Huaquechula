@@ -49,7 +49,7 @@
                 </button>
 
                 <a class="navbar-brand mx-auto" href="{% url 'vista_inicio' %}">
-                    <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo del Observatorio" class="img-fluid" style="height: 70px; width: auto;">
+                    <img src="{% static 'myapp/image/logo.png' %}" alt="Logo del Observatorio" class="img-fluid" style="height: 70px; width: auto;">
                 </a>
 
                 <!-- Solo mostrar enlaces de navegación en escritorio -->
@@ -103,7 +103,7 @@
                                 </li>
                                 <li>
                                     <a class="nav-link submenu-item"
-                                       href="{% url 'lista_documentos' %}">
+                                       href="{% url 'panel_documentos' %}">
                                         <i class="fas fa-file-alt me-1"></i> Documentos
                                     </a>
                                 </li>
@@ -192,8 +192,8 @@
                     </a>
                 </li>
                 <li class="sidebar-item text-center">
-                    <a class="nav-link {% if 'lista_documentos' in request.resolver_match.url_name %}active{% endif %}"
-                        href="{% url 'lista_documentos' %}">
+                    <a class="nav-link {% if 'panel_documentos' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'panel_documentos' %}">
                         <i class="fas fa-file-alt me-2"></i>Documentos
                     </a>
                 </li>
@@ -258,8 +258,8 @@
         </div>
     </main>
 
-    <footer class="text-center p-4 text-white bg-dark mt-auto" role="contentinfo">
-        <div class="container">
+    <footer class="text-center p-4 text-white" style="background-color: var(--color-gris-oscuro); margin-top: 50px;" role="contentinfo">
+        <div class="container" style="margin-top: 0;">
             <p class="mb-2 foter_leter">&copy; 2025 Observatorio Turístico de Huaquechula</p>
             <p class="mb-0 foter_leter">Todos los derechos reservados | Gobierno de Resultados 2024-2027</p>
         </div>

@@ -1,19 +1,6 @@
 {% extends 'myapp/base.html' %}
 {% load static %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Huaquechula</title>
-
-    <!-- Anti-parpadeo: aplicar tema ANTES de pintar la página -->
-    <script>(function(){var t=localStorage.getItem('observatorio_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <!-- Font Awesome para íconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 {% block title %}Huaquechula{% endblock %}
 
 {% block extra_head %}
@@ -21,79 +8,7 @@
     <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}">
     <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}">
     <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
-
-    <!-- Bootstrap JS y Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-
-</head>
-
-<body id="home" data-authenticated="false">
-    <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <!-- Logo -->
-            <a class="navbar-brand" href="#">
-                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo" style="height: 110px; width: auto;">
-            </a>
-
-            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="offcanvas"
-                data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Menú offcanvas (solo móvil) -->
-            <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu"
-                aria-labelledby="mobileMenuLabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                        aria-label="Close"></button>
-                </div>
-                <div class="offcanvas-body">
-                    <ul class="navbar-nav mobile-nav">
-                        <li class="nav-item"><a class="nav-link" href="#Inicio">Inicio</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
-                        
-                        <!-- Encuesta con submenú personalizado para móvil -->
-                        <li class="nav-item has-submenu">
-                            <a class="nav-link submenu-toggle" href="#">
-                                Encuesta <span class="submenu-arrow">▼</span>
-                            </a>
-                            <ul class="submenu">
-                                <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta</a></li>
-                            </ul>
-                        </li>
-                        
-                        <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Menú horizontal (solo escritorio) -->
-            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-                <ul class="navbar-nav d-flex justify-content-around w-75 desktop-nav">
-                    <li class="nav-item"><a class="nav-link" href="#Inicio">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
-                    
-                    <!-- Encuesta con submenú personalizado para escritorio -->
-                    <li class="nav-item has-submenu">
-                        <a class="nav-link submenu-toggle" href="#">
-                            Encuesta <span class="submenu-arrow">▼</span>
-                        </a>
-                        <ul class="submenu">
-                            <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta </a></li>
-                            <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                        </ul>
-                    </li>
-                    
-                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <header class="header">
     <style>
         /* Override base.html margin for home page header */
         main.container { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
@@ -203,27 +118,6 @@
         </section>
     </div>
 {% endblock %}
-
-    <!-- Dialogflow Messenger -->
-    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
-    <df-messenger
-      intent="WELCOME"
-      chat-title="Guía Turístico Huaquechula"
-      agent-id="7e706205-e76f-45ac-a3ff-c239702204d9"
-      language-code="en"
-    ></df-messenger>
-
-    <!-- Pie de página -->
-    <footer class="text-center p-4 text-white">
-        <div class="container">
-            <p class="mb-2">&copy; 2025 Observatorio Turístico de Huaquechula</p>
-            <p class="mb-0">Todos los derechos reservados | Gobierno de Resultados 2024-2027</p>
-        </div>
-    </footer>
-
-</body>
-
-</html>
 {% block extra_js %}
     <script src="{% static 'myapp/JAV/java.js' %}"></script>
 {% endblock %}

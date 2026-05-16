@@ -47,26 +47,9 @@ urlpatterns = [
     
     
     path('panel/', views.panel_documentos, name='panel_documentos'),
-    path('panel/subir/', views.subir_documento, name='subir_documento'),
-    path('panel/editar/<int:id>/', views.editar_documento, name='editar_documento'),
-    path('panel/eliminar/<int:id>/', views.eliminar_documento, name='eliminar_documento'),
-    # Repositorio público
-    path('repositorio/', views.repositorio_publico, name='repositorio'),
-    path('repositorio-publico/', views.repositorio_publico, name='repositorio_publico'),
-    path('repositorio-galeria-prueba/', views.repositorio_galeria_prueba, name='repositorio_galeria_prueba'),
-    path('descargar/<int:id>/', views.descargar_documento, name='descargar_documento'),
-    path('detalle/<int:id>/', views.ver_documento_detalle, name='detalle_documento'),
-    
-    # Estadísticas y exportación
-    path('estadisticas/', views.obtener_estadisticas, name='estadisticas'),
-    path('exportar/csv/', views.exportar_documentos_csv, name='exportar_csv'),
-       path('lista/', views.panel_documentos, name='lista_documentos'), 
-    # Versión con clases (opcional)
-    path('clase/', views.DocumentoListView.as_view(), name='panel_documentos_clase'),
-    
-
 
     path('subir-documento/', views.subir_documento, name='subir_documento'),
+    path('editar-documento/<int:id>/', views.editar_documento, name='editar_documento'),
     path('descargar/<int:documento_id>/', views.descargar_documento, name='descargar_documento'),
     path('eliminar/<int:documento_id>/', views.eliminar_documento, name='eliminar_documento'),
     path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),

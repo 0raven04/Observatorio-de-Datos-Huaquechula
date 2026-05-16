@@ -1,9 +1,10 @@
-.container {
-    width: 90%;
-    max-width: 1400px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    padding-top: 50px;
+
+/* Forzar que el main.container sea ancho y centrado en el mapa */
+main.container {
+    width: 95% !important;
+    max-width: 1800px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 /* HEADER */
@@ -21,6 +22,7 @@ h1 {
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     letter-spacing: 1px;
+    color: var(--color-arena-claro);
 }
 
 .subtitle {

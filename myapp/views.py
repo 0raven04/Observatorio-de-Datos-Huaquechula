@@ -53,107 +53,13 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.contrib import messages
-from .models import Usuario, RegistroVisita, PersonaVisita, Encuestador, Documento, Categoria, Lugar
-from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
-from .forms import EncuestaResidenteForm, EncuestaComercioForm
+from .models import Usuario, RegistroVisita, Encuestador, Documento, Categoria, Lugar
 from django.db.models import Sum, Q
 import subprocess
 import os
 from datetime import datetime
 
-# Vista principal para el registro de visitas
-# - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
-# - Requiere autenticación y que el usuario sea encuestador
-@login_required
-@transaction.atomic  # Garantiza que todas las operaciones de base de datos se completen exitosamente o se reviertan
-def registro_visita(request):
-    """
-    Vista principal para el CRUD de registros de visitas:
-    1. Verifica que el usuario autenticado sea un encuestador
-    2. Para solicitudes POST: procesa el formulario y crea un nuevo registro
-    3. Para solicitudes GET: muestra todos los registros existentes
-    
-    Funcionamiento:
-    - Primero valida los permisos del usuario
-    - En POST:
-        * Convierte los datos del formulario a los tipos adecuados
-        * Crea el registro principal en RegistroVisita
-        * Crea los registros asociados en PersonaVisita
-        * Maneja errores en la conversión de datos
-    - En GET:
-        * Recupera todos los registros de visitas
-        * Muestra la plantilla con los registros
-    """
-    
-    #1.- Verificar que el usuario es un administrador  
-    try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
-        if usuario.tipo not in ['encuestador', 'admin']:  
-            return HttpResponseForbidden("No tienes permiso. Solo los administradores pueden acceder.")  
 
-        if usuario.tipo == 'encuestador':  
-            encuestador = Encuestador.objects.get(id_usuario=usuario)  
-        else:  # admin  
-            encuestador, created = Encuestador.objects.get_or_create(  
-                clave_encuestador=f'ADMIN_{usuario.id_usuario}',  
-                defaults={'id_usuario': usuario}  
-        )  
-    except (Usuario.DoesNotExist, Encuestador.DoesNotExist):  
-        return HttpResponse('Usuario no encontrado.', status=404)
-
-    # 2. Procesar solicitudes POST (creación de nuevo registro)
-    if request.method == 'POST':
-        # Función auxiliar para convertir valores a enteros con manejo de errores
-        def to_int(value, default=None):
-            try:
-                return int(value)
-            except (TypeError, ValueError):
-                return default
-
-        # Obtener y procesar datos del formulario
-        es_extranjero = request.POST.get('esExtranjero') == 'si'  # Convertir a booleano
-        tamanio_grupo = to_int(request.POST.get('numPersonas'), default=1)
-        estancia_dias = to_int(request.POST.get('numDias'), default=1)
-        numero_visitas = to_int(request.POST.get('numVisitas'), default=1)
-        motivo_visita = request.POST.get('motivo') or None
-        tipo_transporte = request.POST.get('transporte') or None
-
-        # Crear el registro principal de visita
-        registro = RegistroVisita.objects.create(
-            tamanio_grupo=tamanio_grupo,
-            es_extranjero=es_extranjero,
-            pais_origen=request.POST.get('pais') if es_extranjero else None,  # País solo para extranjeros
-            procedencia=request.POST.get('procedencia'),
-            tipo_transporte=tipo_transporte,
-            motivo_visita=motivo_visita,
-            estancia_dias=estancia_dias,
-            numero_visitas=numero_visitas,
-            id_encuestador=encuestador
-        )
-        
-        # Crear registros para cada persona en el grupo
-        personas = []
-        for i in range(1, tamanio_grupo + 1):
-            edad = to_int(request.POST.get(f'edad{i}'))
-            sexo = request.POST.get(f'genero{i}')
-            # Validar que los datos de la persona sean correctos
-            if edad is not None and sexo in ['Hombre', 'Mujer', 'Otro']:
-                personas.append(PersonaVisita(id_registro=registro, edad=edad, sexo=sexo))
-
-        # Crear todas las personas de una vez (optimizado)
-        if personas:
-            PersonaVisita.objects.bulk_create(personas)
-            
-        # Redirigir a la lista de registros después de crear
-        return redirect('lista_registros')   
-    
-    # 3. Manejar solicitudes GET (mostrar registros existentes)
-    registros = RegistroVisita.objects.all()
-    mensaje = request.GET.get('mensaje', '')  # Mensaje opcional para mostrar al usuario
-    return render(request, 'myapp/lista_registros.html', {
-        'registros': registros, 
-        'mensaje': mensaje
-    })
 
 from django.views.decorators.csrf import csrf_exempt
 import requests
@@ -816,33 +722,33 @@ def panel_documentos(request):
     User = get_user_model()
 
     # Obtener parámetros de filtrado y ordenamiento
-    clasificacion = request.GET.get('clasificacion', '')
-    tipo_filtro = request.GET.get('tipo', '')  # NUEVO: Capturar filtro de tipo
-    sort_by = request.GET.get('sort', 'fecha_carga')
+    categoria_id = request.GET.get('categoria', '')
+    es_publico_filtro = request.GET.get('es_publico', '')
+    sort_by = request.GET.get('sort', 'fecha_subida')
     order = request.GET.get('order', 'desc')
     search = request.GET.get('search', '')
     
     # Base queryset
     documentos = Documento.objects.all()
     
-    # Aplicar filtro por clasificación
-    if clasificacion in dict(Documento.CLASIFICACION_CHOICES):
-        documentos = documentos.filter(clasificacion=clasificacion)
+    # Aplicar filtro por categoría
+    if categoria_id:
+        documentos = documentos.filter(categoria_id=categoria_id)
 
-    # NUEVO: Aplicar filtro por tipo
-    if tipo_filtro in dict(Documento.TIPO_CHOICES):
-        documentos = documentos.filter(tipo=tipo_filtro)
+    # Aplicar filtro por visibilidad
+    if es_publico_filtro in ['True', 'False']:
+        is_pub = True if es_publico_filtro == 'True' else False
+        documentos = documentos.filter(es_publico=is_pub)
     
     # Aplicar búsqueda
     if search:
         documentos = documentos.filter(
             Q(titulo__icontains=search) |
-            Q(descripcion__icontains=search) |
-            Q(url__icontains=search)
+            Q(descripcion__icontains=search)
         )
     
     # Aplicar ordenamiento
-    valid_sorts = ['titulo', 'fecha_carga', 'clasificacion', 'tipo'] # Agregamos 'tipo'
+    valid_sorts = ['titulo', 'fecha_subida', 'tamaño', 'descargas']
     if sort_by in valid_sorts:
         if order == 'desc':
             sort_by = f'-{sort_by}'
@@ -860,9 +766,8 @@ def panel_documentos(request):
         'administradores': admins,
         'sort_by': sort_by.replace('-', ''),
         'order': order,
-        'clasificacion_filtro': clasificacion,
-        'tipo_filtro': tipo_filtro,          
-        'tipos_choices': Documento.TIPO_CHOICES,
+        'categoria_filtro': categoria_id,
+        'es_publico_filtro': es_publico_filtro,
         'search': search,
     }
     
@@ -965,158 +870,6 @@ def eliminar_documento(request, id):
             })
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
-
-# ==============================================
-# VISTAS PARA PÚBLICO GENERAL (Repositorio público)
-# ==============================================
-def repositorio_publico(request):
-    busqueda = request.GET.get('q', '')
-    tipo_filtro = request.GET.get('tipo', '') # NUEVO
-    
-   
-    documentos = Documento.objects.filter(clasificacion='publico')
-    
-
-    if tipo_filtro in dict(Documento.TIPO_CHOICES):
-        documentos = documentos.filter(tipo=tipo_filtro)
-
-    if busqueda:
-        documentos = documentos.filter(
-            Q(titulo__icontains=busqueda) | 
-            Q(descripcion__icontains=busqueda)
-        )
-    
-    documentos = documentos.order_by('-fecha_carga')
-    
-    paginator = Paginator(documentos, 15)
-    page_number = request.GET.get('page')
-    documentos_paginados = paginator.get_page(page_number)
-    
-
-    total_publicos = Documento.objects.filter(clasificacion='publico').count()
-
-    qs_publicos = Documento.objects.filter(clasificacion='publico')
-    stats_tipos = {
-        'videos': qs_publicos.filter(tipo='video').count(),
-        'reportes': qs_publicos.filter(tipo='reporte').count(),
-        'historicos': qs_publicos.filter(tipo='historico').count(),
-    }
-    
-    context = {
-        'documentos': documentos_paginados,
-        'busqueda': busqueda,
-        'tipo_filtro': tipo_filtro,           
-        'tipos_choices': Documento.TIPO_CHOICES, 
-        'total_publicos': total_publicos,
-        'stats_tipos': stats_tipos,
-    }
-    
-    return render(request, 'myapp/repositorio.html', context)
-
-
-def repositorio_galeria_prueba(request):
-    """
-    Vista de prueba para mostrar el repositorio de documentos públicos 
-    como una galería cultural interactiva.
-    """
-    busqueda = request.GET.get('q', '')
-    tipo_filtro = request.GET.get('tipo', '')
-    
-    class DummyDocument:
-        def __init__(self, titulo, descripcion, tipo, url, icono):
-            from django.utils import timezone
-            self.titulo = titulo
-            self.descripcion = descripcion
-            self.tipo = tipo
-            self.url = url
-            self.fecha_carga = timezone.now()
-            self.icono_archivo = icono
-
-    documentos = Documento.objects.filter(clasificacion='publico')
-    es_demo = False
-    
-    if documentos.count() == 0:
-        es_demo = True
-        documentos = [
-            DummyDocument(
-                "Documento Histórico de Prueba", 
-                "Este es un documento de prueba autogenerado para mostrar cómo se ve el diseño. Muestra un archivo PDF ficticio.", 
-                "historico", 
-                "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", 
-                "fas fa-file-pdf"
-            ),
-            DummyDocument(
-                "Video Documental de Muestra", 
-                "Ejemplo de un video insertado en la galería. Al hacer clic podrás visualizar este video de prueba.", 
-                "video", 
-                "https://www.w3schools.com/html/mov_bbb.mp4", 
-                "fas fa-file-video"
-            ),
-            DummyDocument(
-                "Reporte de Observatorio 2024", 
-                "Un reporte anual simulado. Contiene información ficticia y un botón de descarga para probar la interfaz.", 
-                "reporte", 
-                "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", 
-                "fas fa-file-pdf"
-            ),
-            DummyDocument(
-                "Fotografía Antigua Muestra", 
-                "Una imagen de alta resolución que ilustra cómo se verían los archivos de imagen en el repositorio.", 
-                "historico", 
-                "https://picsum.photos/800/600?random=1", 
-                "fas fa-file-image"
-            )
-        ]
-        
-        if tipo_filtro:
-            documentos = [d for d in documentos if d.tipo == tipo_filtro]
-            
-        if busqueda:
-            q = busqueda.lower()
-            documentos = [d for d in documentos if q in d.titulo.lower() or q in d.descripcion.lower()]
-            
-        total_publicos = len(documentos)
-        stats_tipos = {
-            'videos': 1,
-            'reportes': 1,
-            'historicos': 2,
-            'total': 4
-        }
-    else:
-        if tipo_filtro in dict(Documento.TIPO_CHOICES):
-            documentos = documentos.filter(tipo=tipo_filtro)
-
-        if busqueda:
-            documentos = documentos.filter(
-                Q(titulo__icontains=busqueda) | 
-                Q(descripcion__icontains=busqueda)
-            )
-        
-        documentos = documentos.order_by('-fecha_carga')
-        total_publicos = Documento.objects.filter(clasificacion='publico').count()
-        qs_publicos = Documento.objects.filter(clasificacion='publico')
-        stats_tipos = {
-            'videos': qs_publicos.filter(tipo='video').count(),
-            'reportes': qs_publicos.filter(tipo='reporte').count(),
-            'historicos': qs_publicos.filter(tipo='historico').count(),
-            'total': total_publicos
-        }
-    
-    paginator = Paginator(documentos, 18) # 18 para cuadrícula de 3x6 o 2x9
-    page_number = request.GET.get('page')
-    documentos_paginados = paginator.get_page(page_number)
-
-
-    
-    context = {
-        'documentos': documentos_paginados,
-        'busqueda': busqueda,
-        'tipo_filtro': tipo_filtro,           
-        'tipos_choices': Documento.TIPO_CHOICES, 
-        'stats_tipos': stats_tipos,
-    }
-    
-    return render(request, 'myapp/repositorio_galeria_prueba.html', context)
 
 
 
@@ -3096,7 +2849,7 @@ def redirigir_por_tipo_usuario(request):
             return redirect('lista_registros')  
         elif usuario.tipo == 'propietario':  
             # Redirigir a una página específica para propietarios  
-            return redirect('vista_inicio')  # o donde corresponda  
+            return redirect('mis_propiedades')  # o donde corresponda  
         else:  
             # Tipo de usuario no reconocido  
             return redirect('login')  
@@ -3113,14 +2866,7 @@ from django.views.decorators.http import require_http_methods
 # Repository functionality - Models not yet implemented
 # from .models import Documento, Categoria
 
-def repositorio(request):
-    """Vista principal del repositorio - Pendiente de implementación"""
-    # TODO: Implementar modelos Documento y Categoria
-    return render(request, 'myapp/repositorio.html', {
-        'categorias': [],
-        'documentos': [],
-        'mensaje': 'Funcionalidad en desarrollo'
-    })
+
 def repositorio(request):
     """Vista principal del repositorio"""
     categoria_id = request.GET.get('categoria', None)
@@ -3295,7 +3041,6 @@ def obtener_documentos_categoria(request, categoria_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@login_required
 def dashboard_view(request):
     """
     Vista principal del Dashboard del Observatorio.
