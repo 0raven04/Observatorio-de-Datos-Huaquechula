@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Encuesta: Residente Local</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos generales -->
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+</head>
+<body style="background-color: #f8f9fa;">
+    <!-- Navbar -->
+    <nav class="navbar sticky-top" style="background-color: #27ae60">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'encuestador_dashboard' %}">
+                <h2 class="text-white mb-0" style="font-size: 1.25rem;"><i class="fas fa-arrow-left me-2"></i>Nueva Encuesta: Residente</h2>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <div class="container mt-4 mb-5">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 800px; margin: 0 auto;">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <h4 class="mb-4 text-success border-bottom pb-2">Datos Demográficos</h4>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Edad</label>
+                            {{ form.edad }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Género</label>
+                            {{ form.genero }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Barrio / Colonia</label>
+                            {{ form.barrio_colonia }}
+                        </div>
+                    </div>
+
+                    <h4 class="mb-4 text-success border-bottom pb-2 mt-5">Seguridad</h4>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.confianza_policia.label }}</label>
+                            {{ form.confianza_policia }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.percepcion_inseguridad.label }}</label>
+                            {{ form.percepcion_inseguridad }}
+                        </div>
+                    </div>
+
+                    <h4 class="mb-4 text-success border-bottom pb-2 mt-5">Tradiciones y Patrimonio</h4>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.tension_festividades.label }}</label>
+                            {{ form.tension_festividades }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.acceso_servicios_festividades.label }}</label>
+                            {{ form.acceso_servicios_festividades }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.perdida_tradicion.label }}</label>
+                            {{ form.perdida_tradicion }}
+                        </div>
+                    </div>
+
+                    <h4 class="mb-4 text-success border-bottom pb-2 mt-5">Medio Ambiente</h4>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.calidad_aire.label }}</label>
+                            {{ form.calidad_aire }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">{{ form.gestion_residuos.label }}</label>
+                            {{ form.gestion_residuos }}
+                        </div>
+                    </div>
+
+                    <div class="mt-5 text-end">
+                        <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-success px-4 fw-bold">Guardar Encuesta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

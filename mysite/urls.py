@@ -47,9 +47,10 @@ urlpatterns = [
     # URL para acceder a la vista de gráficos e indicadores turísticos
     path('graficos_indicadores/', views.graficos_indicadores, name='graficos_indicadores'),
     # URL raíz que incluye las URLs de la aplicación 'myapp'
-    # - Todas las URLs definidas en myapp.urls estarán bajo la raíz del proyecto
-    # - Ejemplo: la ruta 'visitas/' de myapp será accesible como '/visitas/'
     path('', include('myapp.urls')),
+
+    # API REST para la app móvil (JWT, CRUD visitas, indicadores)
+    path('', include('myapp.api_urls')),
 ]
 
 if settings.DEBUG:
