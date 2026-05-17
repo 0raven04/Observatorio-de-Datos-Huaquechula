@@ -5,6 +5,10 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'myapp/CSS/style1.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}">
+    <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Override base.html margin for home page header */
         main.container { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
@@ -114,7 +118,6 @@
         </section>
     </div>
 {% endblock %}
-
 {% block extra_js %}
     <script src="{% static 'myapp/JAV/java.js' %}"></script>
 {% endblock %}

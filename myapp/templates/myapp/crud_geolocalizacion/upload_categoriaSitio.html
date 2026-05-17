@@ -1,0 +1,131 @@
+{% block content %}
+
+<div class="modal fade" id="categoriaModal" tabindex="-1" aria-labelledby="tituloCategoria" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"> <div class="modal-content">
+      
+      <form id="categoriaForm" method="POST" action="{% url 'crear_categoria' %}" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <div class="modal-header custom-modal-header position-relative">
+          <h5 class="modal-title w-100 text-center" id="tituloCategoria">
+            <i class="fas fa-tags me-2"></i>Nueva Categoría
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            
+            <div class="mb-3">
+                <label for="cat_nombre" class="form-label fw-bold">Nombre de la Categoría</label>
+                <input type="text" class="form-control" 
+                       id="cat_nombre" name="nombre" 
+                       placeholder="Ej: Turismo Religioso" 
+                       required autocomplete="off"
+                       onkeyup="generarSlugAuto()">
+                <div class="form-text text-muted">El nombre visible para los usuarios.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="cat_slug" class="form-label fw-bold small text-uppercase">Código Slug (URL)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-link"></i></span>
+                    <input type="text" class="form-control bg-light text-muted" 
+                           id="cat_slug" name="codigo_slug" 
+                           placeholder="turismo-religioso" 
+                           readonly required>
+                </div>
+            </div>
+
+                      <button type="submit" class="btn boton bt-body">
+             <i class="fas fa-save me-2"></i>Guardar
+          </button>
+        </div>
+        
+
+        <div class="modal-footer custom-modal-footer d-flex justify-content-between">
+          <button type="button" class="btn btn-warning" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. LÓGICA DE LIMPIEZA AL CERRAR ---
+        const modalCatEl = document.getElementById('categoriaModal');
+        modalCatEl.addEventListener('hidden.bs.modal', function (event) {
+            const form = document.getElementById('categoriaForm');
+            if (form) {
+                form.reset();
+                form.classList.remove('was-validated');
+            }
+        });
+
+        // --- 2. FOCO AUTOMÁTICO AL ABRIR ---
+        modalCatEl.addEventListener('shown.bs.modal', function () {
+            document.getElementById('cat_nombre').focus();
+        });
+
+        // --- 3. ENVÍO AJAX ---
+        const formCategoria = document.getElementById('categoriaForm');
+        formCategoria.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            const formData = new FormData(this);
+            const urlDestino = this.action;
+
+            fetch(urlDestino, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la red');
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Cerrar el modal usando la instancia de Bootstrap
+                    const modalInstance = bootstrap.Modal.getInstance(modalCatEl);
+                    modalInstance.hide();
+                    
+                    alert("✅ " + data.message);
+                    location.reload(); 
+                } else {
+                    alert("⚠️ " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("❌ Error de conexión");
+            });
+        });
+    });
+
+    // --- 4. GENERADOR DE SLUG ---
+    // Esta función debe estar fuera del DOMContentLoaded para que el onkeyup del HTML la encuentre
+    function generarSlugAuto() {
+        const nombreInput = document.getElementById('cat_nombre');
+        const slugInput = document.getElementById('cat_slug');
+        
+        let texto = nombreInput.value;
+        let slug = texto
+            .toLowerCase()
+            .trim()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+
+        slugInput.value = slug;
+    }
+</script>

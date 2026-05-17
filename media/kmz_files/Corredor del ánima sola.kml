@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="corredor_del_nima_sola" id="corredor_del_nima_sola">
+	<SimpleField name="id" type="float"></SimpleField>
+	<SimpleField name="Nombre" type="string"></SimpleField>
+</Schema>
+<Folder><name>corredor_del_nima_sola</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#corredor_del_nima_sola">
+		<SimpleData name="id">1</SimpleData>
+		<SimpleData name="Nombre">Corredor de ofrendas para el ánima sola</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-98.5413026111548,18.7705483357786 -98.5415541340164,18.7688583024835</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

@@ -49,50 +49,7 @@ body {
     padding: 0 15px;
 }
 
-.logo {
-    max-height: 80px;
-    width: auto;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-.logo:hover {
-    transform: scale(1.05);
-}
 
-.boton {
-    width: 100%;
-    max-width: 200px;
-    height: 50px; 
-    color: black;
-    border: 2px solid var(--color-arena-oscuro);
-    border-radius: 10px;
-    padding: 0 20px; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    font-size: 14px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    box-shadow: inset 0 0 0 0 var(--color-arena-oscuro);
-    -webkit-transition: ease-out 0.4s;
-    -moz-transition: ease-out 0.4s;
-    transition: ease-out 0.4s;
-    background-color: white;
-}
-
-.boton.bt-body {
-    margin-top: 20px;
-    margin-right: auto;
-    margin-bottom: -10px;
-    margin-left: auto;
-}
-
-.boton:hover {
-    transform: scale(1);
-    color: white !important;
-    box-shadow: inset 0 0 0 50px var(--color-arena-oscuro);
-}
 :root {
     --color-gris-oscuro: #4A4A4A;
     --color-arena-claro: #EDEBE3;
@@ -113,74 +70,7 @@ hr {
     color: var(--color-gris-oscuro) !important;
 }
 
-/* Estilos para la navbar */
-.navbar-custom {
-    background-color: var(--color-arena-claro);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 12px 0;
-    border-bottom: 2px solid var(--color-arena-oscuro);
-}
 
-.navbar-brand {
-    display: flex;
-    align-items: center;
-    transition: transform 0.3s ease;
-}
-
-.navbar-brand:hover {
-    transform: translateY(-2px);
-}
-
-.navbar-title {
-    color: black;
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin-left: 12px;
-}
-
-.navbar-toggler {
-    width: 40px;
-    height: 40px;
-    border: none;
-    padding: 0;
-    background-color: transparent;
-    border: 2px solid var(--color-arena-oscuro);
-    padding: 6px 10px;
-}
-
-.navbar-toggler:focus {
-    box-shadow: 0 0 0 2px var(--color-arena-oscuro);
-}
-
-.navbar-toggler-icon {
-    width: 40px;
-    height: 40px;
-    background-size: contain;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2874, 74, 74, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-}
-
-.nav-link {
-    color: var(--color-gris-oscuro) !important;
-    font-weight: 500;
-    padding: 10px 15px;
-    border-radius: 6px;
-    margin: 0 5px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.nav-link:hover {
-    background-color: var(--color-arena-oscuro);
-    color: var(--color-gris-oscuro) !important;
-    transform: translateY(-2px);
-}
-
-.nav-link.active {
-    background-color: var(--color-arena-oscuro);
-    font-weight: 600;
-}
 
 /* Estilos para botones */
 .boton {
@@ -240,31 +130,7 @@ hr {
     box-shadow: inset 0 0 0 50px var(--color-arena-oscuro);
 }
 
-.btn-logout {
-    width: auto;
-    max-width: 180px;
-    height: 45px;
-    color: var(--color-gris-oscuro);
-    border: 2px solid var(--color-arena-oscuro);
-    border-radius: 10px;
-    padding: 0 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    box-shadow: inset 0 0 0 0 var(--color-arena-oscuro);
-    transition: ease-out 0.4s;
-    background-color: white;
-    gap: 8px;
-}
 
-.btn-logout:hover {
-    color: white !important;
-    box-shadow: inset 0 0 0 50px var(--color-arena-oscuro);
-    transform: translateY(-2px);
-}
 
 /* Estilos para formularios de login */
 .login-container {
@@ -378,6 +244,7 @@ tbody tr:nth-child(odd) {
 .badge {
     font-size: 0.85em;
     padding: 5px 10px;
+    color: black;
 }
 
 /* Estilos para modales */
@@ -435,23 +302,8 @@ tbody tr:nth-child(odd) {
 
 /* Media Queries */
 @media (max-width: 992px) {
-    .navbar-collapse {
-        background-color: var(--color-arena-claro);
-        padding: 15px;
-        border-radius: 10px;
-        margin-top: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
     
-    .nav-link {
-        margin: 5px 0;
-        justify-content: center;
-    }
-    
-    .btn-logout {
-        margin-top: 10px;
-        justify-content: center;
-    }
+
 }
 
 @media (max-width: 768px) {
@@ -480,19 +332,8 @@ tbody tr:nth-child(odd) {
         padding: 0 10px;
     }
 
-    .logo {
-        width: 40px;
-    }
     
-    .navbar-title {
-        font-size: 1.3rem;
-    }
-    
-    .btn-logout {
-        height: 40px;
-        font-size: 13px;
-        max-width: 160px;
-    }
+
     
     .login-image {
         display: none;
@@ -515,41 +356,8 @@ tbody tr:nth-child(odd) {
     .cabeza {
         height: 50px;
     }
-
-    .logo {
-        width: 35px;
-    }
-    
-    .nav-link {
-        padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-    
-    .navbar-brand {
-        flex-direction: row;
-    }
-    
-    .navbar-title {
-        font-size: 1.1rem;
-        margin-left: 8px;
-    }
-    
-    .btn-logout {
-        height: 36px;
-        font-size: 12px;
-        padding: 0 15px;
-        max-width: 140px;
-    }
 }
 
-/* Faltaba el estilo para .navbar (no .navbar-custom) */
-.navbar {
-    background-color: var(--color-arena-oscuro) !important;
-}
-
-.navbar-brand, .nav-link {
-    color: var(--color-gris-oscuro) !important;
-}
 
 tr:nth-child(even) {
     background-color: #EDEBE3;
@@ -598,5 +406,363 @@ tr:nth-child(odd) {
 
 
 
+.table th {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
 
-      
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+
+table th,
+table td {
+  text-align: center;        /* Centrado horizontal */
+  vertical-align: middle;    /* Centrado vertical */
+}
+
+
+
+
+        /* Estilos generales */
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--color-naranja);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        /* Estilos para los modales */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        /* Estilos para los badges de relaciones */
+        .relationship-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 5px;
+            margin-bottom: 4px;
+        }
+        
+        .geometry-badge { background-color: #e3f2fd; color: #1565c0; }
+        .point-badge { background-color: #f3e5f5; color: #7b1fa2; }
+        
+        /* Detalles desplegables */
+        .details-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 4px solid #ddd;
+            display: none;
+        }
+        
+        .details-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .geometry-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        
+        /* Toggle switch para visibilidad */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--color-naranja);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* Enlaces de URL */
+        .url-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            word-break: break-all;
+            background-color: #f0f7ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #d1e3ff;
+            margin-top: 4px;
+        }
+        
+        .url-link:hover {
+            text-decoration: underline;
+            background-color: #e3f2fd;
+        }
+        
+        /* Badges de tipo de archivo */
+        .file-type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        
+        .kml-badge { background-color: #e8f5e9; color: #2e7d32; }
+        .kmz-badge { background-color: #f3e5f5; color: #7b1fa2; }
+        .image-badge { background-color: #e3f2fd; color: #1565c0; }
+        .video-badge { background-color: #fff3e0; color: #ef6c00; }
+        .audio-badge { background-color: #f1f8e9; color: #689f38; }
+        .pdf-badge { background-color: #ffebee; color: #c62828; }
+        .other-badge { background-color: #f5f5f5; color: #616161; }
+        
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            text-decoration: none;
+            border: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-edit { background-color: #17a2b8; color: white; }
+        .btn-map { background-color: var(--color-arena-oscuro); color: white; }
+        .btn-update { background-color: #6f42c1; color: white; }
+        .btn-info { background-color: #20c997; color: white; }
+        .btn-process { background-color: var(--color-naranja); color: white; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+        
+        /* Filtros y búsqueda */
+        .filter-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        /* Estado de procesamiento */
+        .processing-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .action-btn {
+                flex: 1;
+                min-width: 45%;
+                font-size: 0.75rem;
+                padding: 5px 8px;
+            }
+            
+            .stats-card {
+                padding: 15px;
+            }
+        }
+    
+
+        /* Asegura que el contenedor principal no tenga relleno interno que empuje el header */
+.modal-content {
+    padding: 0 !important; 
+    border: none; /* Opcional: quita el borde gris por defecto */
+    border-radius: 10px; /* Redondeado del modal */
+    overflow: hidden; /* IMPORTANTE: Esto recorta el header/footer para que respeten las esquinas redondeadas */
+}
+
+/* Estilo para que el Header llene todo y tenga color */
+.custom-modal-header {
+    background-color: #4A4A4A; /* Tu color gris oscuro */
+    color: white;
+    padding: 1rem 1.5rem; /* Espaciado interno */
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%; /* Asegura el ancho total */
+}
+
+/* Ajuste para el botón de cerrar en fondo oscuro */
+.custom-modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%); /* Hace la X blanca */
+    opacity: 0.8;
+}
+
+/* Estilo para el Footer */
+.custom-modal-footer {
+    background-color: var(--color-gris-oscuro); /* Un gris muy claro para diferenciar */
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    width: 100%; /* Asegura el ancho total */
+    display: flex;
+    justify-content: flex-end; /* Alinea botones a la derecha */
+    flex-wrap: wrap;
+    align-items: center;
+    /* Eliminar el border-bottom-radius por si acaso, ya que el overflow:hidden del padre se encarga */
+}
+
+#editModalBody {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Evita que este div tenga scroll, lo pasamos al hijo */
+    min-height: 0;    /* Necesario para Firefox en flexbox */
+}
+
+/* 2. Hacemos que el formulario ocupe el 100% de la altura */
+#editDocumentForm {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 3. Forzamos el scroll SOLO en la parte del cuerpo del formulario */
+#editDocumentForm .modal-body {
+    overflow-y: auto; /* Aquí activamos el scroll */
+    flex: 1 1 auto;   /* Esto hace que ocupe todo el espacio y empuje el footer al fondo */
+}

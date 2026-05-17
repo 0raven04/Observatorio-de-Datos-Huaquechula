@@ -1,0 +1,387 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+
+{% block title %}Gestión de Reseñas{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 0 auto;">
+
+  <!-- Encabezado -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12 mb-3">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h3 class="fw-bold text-dark"><i class="fas fa-star me-2" style="color: var(--color-arena-oscuro);"></i>Reseñas del Municipio</h3>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="badge fs-6 px-3 py-2" style="background:var(--color-gris-oscuro); color:white;">
+            Total: {{ resenas|length }}
+          </span>
+          <span class="badge fs-6 px-3 py-2" style="background:#28a745; color:white;">
+            Aprobadas: {{ resenas_aprobadas }}
+          </span>
+          <span class="badge fs-6 px-3 py-2" style="background:#ffc107; color:#333;">
+            Pendientes: {{ resenas_pendientes }}
+          </span>
+          <span class="badge fs-6 px-3 py-2" style="background:#6c757d; color:white;">
+            Ocultas: {{ resenas_ocultas }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="mb-4">
+    <div class="row g-3">
+      <div class="col-md-5">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" class="form-control" id="searchInput" placeholder="Buscar por autor o comentario...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-control" id="filterEstado">
+          <option value="">Todos los estados</option>
+          <option value="aprobada">Aprobadas</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="oculta">Ocultas</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-control" id="filterEstrellas">
+          <option value="">Todas las estrellas</option>
+          <option value="5">★★★★★ (5)</option>
+          <option value="4">★★★★☆ (4)</option>
+          <option value="3">★★★☆☆ (3)</option>
+          <option value="2">★★☆☆☆ (2)</option>
+          <option value="1">★☆☆☆☆ (1)</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn w-100" onclick="aplicarAccionMasiva()" 
+                style="background:var(--color-arena-oscuro); color:var(--color-gris-oscuro); border:none; font-weight:600;">
+          <i class="fas fa-check-double me-1"></i> Acción masiva
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card mb-4">
+    <div class="card-header py-3" style="background-color: var(--color-gris-oscuro);">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-white"><i class="fas fa-list me-2"></i>Listado de Reseñas</h5>
+        <div class="text-white">
+          <i class="fas fa-filter me-1"></i>
+          <span id="filteredCount">{{ resenas|length }}</span> reseñas mostradas
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered mb-0" id="resenasTable">
+          <thead class="text-white" style="background-color: var(--color-gris-oscuro);">
+            <tr>
+              <th class="text-center align-middle" style="width:3%;">
+                <input type="checkbox" id="selectAll" title="Seleccionar todo">
+              </th>
+              <th class="text-center align-middle" style="width:18%;">Autor</th>
+              <th class="text-center align-middle" style="width:8%;">★ Cal.</th>
+              <th class="text-center align-middle" style="width:35%;">Comentario</th>
+              <th class="text-center align-middle" style="width:10%;">Fecha</th>
+              <th class="text-center align-middle" style="width:8%;">❤ Likes</th>
+              <th class="text-center align-middle" style="width:10%;">Estado</th>
+              <th class="text-center align-middle" style="width:8%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in resenas %}
+            <tr class="resena-row text-center align-middle"
+                data-id="{{ r.id_resena }}"
+                data-estado="{{ r.estado }}"
+                data-estrellas="{{ r.calificacion }}"
+                data-autor="{{ r.autor|lower }}"
+                data-comentario="{{ r.comentario|lower|default:'' }}">
+
+              <!-- Checkbox -->
+              <td class="align-middle">
+                <input type="checkbox" class="resena-check" data-id="{{ r.id_resena }}">
+              </td>
+
+              <!-- Autor -->
+              <td class="align-middle text-start">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                       style="width:36px;height:36px;background:var(--color-gris-oscuro);font-size:0.85rem;flex-shrink:0;">
+                    {{ r.autor|slice:":1"|upper }}
+                  </div>
+                  <div>
+                    <strong class="d-block">{{ r.autor }}</strong>
+                    {% if r.ip_visitante %}
+                      <small class="text-muted">{{ r.ip_visitante }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <!-- Calificación -->
+              <td class="align-middle">
+                <span style="color:var(--color-gris-oscuro); font-size:1.1rem; letter-spacing:1px;">
+                  {% for i in "12345" %}{% if forloop.counter <= r.calificacion %}★{% else %}☆{% endif %}{% endfor %}
+                </span>
+                <small class="d-block text-muted">{{ r.calificacion }}/5</small>
+              </td>
+
+              <!-- Comentario -->
+              <td class="align-middle text-start">
+                {% if r.comentario %}
+                  <span title="{{ r.comentario }}">{{ r.comentario|truncatechars:100 }}</span>
+                {% else %}
+                  <span class="text-muted fst-italic">Sin comentario</span>
+                {% endif %}
+              </td>
+
+              <!-- Fecha -->
+              <td class="align-middle">
+                <small>{{ r.fecha_publicacion|date:"d M Y" }}</small><br>
+                <small class="text-muted">{{ r.fecha_publicacion|date:"H:i" }}</small>
+              </td>
+
+              <!-- Likes -->
+              <td class="align-middle">
+                <i class="fas fa-heart" style="color:#e91e63;"></i> {{ r.likes }}
+              </td>
+
+              <!-- Estado -->
+              <td class="align-middle">
+                {% if r.estado == 'aprobada' %}
+                  <span class="badge" style="background:#28a745;">
+                    <i class="fas fa-check me-1"></i>Aprobada
+                  </span>
+                {% elif r.estado == 'pendiente' %}
+                  <span class="badge" style="background:#ffc107; color:#333;">
+                    <i class="fas fa-clock me-1"></i>Pendiente
+                  </span>
+                {% else %}
+                  <span class="badge" style="background:#6c757d;">
+                    <i class="fas fa-eye-slash me-1"></i>Oculta
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Acciones -->
+              <td class="align-middle">
+                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                  {% if r.estado != 'aprobada' %}
+                  <button class="btn btn-sm" title="Aprobar"
+                          onclick="cambiarEstado({{ r.id_resena }}, 'aprobada', this)"
+                          style="background:#28a745;color:white;border:none;padding:4px 8px;">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  {% endif %}
+                  {% if r.estado != 'oculta' %}
+                  <button class="btn btn-sm" title="Ocultar"
+                          onclick="cambiarEstado({{ r.id_resena }}, 'oculta', this)"
+                          style="background:#6c757d;color:white;border:none;padding:4px 8px;">
+                    <i class="fas fa-eye-slash"></i>
+                  </button>
+                  {% endif %}
+                  <button class="btn btn-sm" title="Eliminar"
+                          onclick="eliminarResena({{ r.id_resena }}, this)"
+                          style="background:#e74c3c;color:white;border:none;padding:4px 8px;">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center py-5">
+                <i class="fas fa-star fa-3x mb-3" style="color:var(--color-beige);"></i>
+                <h5 style="color:var(--color-gris-oscuro);">No hay reseñas registradas aún</h5>
+                <p class="text-muted">Las reseñas aparecerán aquí cuando los visitantes las envíen desde el mapa.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel acción masiva (oculto por defecto) -->
+  <div id="panelMasivo" class="card mb-4" style="display:none; border:2px solid var(--color-arena-oscuro);">
+    <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+      <span class="fw-bold"><i class="fas fa-check-square me-2"></i><span id="countSeleccionados">0</span> seleccionadas</span>
+      <button class="btn btn-sm" onclick="accionMasiva('aprobada')"
+              style="background:#28a745;color:white;border:none;">
+        <i class="fas fa-check me-1"></i>Aprobar seleccionadas
+      </button>
+      <button class="btn btn-sm" onclick="accionMasiva('oculta')"
+              style="background:#6c757d;color:white;border:none;">
+        <i class="fas fa-eye-slash me-1"></i>Ocultar seleccionadas
+      </button>
+      <button class="btn btn-sm" onclick="accionMasivaEliminar()"
+              style="background:#e74c3c;color:white;border:none;">
+        <i class="fas fa-trash me-1"></i>Eliminar seleccionadas
+      </button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtros en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', filtrar);
+    document.getElementById('filterEstado').addEventListener('change', filtrar);
+    document.getElementById('filterEstrellas').addEventListener('change', filtrar);
+
+    // Seleccionar todo
+    document.getElementById('selectAll').addEventListener('change', function() {
+        document.querySelectorAll('.resena-check').forEach(cb => {
+            cb.checked = this.checked;
+        });
+        actualizarPanelMasivo();
+    });
+
+    document.querySelectorAll('.resena-check').forEach(cb => {
+        cb.addEventListener('change', actualizarPanelMasivo);
+    });
+});
+
+function filtrar() {
+    const q     = document.getElementById('searchInput').value.toLowerCase();
+    const est   = document.getElementById('filterEstado').value;
+    const stars = document.getElementById('filterEstrellas').value;
+    let vis = 0;
+    document.querySelectorAll('#resenasTable tbody .resena-row').forEach(row => {
+        let show = true;
+        if (est    && row.dataset.estado    !== est)          show = false;
+        if (stars  && row.dataset.estrellas !== stars)        show = false;
+        if (q && !row.dataset.autor.includes(q) && !row.dataset.comentario.includes(q)) show = false;
+        row.style.display = show ? '' : 'none';
+        if (show) vis++;
+    });
+    document.getElementById('filteredCount').textContent = vis;
+}
+
+function actualizarPanelMasivo() {
+    const seleccionados = document.querySelectorAll('.resena-check:checked').length;
+    const panel = document.getElementById('panelMasivo');
+    panel.style.display = seleccionados > 0 ? 'block' : 'none';
+    document.getElementById('countSeleccionados').textContent = seleccionados;
+}
+
+function aplicarAccionMasiva() {
+    document.querySelectorAll('.resena-check:not(:checked)').forEach(cb => {
+        document.querySelectorAll('#resenasTable tbody .resena-row').forEach(row => {
+            if (row.style.display !== 'none') {
+                row.querySelector('.resena-check').checked = true;
+            }
+        });
+    });
+    actualizarPanelMasivo();
+}
+
+function getCsrf() {
+    const m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+}
+
+function cambiarEstado(id, nuevoEstado, btn) {
+    fetch(`/resenas/${id}/estado/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body: JSON.stringify({ estado: nuevoEstado })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            showToast(`Reseña marcada como ${nuevoEstado}`, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast('Error: ' + (data.error || 'desconocido'), 'error');
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
+function eliminarResena(id, btn) {
+    if (!confirm('¿Eliminar esta reseña permanentemente?')) return;
+    fetch(`/resenas/${id}/eliminar/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf() }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const row = btn.closest('tr');
+            row.style.transition = 'opacity 0.3s';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 300);
+            showToast('Reseña eliminada', 'success');
+        } else {
+            showToast('Error al eliminar', 'error');
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
+function accionMasiva(nuevoEstado) {
+    const ids = Array.from(document.querySelectorAll('.resena-check:checked'))
+                     .map(cb => cb.dataset.id);
+    if (!ids.length) return;
+    fetch('/resenas/accion-masiva/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body: JSON.stringify({ ids, estado: nuevoEstado })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            showToast(`${data.actualizadas} reseña(s) actualizadas`, 'success');
+            setTimeout(() => location.reload(), 900);
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
+function accionMasivaEliminar() {
+    const ids = Array.from(document.querySelectorAll('.resena-check:checked'))
+                     .map(cb => cb.dataset.id);
+    if (!ids.length) return;
+    if (!confirm(`¿Eliminar ${ids.length} reseña(s) permanentemente?`)) return;
+    fetch('/resenas/accion-masiva/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body: JSON.stringify({ ids, accion: 'eliminar' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            showToast(`${data.eliminadas} reseña(s) eliminadas`, 'success');
+            setTimeout(() => location.reload(), 900);
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
+function showToast(msg, type='info') {
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;top:20px;right:20px;padding:14px 20px;border-radius:8px;color:white;z-index:10000;
+                       box-shadow:0 4px 12px rgba(0,0,0,0.2);font-weight:600;display:flex;align-items:center;gap:10px;`;
+    t.style.backgroundColor = type==='success' ? '#28a745' : type==='error' ? '#e74c3c' : '#4A4A4A';
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(()=>t.remove(),400); }, 2800);
+}
+</script>
+{% endblock %}

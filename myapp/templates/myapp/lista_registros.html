@@ -1,158 +1,381 @@
-{% extends 'myapp/base.html' %}
+{% extends "base_usuarios.html" %}
 {% load static %}
-
-{% block title %}Listado de Visitas - Huaquechula{% endblock %}
-
-{% block extra_head %}
+{% block title %}Listado de Visitantes{% endblock %}
+{% block extra_css %}
     <link href="{% static 'myapp/CSS/style_crud.css' %}" rel="stylesheet" />
-    <style>
-        .card-header {
-            background-color: var(--color-gris-oscuro) !important;
-        }
-        .btn-logout {
-            background-color: var(--color-naranja);
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-        .boton {
-            background-color: var(--color-dorado);
-            color: var(--color-gris-oscuro);
-            border: none;
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-        .boton:hover {
-            background-color: var(--color-dorado-oscuro);
-            color: white;
-            transform: translateY(-2px);
-        }
-        .table thead {
-            background-color: var(--color-gris-oscuro);
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold" style="color: var(--color-gris-oscuro);">Control de Visitas</h1>
-        <div class="d-flex gap-2">
-            <button type="button" id="btnNuevoRegistro" class="btn boton" data-bs-toggle="modal" data-bs-target="#miModal">
-                <i class="fas fa-plus me-2"></i>Nuevo Registro
+
+      <!-- Sección de botones superiores -->
+      <div class="row">
+        <div class="offset-9 col-md-3">
+          <div class="d-flex mb-3">
+            <!-- Botón para abrir modal de nuevo registro -->
+            <button
+              type="button"
+              id="btnNuevoRegistro"
+              class="btn boton bt-body me-2"
+              data-url="{% url 'lista_registros' %}"
+              data-bs-toggle="modal"
+              data-bs-target="#miModal"
+            >
+              Nuevo Registro
             </button>
-            <button type="button" class="btn btn-outline-danger" id="botonEliminar">
-                <i class="fas fa-trash me-2"></i>Borrar Selección
+
+            <!-- Botón para eliminar selección múltiple -->
+            <button type="button" class="btn boton bt-body" id="botonEliminar">
+              Borrar Selección
             </button>
+          </div>
         </div>
-    </div>
+      </div>
 
-    {% if mensaje %}
-    <div class="alert alert-info alert-dismissible fade show shadow-sm border-0 mb-4">
-        <i class="fas fa-info-circle me-2"></i>{{ mensaje }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endif %}
+      <!-- Mostrar mensajes del sistema -->
+      {% if mensaje %}
+      <div class="alert alert-info alert-dismissible fade show">
+        {{ mensaje }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endif %}
 
-    <div class="card shadow-sm border-0 overflow-hidden">
-        <div class="card-header py-3 text-center">
-            <h5 class="mb-0 text-white"><i class="fas fa-list me-2"></i>Registros de Visitantes</h5>
+      <!-- Cuerpo de la tarjeta con la tabla de registros -->
+      <div class="card shadow-sm mb-4">
+        <!-- Encabezado de la tarjeta -->
+        <div class="card-header py-3 text-center" style="background-color: #4A4A4A">
+            <h5 class="mb-0 text-white"><i class="fas fa-users me-2"></i>Registros de Visitantes</h5>
         </div>
 
+        <!-- Formulario oculto para eliminación múltiple -->
+        <form
+            id="formEliminarSeleccionados"
+            method="POST"
+            action="{% url 'eliminar_seleccionados' %}"
+        >
+            {% csrf_token %}
+            <input type="hidden" name="ids" id="idsSeleccionados" />
+        </form>
+
+        <!-- Cuerpo de la tarjeta con la tabla de registros -->
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="text-white">
-                        <tr>
-                            <th scope="col" width="50" class="text-center">Sel.</th>
-                            <th scope="col">ID</th>
-                            <th scope="col">Fecha</th>
-                            <th scope="col">Grupo</th>
-                            <th scope="col">Extranjero</th>
-                            <th scope="col">País</th>
-                            <th scope="col">Transporte</th>
-                            <th scope="col">Motivo</th>
-                            <th scope="col" class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in registros %}
-                        <tr>
-                            <td class="text-center">
-                                <input class="form-check-input checkbox-seleccion" type="checkbox" value="{{ r.id_registro }}">
-                            </td>
-                            <td><span class="badge bg-light text-dark">{{ r.id_registro }}</span></td>
-                            <td>{{ r.fecha }}</td>
-                            <td>{{ r.tamanio_grupo }}</td>
-                            <td>
-                                {% if r.es_extranjero %}
-                                <span class="badge bg-warning text-dark">Sí</span>
-                                {% else %}
-                                <span class="badge bg-secondary">No</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ r.pais_origen|default:"-" }}</td>
-                            <td>{{ r.tipo_transporte }}</td>
-                            <td>{{ r.motivo_visita }}</td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-sm btn-outline-primary btn-editar" data-id="{{ r.id_registro }}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="{{ r.id_registro }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <table class="table table-hover table-bordered mb-0">
+    <!-- Encabezados de la tabla -->
+    <thead class="text-white" style="background-color: #4A4A4A">
+        <tr>
+            <th scope="col" width="50" class="text-center align-middle">Sel.</th>
+            <th scope="col" width="80" class="text-center align-middle">ID</th>
+            <th scope="col" width="100" class="text-center align-middle">Fecha</th>
+            <th scope="col" width="100" class="text-center align-middle">Total Personas</th>
+            <th scope="col" width="100" class="text-center align-middle">Mujeres</th>
+            <th scope="col" width="100" class="text-center align-middle">Hombres</th>
+            <th scope="col" width="100" class="text-center align-middle">Extranjero</th>
+            <th scope="col" width="120" class="text-center align-middle">País Origen</th>
+            <th scope="col" width="120" class="text-center align-middle">Procedencia</th>
+            <th scope="col" width="120" class="text-center align-middle">Transporte</th>
+            <th scope="col" width="150" class="text-center align-middle">Motivo</th>
+            <th scope="col" width="100" class="text-center align-middle">Estancia (días)</th>
+            <th scope="col" width="100" class="text-center align-middle">Visitas Previas</th>
+            <th scope="col" width="120" class="text-center align-middle">Encuestador</th>
+            <th scope="col" width="180" class="text-center align-middle">Acciones</th>
+        </tr>
+    </thead>
+
+    <!-- Cuerpo de la tabla con datos dinámicos -->
+    <tbody>
+        {% for r in registros %}
+        <tr class="align-middle">
+            <!-- Checkbox para selección múltiple -->
+            <td class="text-center align-middle">
+                <div class="form-check d-flex justify-content-center align-items-center">
+                    <input
+                        class="form-check-input checkbox-seleccion"
+                        type="checkbox"
+                        value="{{ r.id_registro }}"
+                        style="width: 18px; height: 18px;"
+                    />
+                </div>
+            </td>
+
+            <!-- Datos del registro -->
+            <td class="text-center align-middle">
+                <span class="badge rounded-pill d-inline-block">{{ r.id_registro }}</span>
+            </td>
+            <td class="text-center align-middle">{{ r.fecha|date:"Y-m-d H:i" }}</td>
+            <td class="text-center align-middle">
+                <span class="badge rounded-pill d-inline-block">
+                    {{ r.total_personas }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                <span class="badge rounded-pill d-inline-block">
+                    {{ r.total_mujeres }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                <span class="badge rounded-pill d-inline-block">
+                    {{ r.total_hombres }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                {% if r.es_extranjero %}
+                <span class="badge rounded-pill d-inline-block" style="background-color: #4A4A4A; color: white;">
+                    Sí
+                </span>
+                {% else %}
+                <span class="badge rounded-pill d-inline-block" style="background-color: #D6CEAA; color: #4A4A4A;">
+                    No
+                </span>
+                {% endif %}
+            </td>
+            <td class="text-center align-middle">{{ r.pais_origen|default:"N/A" }}</td>
+            <td class="text-center align-middle">{{ r.procedencia|default:"-" }}</td>
+            <td class="text-center align-middle">
+                <span class="badge d-inline-block">
+                    {{ r.get_tipo_transporte_display }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                <span class="badge d-inline-block">
+                    {{ r.get_motivo_visita_display }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                <span class="badge rounded-pill d-inline-block">
+                    {{ r.estancia_dias }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                <span class="badge rounded-pill d-inline-block">
+                    {{ r.visitas_previas }}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                {% if r.clave_encuestador.id_usuario.nombre_usuario == 'independiente' %}
+                <span class="badge rounded-pill d-inline-block" style="background-color: #17a2b8; color: white;" title="Encuesta realizada de forma independiente">
+                    Independiente
+                </span>
+                {% else %}
+                <span class="badge rounded-pill d-inline-block" style="background-color: #7f8c8d; color: white;" title="Usuario: {{ r.clave_encuestador.id_usuario.nombre_usuario }}">
+                    {{ r.clave_encuestador.id_usuario.nombre_usuario }}
+                </span>
+                {% endif %}
+            </td>
+
+            <!-- Botones de acciones -->
+            <td class="text-center align-middle">
+                <div class="d-flex flex-column gap-1 justify-content-center">
+                    <!-- Fila 1: Editar y Ver -->
+                    <div class="d-flex justify-content-center gap-1">
+                        <!-- Botón para editar registro -->
+                        <button 
+                            class="btn btn-sm btn-editar"
+                            data-id="{{ r.id_registro }}"
+                            data-url="{% url 'editar_registro' r.id_registro %}"
+                            data-edit-url="{% url 'editar_registro' 0 %}"
+                            style="background-color: #D6CEAA; border: none; color: #4A4A4A; display:flex; flex-direction:column; align-items:center; justify-content:center; width:65px; height:50px;">
+                            
+                            <i class="fas fa-edit"></i>
+                            <span class="small">Editar</span>
+                        </button>
+
+                        <!-- Botón Ver detalles -->
+                        <button class="btn btn-sm"
+                                onclick="verRegistro('{{ r.id_registro }}')"
+                                style="background-color: #4A4A4A; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 50px; padding: 2px;" 
+                                title="Ver detalles">
+                            <i class="fas fa-eye" style="font-size: 1rem;"></i>
+                            <span style="font-size: 0.65rem; line-height: 1;">Ver</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Fila 2: Eliminar -->
+                    <div class="d-flex justify-content-center gap-1">
+                        <!-- Botón Eliminar -->
+                        <button class="btn btn-sm btn-eliminar"
+                                data-id="{{ r.id_registro }}"
+                                data-delete-url="{% url 'eliminar_registro' r.id_registro %}"
+                                style="background-color: #e74c3c; border: none; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 50px; padding: 2px;"
+                                title="Eliminar registro">
+                            <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                            <span style="font-size: 0.65rem; line-height: 1;">Eliminar</span>
+                        </button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="15" class="text-center py-4 align-middle">
+                <div class="alert alert-info m-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay registros de visitantes disponibles.
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
             </div>
         </div>
     </div>
 
-    <div class="mt-4">
-        <button class="btn btn-sm btn-outline-secondary" onclick="window.location.href='/backup/'">
-            <i class="fas fa-database me-2"></i>Respaldo de datos
-        </button>
-    </div>
-</div>
-
-<!-- Formulario oculto para eliminación múltiple -->
-<form id="formEliminarSeleccionados" method="POST" action="{% url 'eliminar_seleccionados' %}">
-    {% csrf_token %}
-    <input type="hidden" name="ids" id="idsSeleccionados" />
-</form>
-
-<!-- Modal para formularios -->
 <div class="modal fade" id="miModal" tabindex="-1" aria-labelledby="tituloModal" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow">
-            <form class="needs-validation" novalidate id="formulario" method="POST" action="{% url 'lista_registros' %}" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title w-100 text-center" id="tituloModal">Gestión de Registro</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body p-4">
-                    {% include 'myapp/mod_db/form.html' %}
-                </div>
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn boton">Guardar Cambios</button>
-                </div>
-            </form>
+  <div class="modal-dialog modal-lg modal-full-width">
+    <div class="modal-content p-0"> <!-- Eliminamos padding del modal-content -->
+      
+      <!-- Formulario que ocupa todo el modal -->
+      <form class="needs-validation g-3 h-100 m-0" novalidate name="formulario" id="formulario" method="POST"
+        action="{% url 'lista_registros' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Encabezado del modal - Ocupa todo el ancho -->
+        <div class="modal-header custom-modal-header w-100 m-0 p-3" 
+             style="background-color: #4A4A4A; border-bottom: 2px solid #D6CEAA;">
+          <h5 class="modal-title w-100 text-center text-white m-0" id="tituloModal">
+            <i class="fas fa-users me-2"></i>Nuevo Registro de Visita
+          </h5>
+          <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
+
+        <!-- Cuerpo del modal - Ocupa el espacio restante -->
+        <div class="modal-body modal-scrollable m-0 p-0 flex-grow-1">
+          <div class="container-fluid p-3 p-md-4"> <!-- Contenedor con padding interno -->
+            {% include 'myapp/mod_db/form.html' %}
+          </div>
+        </div>
+
+        <!-- Pie del modal - Ocupa todo el ancho -->
+        <div class="modal-footer custom-modal-footer w-100 m-0 p-3" 
+             style="background-color: #4A4A4A; border-top: 2px solid #D6CEAA;">
+          <div class="w-100 d-flex justify-content-between align-items-center">
+            <div></div> <!-- Espaciador izquierdo -->
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-warning px-4" data-bs-dismiss="modal">
+                <i class="fas fa-times me-2"></i>Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-2"></i>Guardar Registro
+              </button>
+            </div>
+          </div>
+        </div>
+        
+      </form>
+      
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'myapp/JAV/js_lista_regsitro.js' %}" defer></script>
-{% endblock %}
+<script src="{% static 'myapp/JAV/js_lista_registro.js' %}" defer></script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Seleccionamos el modal por su ID real 'miModal'
+        var myModalEl = document.getElementById('miModal');
+        
+        // 2. Escuchamos el evento de Bootstrap cuando el modal se oculta
+        myModalEl.addEventListener('hidden.bs.modal', function (event) {
+            
+            // 3. Seleccionamos el formulario por su ID real 'formulario' y lo reseteamos
+            var form = document.getElementById('formulario');
+            if (form) {
+                form.reset();
+                // Si tienes validaciones visuales de Bootstrap, quítalas también:
+                form.classList.remove('was-validated'); 
+            }
+        });
+    });
+
+  function editarRegistro(id) {
+      fetch(`/registros/editar/${id}/`)
+          .then(res => {
+              if (!res.ok) throw new Error("No se pudo cargar el registro");
+              return res.json();
+          })
+          .then(data => {
+
+              // Llenar cada input por name
+              for (const campo in data) {
+                  const input = document.querySelector(`#formulario [name="${campo}"]`);
+                  if (input) {
+                      if (input.type === "checkbox") {
+                          input.checked = data[campo];
+                      } else {
+                          input.value = data[campo];
+                      }
+                  }
+              }
+
+              // Cambiar título del modal
+              document.getElementById("tituloModal").innerText = "Editar Registro";
+
+              // Campo oculto para enviar ID al guardar
+              let hidden = document.querySelector('[name="id_registro"]');
+              if (!hidden) {
+                  hidden = document.createElement("input");
+                  hidden.type = "hidden";
+                  hidden.name = "id_registro";
+                  document.getElementById("formulario").appendChild(hidden);
+              }
+              hidden.value = id;
+
+              // Abrir el modal
+              const modal = new bootstrap.Modal(document.getElementById("miModal"));
+              modal.show();
+          })
+          .catch(err => {
+              alert("Error: " + err.message);
+          });
+  }
+
+  function verRegistro(id) {
+      fetch(`/registros/editar/${id}/`)
+          .then(res => {
+              if (!res.ok) throw new Error("No se pudo cargar el registro");
+              return res.json();
+          })
+          .then(data => {
+              // Llenar cada input por name
+              for (const campo in data) {
+                  const input = document.querySelector(`#formulario [name="${campo}"]`);
+                  if (input) {
+                      if (input.type === "checkbox") {
+                          input.checked = data[campo];
+                      } else {
+                          input.value = data[campo];
+                      }
+                      input.disabled = true; // Deshabilitar
+                  }
+              }
+
+              // Cambiar título del modal
+              document.getElementById("tituloModal").innerText = "Ver Registro";
+
+              // Ocultar botón Guardar y Mostrar el Modal
+              const btnGuardar = document.querySelector('#formulario button[type="submit"]');
+              if(btnGuardar) btnGuardar.style.display = 'none';
+
+              const modal = new bootstrap.Modal(document.getElementById("miModal"));
+              modal.show();
+
+              // Al cerrar, re-habilitar inputs y mostrar botón
+              document.getElementById('miModal').addEventListener('hidden.bs.modal', function () {
+                  document.querySelectorAll('#formulario input, #formulario select, #formulario textarea').forEach(el => el.disabled = false);
+                  if(btnGuardar) btnGuardar.style.display = 'block';
+              }, {once: true});
+          })
+          .catch(err => {
+              alert("Error: " + err.message);
+          });
+  }
+  </script>
+{% endblock %}

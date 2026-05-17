@@ -14,16 +14,19 @@
     
     <!-- Base Styles -->
     <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}">
     
     {% block extra_head %}{% endblock %}
+    {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
     <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <!-- Logo -->
-            <a class="navbar-brand" href="{% url 'vista_inicio' %}">
-                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo" style="height: 110px; width: auto;">
+            <a class="navbar-brand mx-auto" href="{% url 'vista_inicio' %}">
+                <img src="{% static 'myapp/image/logo.png' %}" alt="Logo del Observatorio" class="img-fluid">
             </a>
 
             <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="offcanvas"
@@ -54,6 +57,7 @@
                                 {% if user.is_authenticated %}
                                     <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
                                     <li><a class="nav-link submenu-item" href="{% url 'lista_registros' %}">Lista de Visitas</a></li>
+                                    <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
                                     <li><form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="nav-link submenu-item" style="border:none; background:none; width:100%; text-align:left;">Cerrar sesión</button></form></li>
                                 {% else %}
                                     <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
@@ -81,6 +85,7 @@
                             {% if user.is_authenticated %}
                                 <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
                                 <li><a class="nav-link submenu-item" href="{% url 'lista_registros' %}">Lista de Visitas</a></li>
+                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
                                 <li>
                                     <form action="{% url 'logout' %}" method="post" id="logout-form">
                                         {% csrf_token %}
@@ -98,17 +103,32 @@
         </div>
     </nav>
 
-    <main class="container" style="margin-top: 140px;">
+    <main class="container flex-grow-1 mx-auto align-self-center" style="margin-top: 140px;">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Pie de página -->
-    <footer class="text-center p-4 text-white" style="background-color: var(--color-gris-oscuro); margin-top: 50px;">
+    <footer class="text-center p-4 text-white mt-auto" style="background-color: var(--color-gris-oscuro); margin-top: 50px;">
         <div class="container" style="margin-top: 0;">
-            <p class="mb-2">&copy; 2025 Observatorio Turístico de Huaquechula</p>
-            <p class="mb-0">Todos los derechos reservados | Gobierno de Resultados 2024-2027</p>
+            <p class="mb-2 foter_leter">&copy; 2025 Observatorio Turístico de Huaquechula</p>
+            <p class="mb-0 foter_leter">Todos los derechos reservados | Gobierno de Resultados 2024-2027</p>
         </div>
     </footer>
+
+    {% block extra_html %}{% endblock %}
+
+    <!-- Dialogflow Messenger -->
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    <df-messenger
+      intent="WELCOME"
+      chat-title="Guía Turístico Huaquechula"
+      agent-id="7e706205-e76f-45ac-a3ff-c239702204d9"
+      language-code="es"
+    ></df-messenger>
+
+    <!-- Accessibility and Settings -->
+    <script src="{% static 'myapp/JAV/accessibility.js' %}" defer></script>
+    <script src="{% static 'myapp/JAV/settings.js' %}" defer></script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -1,0 +1,1315 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Mapa de Huaquechula{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+
+<link rel="stylesheet" href="{% static 'myapp/CSS/css_mapa.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== PANEL MARCADOR – ESTILOS CRÍTICOS (override Bootstrap) ===== */
+    #custom-marker-panel {
+        display: none !important;
+        position: fixed !important;
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28), 0 2px 10px rgba(0, 0, 0, 0.12) !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    #custom-marker-panel.panel-visible {
+        display: flex !important;
+    }
+
+    /* Escritorio */
+    @media (min-width: 769px) {
+        #custom-marker-panel {
+            top: 85px !important;
+            left: 20px !important;
+            width: 390px !important;
+            max-height: calc(100vh - 105px) !important;
+            border-radius: 16px !important;
+        }
+
+        #custom-marker-panel.panel-visible {
+            animation: gmPanelLeft 0.38s cubic-bezier(0.25, 0.8, 0.25, 1) both !important;
+        }
+    }
+
+    /* Móvil - bottom sheet */
+    @media (max-width: 768px) {
+        #custom-marker-panel {
+            bottom: 0 !important;
+            top: auto !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 75vh !important;
+            border-radius: 20px 20px 0 0 !important;
+        }
+
+        #custom-marker-panel.panel-visible {
+            animation: gmPanelUp 0.38s cubic-bezier(0.25, 0.8, 0.25, 1) both !important;
+        }
+
+        #custom-marker-panel::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 5px;
+            background: #ccc;
+            border-radius: 5px;
+            z-index: 100000;
+        }
+    }
+
+    @keyframes gmPanelLeft {
+        from {
+            transform: translateX(-110%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes gmPanelUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Contenido interno */
+    #custom-marker-panel .close-panel-btn {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: none !important;
+        cursor: pointer !important;
+        z-index: 100001 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 15px !important;
+        color: #444 !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18) !important;
+        transition: transform 0.2s !important;
+        padding: 0 !important;
+    }
+
+    #custom-marker-panel .close-panel-btn:hover {
+        transform: scale(1.12) !important;
+    }
+
+    #custom-marker-panel .panel-cover {
+        width: 100% !important;
+        height: 190px !important;
+        flex-shrink: 0 !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-color: #e8e4d8 !important;
+    }
+
+    #custom-marker-panel .panel-content-scroll {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding: 20px !important;
+        padding-bottom: 28px !important;
+    }
+
+    #custom-marker-panel .panel-header {
+        margin-bottom: 12px !important;
+        border-bottom: 1px solid #f0ece4 !important;
+        padding-bottom: 12px !important;
+    }
+
+    #custom-marker-panel .panel-header h2 {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        color: #2c2c2c !important;
+        margin: 0 0 4px 0 !important;
+        line-height: 1.2 !important;
+    }
+
+    #custom-marker-panel .panel-category {
+        font-size: 0.85rem !important;
+        color: #888 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin: 0 !important;
+        font-weight: 500 !important;
+    }
+
+    #custom-marker-panel .panel-info-block {
+        font-size: 0.9rem !important;
+        color: #555 !important;
+        margin-bottom: 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+    }
+
+    #custom-marker-panel .panel-description {
+        font-size: 0.93rem !important;
+        line-height: 1.55 !important;
+        color: #444 !important;
+        margin-bottom: 0 !important;
+    }
+
+    #custom-marker-panel .panel-walk-time {
+        background: #f6f3ec !important;
+        border-left: 4px solid #4a4a4a !important;
+        border-radius: 10px !important;
+        padding: 11px 14px !important;
+        font-size: 0.93rem !important;
+        color: #333 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+
+    #custom-marker-panel .btn-primary-route {
+        width: 100% !important;
+            max-width: 100% !important;
+            height: 50px !important;
+            color: black !important;
+            border: 2px solid var(--color-arena-oscuro) !important;
+            border-radius: 10px !important;
+            padding: 0 20px !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            font-size: 14px !important;
+            letter-spacing: 1px !important;
+            cursor: pointer !important;
+            box-shadow: inset 0 0 0 0 var(--color-arena-oscuro) !important;
+            transition: ease-out 0.4s !important;
+            background-color: white !important;
+        }
+
+        #custom-marker-panel .btn-primary-route:hover {
+            transform: scale(1) !important;
+            color: white !important;
+            box-shadow: inset 0 0 0 50px var(--color-arena-oscuro) !important;
+            background-color: var(--color-arena-oscuro) !important;
+        }
+
+        #custom-marker-panel .btn-primary-route:active {
+            transform: translateY(-1px) !important;
+    #custom-marker-panel .panel-instructions {
+        font-size: 0.88rem;
+        color: #444;
+    }
+
+    /* ===== FIN PANEL ===== */
+</style>
+
+<header>
+    <h1>Pueblo Huaquechula</h1>
+    {% if archivo %}
+    <p class="subtitle">Visualizando: {{ archivo.nombre_archivo }}</p>
+    {% else %}
+    <p class="subtitle">Municipio de Puebla, México</p>
+    {% endif %}
+</header>
+
+<!-- Panel de Detalles del Marcador (Estilo Google Maps) - FUERA del full-map -->
+<div id="custom-marker-panel">
+    <button id="close-marker-panel" class="close-panel-btn"><i class="fas fa-times"></i></button>
+    <div id="marker-panel-cover" class="panel-cover"></div>
+    <div class="panel-content-scroll">
+        <div class="panel-header">
+            <h2 id="marker-panel-title">Título</h2>
+            <p id="marker-panel-category" class="panel-category">Categoría</p>
+        </div>
+
+        <div id="marker-panel-time" class="panel-info-block">
+            <!-- Se llena con JS -->
+        </div>
+
+        <div class="panel-body">
+            <p id="marker-panel-description" class="panel-description"></p>
+        </div>
+
+        <!-- Galería multimedia -->
+        <div id="marker-panel-galeria" style="display:none; margin-bottom:16px;">
+            <div id="marker-panel-galeria-grid" style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 8px;
+            "></div>
+        </div>
+
+        <div id="marker-panel-walk-time" class="panel-walk-time">
+            <!-- Se llena con JS -->
+        </div>
+
+        <div id="marker-panel-instructions" class="panel-instructions">
+            <!-- Instrucciones de la ruta en curso -->
+        </div>
+
+        <div class="panel-actions" id="marker-panel-actions">
+            <button id="marker-panel-route-btn" class="btn boton bt-body mt-5 btn-primary-route" type="button">
+                <i class="fas fa-route"></i> Iniciar Ruta
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div class="full-map">
+        <div id="map"></div>
+
+        <!-- Filtro desplegable personalizado -->
+        <div id="custom-filter" class="leaflet-control leaflet-control-layers">
+            <div class="filter-header">
+                <h3><i class="fas fa-filter"></i> Filtros</h3>
+                <button id="toggle-filter" class="toggle-btn">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+
+            <div class="filter-content">
+                <div class="filter-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Tipo de Punto</h4>
+                    <div class="filter-checkboxes" id="tipo-filters">
+                        <!-- Se llenará con JavaScript -->
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4><i class="fas fa-tags"></i> Categorías</h4>
+                    <div class="filter-checkboxes" id="categoria-filters">
+                        <!-- Se llenará con JavaScript -->
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button id="select-all" class="btn-action">
+                        <i class="fas fa-check-square"></i> Seleccionar todo
+                    </button>
+                    <button id="deselect-all" class="btn-action">
+                        <i class="fas fa-square"></i> Deseleccionar todo
+                    </button>
+                    <button id="reset-view" class="btn-action">
+                        <i class="fas fa-sync-alt"></i> Reiniciar vista
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_html %}
+<!-- ===================================================
+     FAB DE RESEÑAS
+     =================================================== -->
+<button id="fab-resenas" title="Ver reseñas del municipio" aria-label="Abrir reseñas">
+    <i class="fas fa-star"></i>
+    <span>Reseñas</span>
+</button>
+
+<!-- ===================================================
+     PANEL DE RESEÑAS (lado derecho del mapa)
+     =================================================== -->
+<div id="panel-resenas" role="dialog" aria-label="Panel de reseñas de Huaquechula">
+
+    <!-- Cabecera del panel -->
+    <div class="pr-header">
+        <div class="pr-header-left">
+            <i class="fas fa-map-marker-alt pr-icon"></i>
+            <div>
+                <h2 class="pr-titulo">Huaquechula</h2>
+                <p class="pr-subtitulo">Municipio de Puebla, México</p>
+            </div>
+        </div>
+        <button id="btn-cerrar-resenas" class="pr-btn-cerrar" aria-label="Cerrar panel">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Sección de estadísticas -->
+    <div class="pr-stats" id="pr-stats">
+        <div class="pr-score-big" id="pr-score-num">—</div>
+        <div class="pr-score-right">
+            <div class="pr-estrellas" id="pr-estrellas-prom">☆☆☆☆☆</div>
+            <div class="pr-total" id="pr-total">Sin reseñas aún</div>
+        </div>
+        <!-- Barras de distribución -->
+        <div class="pr-barras" id="pr-barras">
+            <div class="pr-barra-row"><span>5</span><div class="pr-barra-track"><div class="pr-barra-fill" id="bar5" style="width:0%"></div></div></div>
+            <div class="pr-barra-row"><span>4</span><div class="pr-barra-track"><div class="pr-barra-fill" id="bar4" style="width:0%"></div></div></div>
+            <div class="pr-barra-row"><span>3</span><div class="pr-barra-track"><div class="pr-barra-fill" id="bar3" style="width:0%"></div></div></div>
+            <div class="pr-barra-row"><span>2</span><div class="pr-barra-track"><div class="pr-barra-fill" id="bar2" style="width:0%"></div></div></div>
+            <div class="pr-barra-row"><span>1</span><div class="pr-barra-track"><div class="pr-barra-fill" id="bar1" style="width:0%"></div></div></div>
+        </div>
+    </div>
+
+    <!-- Botón escribir reseña -->
+    <div class="pr-cta-wrap">
+        <button id="btn-dejar-resena" class="pr-btn-cta">
+            <i class="fas fa-pencil-alt"></i> Escribe una reseña
+        </button>
+    </div>
+
+    <!-- Feed de reseñas -->
+    <div class="pr-feed" id="pr-feed">
+        <div class="pr-loading" id="pr-loading">
+            <i class="fas fa-circle-notch fa-spin"></i> Cargando reseñas...
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     MODAL DE FORMULARIO DE RESEÑA
+     =================================================== -->
+<div id="modal-resena-overlay" role="dialog" aria-modal="true" aria-label="Dejar reseña">
+    <div id="modal-resena">
+        <div class="modal-resena-header">
+            <h3><i class="fas fa-star"></i> Deja tu opinión</h3>
+            <button id="btn-cerrar-modal" class="modal-resena-close" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-resena-body">
+            <!-- Apodo -->
+            <div class="modal-campo">
+                <label for="resena-nickname"><i class="fas fa-user"></i> Tu apodo</label>
+                <input type="text" id="resena-nickname" placeholder="Ej: María T., Viajero_2024"
+                       maxlength="100" autocomplete="nickname">
+            </div>
+
+            <!-- Estrellas interactivas -->
+            <div class="modal-campo">
+                <label><i class="fas fa-star"></i> Calificación</label>
+                <div id="star-picker" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">
+                    <span class="star-pick" data-val="1" aria-label="1 estrella">&#9733;</span>
+                    <span class="star-pick" data-val="2" aria-label="2 estrellas">&#9733;</span>
+                    <span class="star-pick" data-val="3" aria-label="3 estrellas">&#9733;</span>
+                    <span class="star-pick" data-val="4" aria-label="4 estrellas">&#9733;</span>
+                    <span class="star-pick" data-val="5" aria-label="5 estrellas">&#9733;</span>
+                </div>
+                <p class="star-pick-label" id="star-pick-label">Selecciona una calificación</p>
+            </div>
+
+            <!-- Comentario -->
+            <div class="modal-campo">
+                <label for="resena-comentario"><i class="fas fa-comment"></i> Tu opinión <span class="opcional">(opcional)</span></label>
+                <textarea id="resena-comentario" placeholder="¿Qué te pareció Huaquechula?" rows="4" maxlength="500"></textarea>
+                <div class="char-count"><span id="char-count">0</span>/500</div>
+            </div>
+
+            <!-- reCAPTCHA -->
+            <div class="modal-campo recaptcha-wrap">
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"
+                     id="resena-recaptcha"></div>
+            </div>
+
+            <!-- Error -->
+            <div id="resena-error" class="resena-error" style="display:none;"></div>
+
+            <!-- Botón enviar -->
+            <button id="btn-enviar-resena" class="pr-btn-enviar">
+                <i class="fas fa-paper-plane"></i> Enviar reseña
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+
+<script>
+    // ==========================================
+    // VARIABLES GLOBALES (Disponibles para todo el código)
+    // ==========================================
+    window.todosLosMarcadores = []; // <-- Ahora es global
+    var ControlFiltros;
+
+    var estiloOculto = document.createElement("style");
+    estiloOculto.innerHTML = `
+    .leaflet-routing-container, 
+    .leaflet-routing-error, 
+    .leaflet-routing-alternatives-container { 
+        display: none !important; 
+    }
+`;
+    document.head.appendChild(estiloOculto);
+
+    if (!window._mapaYaInicializado) {
+        window._mapaYaInicializado = true;
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ==========================================
+            // 1. CONFIGURACIÓN INICIAL DEL MAPA
+            // ==========================================
+            var centroHuaquechula = [18.769895, -98.544040];
+            var limitesMapa = L.latLngBounds([
+                [18.749895, -98.564040], [18.789895, -98.524040]
+            ]);
+
+            var mapContainer = document.getElementById('map');
+            if (window._leaflet_map_instance) {
+                window._leaflet_map_instance.remove();
+                window._leaflet_map_instance = null;
+            }
+            if (mapContainer != null && mapContainer._leaflet_id) { mapContainer._leaflet_id = null; }
+            if (mapContainer) { mapContainer.innerHTML = ''; }
+
+            var map = L.map('map', {
+                center: centroHuaquechula, 
+                zoom: 16, 
+                minZoom: 14, 
+                maxZoom: 18,
+                maxBounds: limitesMapa,
+                maxBoundsViscosity: 1.0
+            });
+            window._leaflet_map_instance = map;
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                maxZoom: 19
+            }).addTo(map);
+
+            // ==========================================
+            // 2. SISTEMA DE ICONOS PERSONALIZADOS 
+            // ==========================================
+            const iconoOfrendaCustom = L.icon({
+                iconUrl: '/static/myapp/image/ofrenda_punto.png',
+                iconSize: [50, 60],
+                iconAnchor: [22, 45],
+                popupAnchor: [0, -45]
+            });
+
+            var configIconos = {
+                'sitio_turistico': { color: '#e91e63', icono: 'fas fa-map-marked-alt' },
+                'servicio': { color: '#28a745', icono: 'fas fa-concierge-bell' },
+                'general_kml': { color: '#3388ff', icono: 'fas fa-question' }
+            };
+
+            function crearIconoDiv(config) {
+                return L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="
+                        background-color: ${config.color}; color: white; width: 30px; height: 30px;
+                        border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex;
+                        justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+                        border: 2px solid white; margin-left: -15px; margin-top: -30px;">
+                         <i class="${config.icono}" style="transform: rotate(45deg); font-size: 14px;"></i>
+                       </div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30],
+                    popupAnchor: [0, -30]
+                });
+            }
+
+            // ==========================================
+            // 3. SISTEMA DE FILTRADO Y DATOS
+            // ==========================================
+            window.todosLosMarcadores = []; // Reiniciamos la lista global
+            var categoriasSitio_BD = [];
+
+            try {
+                var geojsonDataRaw = '{{ geojson_data|escapejs }}';
+                var geojsonData = JSON.parse(geojsonDataRaw);
+
+                var categoriasRaw = '{{ categorias_sitio|escapejs }}';
+                categoriasSitio_BD = JSON.parse(categoriasRaw);
+            } catch (e) {
+                console.error("Error parseando datos de Django:", e);
+                var geojsonData = { type: "FeatureCollection", features: [] };
+            }
+
+            var estadoFiltros = {
+                tipos: { 'sitio_turistico': true, 'ofrenda': true, 'servicio': true },
+                subcategorias: {}
+            };
+
+            if (categoriasSitio_BD && Array.isArray(categoriasSitio_BD)) {
+                categoriasSitio_BD.forEach(function (cat) {
+                    estadoFiltros.subcategorias[cat.id_categoria] = true;
+                });
+            }
+
+            window.aplicarFiltros = function () {
+                window.todosLosMarcadores.forEach(function (item) {
+                    if (item.tipo === 'general_kml') {
+                        if (!map.hasLayer(item.layer)) map.addLayer(item.layer);
+                        return;
+                    }
+                    var mostrarTipo = estadoFiltros.tipos[item.tipo];
+                    var mostrarSub = true;
+                    if (item.tipo === 'sitio_turistico' && item.subcat) {
+                        mostrarSub = estadoFiltros.subcategorias[item.subcat];
+                    }
+                    if (mostrarTipo && mostrarSub) {
+                        if (!map.hasLayer(item.layer)) map.addLayer(item.layer);
+                    } else {
+                        if (map.hasLayer(item.layer)) map.removeLayer(item.layer);
+                    }
+                });
+            };
+
+            // ==========================================
+            // 4. RENDERIZADO DEL GEOJSON 
+            // ==========================================
+
+            // NUEVA FUNCIÓN: Escanea los vértices de polígonos/líneas para encontrar el borde más cercano a ti
+            window.obtenerPuntoMasCercanoDeCapa = function (layer, ubicacionOrigen) {
+                if (typeof layer.getLatLng === 'function') {
+                    return layer.getLatLng(); // Si es un punto normal, regresa su posición
+                } else if (typeof layer.getLatLngs === 'function') {
+                    var latlngs = layer.getLatLngs();
+                    var mejorPunto = null;
+                    var minDist = Infinity;
+
+                    // Función que busca entre todos los bordes de la figura geométrica
+                    function buscarEnArray(arr) {
+                        for (var i = 0; i < arr.length; i++) {
+                            if (Array.isArray(arr[i])) {
+                                buscarEnArray(arr[i]);
+                            } else if (arr[i] && arr[i].lat !== undefined) {
+                                var dist = ubicacionOrigen.distanceTo(arr[i]);
+                                if (dist < minDist) {
+                                    minDist = dist;
+                                    mejorPunto = arr[i];
+                                }
+                            }
+                        }
+                    }
+                    buscarEnArray(latlngs);
+                    return mejorPunto; // Regresa el borde más cercano
+                }
+                return null;
+            };
+
+            if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+                L.geoJSON(geojsonData, {
+                    style: function (f) {
+                        var type = f.geometry.type;
+                        var cat = f.properties.categoria_sistema || 'general_kml';
+                        if (cat === 'general_kml') {
+                            if (type === 'LineString' || type === 'MultiLineString') return { color: '#9c27b0', weight: 5, opacity: 0.8 };
+                            if (type === 'Polygon' || type === 'MultiPolygon') return { color: '#28a745', fillColor: '#28a745', fillOpacity: 0.4, weight: 3, opacity: 0.8 };
+                        }
+                        var colorConfig = configIconos[cat] ? configIconos[cat].color : '#3388ff';
+                        return { color: colorConfig, fillColor: colorConfig, fillOpacity: 0.2, weight: 3 };
+                    },
+                    onEachFeature: function (f, layer) {
+                        var p = f.properties;
+                        var tipoSistema = p.categoria_sistema || 'general_kml';
+
+                        // OBTENEMOS UN ID ÚNICO PARA ESTA ÁREA O MARCADOR
+                        var idCapa = L.stamp(layer);
+                        var idCatBD = p.id_categoria_bd || null;
+
+                        // Lo guardamos en la lista global inmediatamente
+                        window.todosLosMarcadores.push({ id: idCapa, layer: layer, tipo: tipoSistema, subcat: idCatBD });
+
+                        // Simulación de ubicación del usuario
+                        var puntoOrigen = L.latLng(18.768500, -98.543200);
+
+                        // Buscamos el punto más cercano de esta figura hacia el usuario
+                        var puntoDestino = window.obtenerPuntoMasCercanoDeCapa(layer, puntoOrigen);
+                        var distanciaMetros = puntoOrigen.distanceTo(puntoDestino);
+                        var tiempoMinutos = Math.max(1, Math.round(distanciaMetros / 83));
+
+                        // Construir objeto de datos para el panel
+                        var datosPanel = {
+                            idCapa: idCapa,
+                            nombre: p.nombre || "Sin nombre",
+                            imagen: p.imagen || "",
+                            categoria: p.categoria_filtro || "Otros",
+                            categoria_sistema: p.categoria_sistema || "general_kml",
+                            descripcion: p.descripcion || "",
+                            horario: p.horario && tipoSistema !== 'general_kml' ? p.horario : null,
+                            tiempoMinutos: tiempoMinutos,
+                            distanciaMetros: Math.round(distanciaMetros),
+                            galeria: p.galeria || [],
+                            ofrenda_anfitrion: p.ofrenda_anfitrion || ""
+                        };
+
+                        // En lugar de popup, agregamos evento de clic
+                        layer.on('click', function (e) {
+                            window.abrirPanelMarcador(datosPanel);
+
+                            // Centrar mapa. En móvil centramos un poco más arriba para que el panel no lo tape.
+                            var zoomActual = map.getZoom();
+                            var targetLatLng = e.latlng;
+                            if (window.innerWidth <= 768) {
+                                // Desplazar ligeramente la latitud hacia abajo (lo que mueve el mapa hacia arriba visualmente)
+                                targetLatLng = L.latLng(e.latlng.lat - 0.002, e.latlng.lng);
+                            }
+                            map.setView(targetLatLng, zoomActual, { animate: true });
+                        });
+
+                        layer.addTo(map);
+                    },
+                    pointToLayer: function (f, latlng) {
+                        var cat = f.properties.categoria_sistema || 'general_kml';
+                        if (cat === 'ofrenda') return L.marker(latlng, { icon: iconoOfrendaCustom });
+                        var config = configIconos[cat] || configIconos['general_kml'];
+                        return L.marker(latlng, { icon: crearIconoDiv(config) });
+                    }
+                });
+            }
+
+            // ==========================================
+            // 5. CONTROL DE FILTROS EN LA UI (Sin Cambios)
+            // ==========================================
+
+            // ==========================================
+            // PANEL FLOTANTE DEL MARCADOR
+            // ==========================================
+            var panel = document.getElementById('custom-marker-panel');
+            var btnCerrarPanel = document.getElementById('close-marker-panel');
+
+            window.cerrarPanelMarcador = function () {
+                if (panel) {
+                    panel.classList.remove('panel-visible');
+                }
+            };
+
+            if (btnCerrarPanel) {
+                btnCerrarPanel.addEventListener('click', window.cerrarPanelMarcador);
+            }
+
+            // Permitir cerrar con "swipe down" simulado en móvil (scroll hacia arriba al inicio)
+            var panelScroll = document.querySelector('.panel-content-scroll');
+            if (panelScroll) {
+                var startY;
+                panel.addEventListener('touchstart', function (e) {
+                    if (panelScroll.scrollTop === 0) {
+                        startY = e.touches[0].clientY;
+                    }
+                }, { passive: true });
+                panel.addEventListener('touchmove', function (e) {
+                    if (startY && panelScroll.scrollTop === 0) {
+                        var currentY = e.touches[0].clientY;
+                        if (currentY - startY > 50) { // Si desliza más de 50px hacia abajo
+                            window.cerrarPanelMarcador();
+                            startY = null;
+                        }
+                    }
+                }, { passive: true });
+                panel.addEventListener('touchend', function () {
+                    startY = null;
+                });
+            }
+
+            window.abrirPanelMarcador = function (datos) {
+                if (!panel) return;
+
+                // Título y categoría
+                var titulo = datos.nombre;
+                if (datos.categoria_sistema === 'ofrenda' && datos.ofrenda_anfitrion) {
+                    titulo = 'Dedicada a: ' + datos.ofrenda_anfitrion;
+                }
+                document.getElementById('marker-panel-title').innerText = titulo;
+                document.getElementById('marker-panel-category').innerText = datos.categoria;
+
+                // Imagen de portada
+                var divCover = document.getElementById('marker-panel-cover');
+                if (datos.imagen) {
+                    divCover.style.backgroundImage = "url('" + datos.imagen + "')";
+                    divCover.style.display = "block";
+                } else {
+                    divCover.style.display = "none";
+                }
+
+                // Horario
+                var divTime = document.getElementById('marker-panel-time');
+                if (datos.horario) {
+                    divTime.innerHTML = "🕒 " + datos.horario;
+                    divTime.style.display = "block";
+                } else {
+                    divTime.style.display = "none";
+                }
+
+                // Descripción (para ofrendas no la repetimos si ya aparece como título)
+                var pDesc = document.getElementById('marker-panel-description');
+                var esOfrenda = datos.categoria_sistema === 'ofrenda' && datos.ofrenda_anfitrion;
+                if (datos.descripcion && !esOfrenda) {
+                    pDesc.innerText = datos.descripcion;
+                    pDesc.style.display = "block";
+                } else {
+                    pDesc.style.display = "none";
+                }
+
+                // Galería multimedia
+                var divGaleria = document.getElementById('marker-panel-galeria');
+                var divGrid = document.getElementById('marker-panel-galeria-grid');
+                divGrid.innerHTML = '';
+                if (datos.galeria && datos.galeria.length > 0) {
+                    datos.galeria.forEach(function (item) {
+                        if (item.tipo === 'imagen') {
+                            var img = document.createElement('img');
+                            img.src = item.url;
+                            img.alt = 'Foto';
+                            img.style.cssText = 'width:100%;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;';
+                            img.onclick = function () { window.open(item.url, '_blank'); };
+                            divGrid.appendChild(img);
+                        } else if (item.tipo === 'video') {
+                            var a = document.createElement('a');
+                            a.href = item.url;
+                            a.target = '_blank';
+                            a.innerHTML = '<div style="width:100%;height:90px;background:#000;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-play-circle" style="color:#fff;font-size:2rem;"></i></div>';
+                            divGrid.appendChild(a);
+                        }
+                    });
+                    divGaleria.style.display = 'block';
+                } else {
+                    divGaleria.style.display = 'none';
+                }
+
+                // Tiempo de caminata
+                var divWalk = document.getElementById('marker-panel-walk-time');
+                divWalk.innerHTML = `<i class="fas fa-walking"></i> <strong>${datos.tiempoMinutos} min</strong> caminando aprox. (${datos.distanciaMetros}m)`;
+
+                // Limpiar instrucciones y mostrar botón
+                document.getElementById('marker-panel-instructions').innerHTML = '';
+                document.getElementById('marker-panel-actions').style.display = 'block';
+
+                var btnRoute = document.getElementById('marker-panel-route-btn');
+                btnRoute.onclick = function () {
+                    window.trazarRuta(datos.idCapa);
+                };
+
+                // Mostrar panel
+                panel.classList.add('panel-visible');
+            };
+
+        }); 
+
+        // ==========================================
+        // 6. SISTEMA DE RUTAS Y SIMULADOR
+        // ==========================================
+        window._controlRutaActual = null;
+        window._simulacionInterval = null;
+        window._marcadorUsuario = null;
+        window._lineaRestante = null;
+        window._lineaRecorrida = null;
+
+        const latitudSimulada = 18.768500;
+        const longitudSimulada = -98.543200;
+
+        /*
+        // ==========================================
+        // MODO PRODUCCIÓN: GPS REAL CON FALLO SILENCIOSO
+        // Descomenta esto cuando el sitio tenga HTTPS y esté listo
+        // ==========================================
+        window.obtenerPuntoDePartida = function(callbackExito) {
+            if (!navigator.geolocation) {
+                // Si el navegador es muy antiguo, solo mostramos el mapa
+                return; 
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(posicion) {
+                    var ubicacionReal = L.latLng(posicion.coords.latitude, posicion.coords.longitude);
+
+                    // Verificamos si está en Huaquechula (usando tus limitesMapa ya definidos)
+                    if (limitesMapa.contains(ubicacionReal)) {
+                        callbackExito(ubicacionReal);
+                    } else {
+                        // Si está fuera de la zona, avisamos pero dejamos ver el mapa
+                        alert("Navegación limitada: Te encuentras fuera de la zona de recorridos de Huaquechula.");
+                        // Opcionalmente centramos el mapa en el pueblo
+                        window._leaflet_map_instance.setView([18.769895, -98.544040], 16);
+                    }
+                },
+                function(error) {
+                    // Si el usuario deniega el permiso (error.PERMISSION_DENIED)
+                    // o hay un fallo de señal, no mostramos alertas.
+                    // El mapa simplemente se queda donde está, permitiendo exploración manual.
+                    
+                    console.warn("Acceso a ubicación denegado o no disponible. Modo exploración manual activado.");
+                    
+                    // Aseguramos que el mapa esté en el centro de Huaquechula por defecto
+                    window._leaflet_map_instance.setView([18.769895, -98.544040], 16);
+                },
+                { 
+                    enableHighAccuracy: true, // Mayor precisión para rutas peatonales
+                    timeout: 8000,            // Esperar 8 segundos antes de desistir
+                    maximumAge: 0             // No usar ubicaciones guardadas viejas
+                }
+            );
+        };
+        */
+
+        window.ocultarOtrosMarcadoresPorId = function (idCapaTarget) {
+            if (!window._leaflet_map_instance) return;
+            window.todosLosMarcadores.forEach(function (m) {
+                if (m.id !== idCapaTarget && window._leaflet_map_instance.hasLayer(m.layer)) {
+                    window._leaflet_map_instance.removeLayer(m.layer);
+                }
+            });
+        };
+
+        window.mostrarTodosLosMarcadores = function () {
+            if (!window._leaflet_map_instance) return;
+            window.todosLosMarcadores.forEach(function (m) {
+                if (!window._leaflet_map_instance.hasLayer(m.layer)) {
+                    window._leaflet_map_instance.addLayer(m.layer);
+                }
+            });
+            if (window.aplicarFiltros) window.aplicarFiltros();
+        };
+
+        /*
+        window.trazarRuta = function (idCapaDestino) {
+            if (typeof L.Routing === 'undefined') return;
+
+            var marcadorDestino = window.todosLosMarcadores.find(m => m.id === idCapaDestino);
+            if (!marcadorDestino) return;
+
+            // En lugar de usar el punto simulado directamente, llamamos a la función del GPS
+            window.obtenerPuntoDePartida(function(puntoOrigenReal) {
+                
+                var destinoDinamico = window.obtenerPuntoMasCercanoDeCapa(marcadorDestino.layer, puntoOrigenReal);
+                window.ocultarOtrosMarcadoresPorId(idCapaDestino);
+
+                // ... (El resto de tu limpieza de ruta, _simulacionInterval, etc. va aquí adentro exactamente igual) ...
+
+                window._controlRutaActual = L.Routing.control({
+                    waypoints: [puntoOrigenReal, destinoDinamico], // Usamos el punto real
+                    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1', profile: 'walking', language: 'es' }),
+                    // ...
+                }).addTo(window._leaflet_map_instance);
+
+            }); // <-- Fin del callback del GPS
+        };
+        */
+
+        window.trazarRuta = function (idCapaDestino) {
+            if (typeof L.Routing === 'undefined') return;
+
+            var marcadorDestino = window.todosLosMarcadores.find(m => m.id === idCapaDestino);
+            if (!marcadorDestino) return;
+
+            var puntoOrigen = L.latLng(latitudSimulada, longitudSimulada);
+            var destinoDinamico = window.obtenerPuntoMasCercanoDeCapa(marcadorDestino.layer, puntoOrigen);
+
+            window.ocultarOtrosMarcadoresPorId(idCapaDestino);
+
+            // Limpieza total antes de iniciar nueva prueba
+            if (window._controlRutaActual) window._leaflet_map_instance.removeControl(window._controlRutaActual);
+            if (window._simulacionInterval) clearInterval(window._simulacionInterval);
+            if (window._marcadorUsuario) window._leaflet_map_instance.removeLayer(window._marcadorUsuario);
+            if (window._lineaRestante) window._leaflet_map_instance.removeLayer(window._lineaRestante);
+            if (window._lineaRecorrida) window._leaflet_map_instance.removeLayer(window._lineaRecorrida);
+
+            window._controlRutaActual = L.Routing.control({
+                waypoints: [puntoOrigen, destinoDinamico],
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1', profile: 'walking', language: 'es' }),
+                show: false, // Se mantiene en false
+                addWaypoints: false,
+                lineOptions: { styles: [{ opacity: 0 }] }, // Línea original invisible
+                createMarker: function () { return null; }
+            }).addTo(window._leaflet_map_instance);
+
+            window._controlRutaActual.on('routesfound', function (e) {
+                var ruta = e.routes[0];
+                var coordenadasLinea = ruta.coordinates;
+                var pasos = ruta.instructions;
+
+                window._lineaRecorrida = L.polyline([], { color: '#6c757d', weight: 6, opacity: 0.6, dashArray: '5, 10' }).addTo(window._leaflet_map_instance);
+                window._lineaRestante = L.polyline(coordenadasLinea, { color: '#0000FF', weight: 6, opacity: 0.8 }).addTo(window._leaflet_map_instance);
+
+                var iconoPeaton = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color:#343a40; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5);"><i class="fas fa-street-view"></i></div>`,
+                    iconSize: [26, 26], iconAnchor: [13, 13]
+                });
+
+                window._marcadorUsuario = L.marker(coordenadasLinea[0], { icon: iconoPeaton, zIndexOffset: 1000 }).addTo(window._leaflet_map_instance);
+
+                var indiceActual = 0;
+
+                function actualizarInterfaz() {
+                    var posActual = coordenadasLinea[indiceActual];
+                    var tramoCaminado = coordenadasLinea.slice(0, indiceActual + 1);
+                    var tramoFaltante = coordenadasLinea.slice(indiceActual);
+
+                    window._lineaRecorrida.setLatLngs(tramoCaminado);
+                    window._lineaRestante.setLatLngs(tramoFaltante);
+
+                    var distRestante = posActual.distanceTo(destinoDinamico);
+                    var tiempoRestante = Math.max(1, Math.round(distRestante / 83));
+
+                    var htmlInstrucciones = `<div style="text-align:left; margin-top:15px; font-size:13px; border-top:2px solid var(--color-arena-oscuro); padding-top:15px;">`;
+                    htmlInstrucciones += `<strong style="font-size:15px; color:var(--color-gris-oscuro);"><i class="fas fa-walking"></i> Faltan: ${distRestante.toFixed(0)}m (${tiempoRestante} min)</strong><br><br>`;
+
+                    pasos.forEach(function (p, i) {
+                        let texto = p.text;
+                        if (texto.toLowerCase().includes("destino")) texto = "Has llegado. El punto de interés estará cerca.";
+                        htmlInstrucciones += `<div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:5px; color:#555;">${i + 1}. ${texto}</div>`;
+                    });
+                    htmlInstrucciones += `</div>`;
+
+                    // Inyectamos las instrucciones en el panel flotante
+                    document.getElementById('marker-panel-instructions').innerHTML = htmlInstrucciones;
+                    document.getElementById('marker-panel-actions').style.display = 'none'; // Ocultar el boton de Iniciar Ruta
+
+                    // Asegurarse de que el panel está visible en escritorio, en móvil opcionalmente cerrarlo o dejarlo
+                    var panelActivo = document.getElementById('custom-marker-panel');
+                    if (panelActivo && !panelActivo.classList.contains('panel-visible') && window.innerWidth > 768) {
+                        panelActivo.classList.add('panel-visible');
+                    }
+                }
+
+                actualizarInterfaz();
+
+                window._simulacionInterval = setInterval(function () {
+                    indiceActual += 2;
+
+                    // Verificación de fin de trayecto mejorada
+                    if (indiceActual >= coordenadasLinea.length - 1) {
+                        clearInterval(window._simulacionInterval);
+                        indiceActual = coordenadasLinea.length - 1; // Forzamos al último punto exacto
+
+                        window._marcadorUsuario.setLatLng(coordenadasLinea[indiceActual]);
+                        actualizarInterfaz();
+
+                        // Ejecutamos la limpieza y el aviso
+                        setTimeout(function () {
+                            alert("¡Has llegado al destino!");
+                            window.mostrarTodosLosMarcadores();
+
+                            // Limpieza de capas de simulación
+                            window._leaflet_map_instance.removeControl(window._controlRutaActual);
+                            window._leaflet_map_instance.removeLayer(window._marcadorUsuario);
+                            window._leaflet_map_instance.removeLayer(window._lineaRestante);
+                            window._leaflet_map_instance.removeLayer(window._lineaRecorrida);
+
+                            window._controlRutaActual = window._marcadorUsuario = window._lineaRestante = window._lineaRecorrida = null;
+
+                            document.getElementById('marker-panel-instructions').innerHTML = '';
+                            document.getElementById('marker-panel-actions').style.display = 'block';
+                        }, 1000);
+                    } else {
+                        window._marcadorUsuario.setLatLng(coordenadasLinea[indiceActual]);
+                        actualizarInterfaz();
+                    }
+                }, 300);
+            });
+        };
+
+        // ==========================================
+        // 7. FUNCIÓN: IR AL PUNTO MÁS CERCANO (Actualizada para Polígonos)
+        // ==========================================
+        window.irAlPuntoMasCercano = function () {
+            if (!window.todosLosMarcadores || window.todosLosMarcadores.length === 0) {
+                alert("Aún no hay puntos cargados en el mapa.");
+                return;
+            }
+
+            var miUbicacion = L.latLng(latitudSimulada, longitudSimulada);
+            var distanciaMinima = Infinity;
+            var idMarcadorMasCercano = null;
+            var posicionDestinoFinal = null;
+
+            window.todosLosMarcadores.forEach(function (m) {
+                if (window._leaflet_map_instance.hasLayer(m.layer)) {
+                    // Buscamos el borde del polígono o punto más cercano
+                    var posDestino = window.obtenerPuntoMasCercanoDeCapa(m.layer, miUbicacion);
+
+                    if (posDestino) {
+                        var distanciaMetros = miUbicacion.distanceTo(posDestino);
+                        if (distanciaMetros < distanciaMinima) {
+                            distanciaMinima = distanciaMetros;
+                            idMarcadorMasCercano = m.id;
+                            posicionDestinoFinal = posDestino;
+                        }
+                    }
+                }
+            });
+
+            if (idMarcadorMasCercano) {
+                alert("El punto más cercano está a " + Math.round(distanciaMinima) + " metros. Calculando ruta...");
+                window._leaflet_map_instance.setView(posicionDestinoFinal, 17);
+                window.trazarRuta(idMarcadorMasCercano);
+            } else {
+                alert("No se encontraron puntos visibles cerca.");
+            }
+        };
+    }
+
+</script>
+
+
+<script>
+// @ts-nocheck
+// =====================================================
+// SISTEMA DE RESEÑAS GLOBALES — inline
+// =====================================================
+(function () {
+    'use strict';
+
+    var ETIQUETAS = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', '¡Excelente!'];
+    var COLORES = ['#e91e63','#9c27b0','#3f51b5','#2196f3','#00bcd4','#009688','#4caf50','#ff9800','#795548','#607d8b'];
+
+    function colorAvatar(n) {
+        var h = 0;
+        for (var i = 0; i < (n||'').length; i++) h = n.charCodeAt(i) + ((h<<5)-h);
+        return COLORES[Math.abs(h) % COLORES.length];
+    }
+    function iniciales(n) {
+        var p = (n||'V').trim().split(/\s+/);
+        return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0]+p[p.length-1][0]).toUpperCase();
+    }
+    function stars(n) { return '★'.repeat(n)+'☆'.repeat(5-n); }
+    function esc(s) {
+        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function getCsrf() {
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+    function toast(msg, ico) {
+        var t = document.getElementById('resena-toast');
+        if (!t) { t = document.createElement('div'); t.id='resena-toast'; document.body.appendChild(t); }
+        t.innerHTML = '<i class="fas fa-'+(ico||'check-circle')+'"></i> '+msg;
+        t.style.display = 'flex';
+        clearTimeout(t._to);
+        t._to = setTimeout(function(){ t.style.display='none'; }, 3200);
+    }
+
+    /* ---- Estado ---- */
+    var cal = 0;
+
+    /* ---- Referencias DOM ---- */
+    var panelR, fabR, btnCerrarP, btnDejar;
+    var modalOv, btnCerrarM, btnEnviar;
+    var inputNick, inputCom, charEl, labelStar;
+    var errEl, starsEl;
+    var feed, prNum, prEst, prTot;
+    var bars = {};
+
+    /* ---- Panel ---- */
+    function abrirPanel() {
+        if (!panelR) return;
+        panelR.classList.add('pr-visible');
+        cargarResenas();
+    }
+    function cerrarPanel() { if (panelR) panelR.classList.remove('pr-visible'); }
+
+    /* ---- Modal ---- */
+    function abrirModal() {
+        resetModal();
+        if (modalOv) modalOv.classList.add('modal-visible');
+        if (inputNick) inputNick.focus();
+        if (window.grecaptcha) { try { grecaptcha.reset(); } catch(e){} }
+    }
+    function cerrarModal() { if (modalOv) modalOv.classList.remove('modal-visible'); }
+    function resetModal() {
+        cal = 0;
+        if (starsEl) starsEl.forEach(function(s){ s.classList.remove('selected','hover'); });
+        if (labelStar) { labelStar.textContent='Selecciona una calificación'; labelStar.classList.remove('filled'); }
+        if (inputNick) inputNick.value='';
+        if (inputCom)  inputCom.value='';
+        if (charEl)    charEl.textContent='0';
+        if (errEl)     errEl.style.display='none';
+        if (btnEnviar) { btnEnviar.disabled=false; btnEnviar.classList.remove('enviando'); btnEnviar.innerHTML='<i class="fas fa-paper-plane"></i> Enviar reseña'; }
+    }
+
+    /* ---- Estrellas picker ---- */
+    function initStars() {
+        if (!starsEl || !starsEl.length) return;
+        starsEl.forEach(function(s, idx) {
+            s.addEventListener('mouseenter', function(){
+                starsEl.forEach(function(x,i){ x.classList.toggle('hover', i<=idx); });
+            });
+            s.addEventListener('mouseleave', function(){
+                starsEl.forEach(function(x,i){ x.classList.remove('hover'); x.classList.toggle('selected', i<cal); });
+            });
+            s.addEventListener('click', function(){
+                cal = idx+1;
+                starsEl.forEach(function(x,i){ x.classList.toggle('selected', i<cal); });
+                if (labelStar) { labelStar.textContent=ETIQUETAS[cal]; labelStar.classList.add('filled'); }
+            });
+        });
+    }
+
+    /* ---- API ---- */
+    function cargarResenas() {
+        if (feed) feed.innerHTML='<div class="pr-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando reseñas...</div>';
+        fetch('/api/resenas/', { headers: {'X-Requested-With':'XMLHttpRequest'} })
+            .then(function(r){ return r.json(); })
+            .then(function(d){ renderStats(d); renderFeed(d.resenas); })
+            .catch(function(){ if(feed) feed.innerHTML='<div class="pr-empty"><i class="fas fa-wifi"></i> No se pudieron cargar.</div>'; });
+    }
+    function renderStats(d) {
+        if (prNum) prNum.textContent = d.total>0 ? d.promedio : '—';
+        if (prEst) prEst.textContent = d.total>0 ? stars(Math.round(d.promedio)) : '☆☆☆☆☆';
+        if (prTot) prTot.textContent = d.total>0 ? d.total+' reseña'+(d.total!==1?'s':'') : 'Sin reseñas aún';
+        [5,4,3,2,1].forEach(function(n){
+            var b=bars[n]; if(!b) return;
+            b.style.width = (d.total>0 ? Math.round((d.distribucion[String(n)]/d.total)*100) : 0)+'%';
+        });
+    }
+    function renderFeed(rs) {
+        if (!feed) return;
+        if (!rs || !rs.length) { feed.innerHTML='<div class="pr-empty"><i class="fas fa-star"></i> Sé el primero en opinar sobre Huaquechula.</div>'; return; }
+        feed.innerHTML='';
+        rs.forEach(function(r){ insertCard(r, false); });
+    }
+    function insertCard(r, top) {
+        if (!feed) return;
+        var color=colorAvatar(r.autor), inic=iniciales(r.autor);
+        var card=document.createElement('div');
+        card.className='resena-card'; card.id='rc-'+r.id;
+        card.innerHTML=
+            '<div class="resena-avatar" style="background:'+color+';">'+inic+'</div>'+
+            '<div class="resena-content">'+
+              '<div class="resena-top"><span class="resena-autor" title="'+esc(r.autor)+'">'+esc(r.autor)+'</span>'+
+              '<span class="resena-fecha">'+esc(r.fecha)+'</span></div>'+
+              '<div class="resena-stars">'+stars(r.calificacion)+'</div>'+
+              (r.comentario?'<p class="resena-texto">'+esc(r.comentario)+'</p>':'')+
+              '<div class="resena-actions">'+
+                '<button class="resena-btn-like" data-id="'+r.id+'"><i class="fas fa-heart"></i> <span class="lk">'+r.likes+'</span></button>'+
+                '<button class="resena-btn-report" data-id="'+r.id+'"><i class="fas fa-flag"></i> Reportar</button>'+
+              '</div></div>';
+        card.querySelector('.resena-btn-like').addEventListener('click', function(){ darLike(r.id, this); });
+        card.querySelector('.resena-btn-report').addEventListener('click', function(){ reportar(r.id); });
+        if (top && feed.firstChild) feed.insertBefore(card, feed.firstChild);
+        else feed.appendChild(card);
+    }
+    function darLike(id, btn) {
+        fetch('/api/resenas/'+id+'/like/', { method:'POST', headers:{'X-CSRFToken':getCsrf(),'X-Requested-With':'XMLHttpRequest'} })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(d.ok){ var el=btn.querySelector('.lk'); if(el) el.textContent=d.likes; btn.style.color='#e91e63'; btn.disabled=true; } })
+        .catch(function(){});
+    }
+    function reportar(id) {
+        if(!confirm('¿Reportar esta reseña?')) return;
+        fetch('/api/resenas/'+id+'/reportar/', { method:'POST', headers:{'X-CSRFToken':getCsrf(),'X-Requested-With':'XMLHttpRequest'} })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(d.ok) toast('Reseña reportada. Gracias.','flag'); })
+        .catch(function(){});
+    }
+    function enviar() {
+        var nick=(inputNick?inputNick.value.trim():'');
+        var com=(inputCom?inputCom.value.trim():'');
+        if(!nick){ mostrarErr('Ingresa tu apodo.'); return; }
+        if(!cal){ mostrarErr('Selecciona una calificación.'); return; }
+        var token='';
+        if(window.grecaptcha){ try{ token=grecaptcha.getResponse(); }catch(e){} }
+        if(!token){ mostrarErr('Completa el reCAPTCHA.'); return; }
+        if(btnEnviar){ btnEnviar.disabled=true; btnEnviar.classList.add('enviando'); btnEnviar.innerHTML='Enviando...'; }
+        if(errEl) errEl.style.display='none';
+        fetch('/api/resenas/', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf(),'X-Requested-With':'XMLHttpRequest'},
+            body:JSON.stringify({nombre_visitante:nick, calificacion:cal, comentario:com, recaptcha_token:token})
+        })
+        .then(function(r){ return r.json().then(function(d){ return {s:r.status, d:d}; }); })
+        .then(function(res){
+            if(res.s===201 && res.d.ok){
+                cerrarModal(); insertCard(res.d.resena, true); cargarResenas(); toast('¡Gracias por tu reseña! 🌟','star');
+            } else {
+                mostrarErr(res.d.error||'Ocurrió un error.'); if(window.grecaptcha){ try{grecaptcha.reset();}catch(e){} }
+                if(btnEnviar){ btnEnviar.disabled=false; btnEnviar.classList.remove('enviando'); btnEnviar.innerHTML='<i class="fas fa-paper-plane"></i> Enviar reseña'; }
+            }
+        })
+        .catch(function(){
+            mostrarErr('Sin conexión. Verifica tu internet.');
+            if(btnEnviar){ btnEnviar.disabled=false; btnEnviar.classList.remove('enviando'); btnEnviar.innerHTML='<i class="fas fa-paper-plane"></i> Enviar reseña'; }
+        });
+    }
+    function mostrarErr(m) { if(errEl){ errEl.textContent=m; errEl.style.display='block'; } }
+
+    /* ---- Init ---- */
+    function init() {
+        panelR   = document.getElementById('panel-resenas');
+        fabR     = document.getElementById('fab-resenas');
+        btnCerrarP = document.getElementById('btn-cerrar-resenas');
+        btnDejar   = document.getElementById('btn-dejar-resena');
+        modalOv    = document.getElementById('modal-resena-overlay');
+        btnCerrarM = document.getElementById('btn-cerrar-modal');
+        btnEnviar  = document.getElementById('btn-enviar-resena');
+        inputNick  = document.getElementById('resena-nickname');
+        inputCom   = document.getElementById('resena-comentario');
+        charEl     = document.getElementById('char-count');
+        labelStar  = document.getElementById('star-pick-label');
+        errEl      = document.getElementById('resena-error');
+        starsEl    = Array.from(document.querySelectorAll('.star-pick'));
+        feed       = document.getElementById('pr-feed');
+        prNum      = document.getElementById('pr-score-num');
+        prEst      = document.getElementById('pr-estrellas-prom');
+        prTot      = document.getElementById('pr-total');
+        bars = {5:document.getElementById('bar5'),4:document.getElementById('bar4'),
+                3:document.getElementById('bar3'),2:document.getElementById('bar2'),1:document.getElementById('bar1')};
+
+        if (!fabR) { console.warn('RESEÑAS: #fab-resenas no encontrado'); return; }
+
+        initStars();
+
+        if (inputCom && charEl) {
+            inputCom.addEventListener('input', function(){ charEl.textContent=this.value.length; });
+        }
+
+        fabR.addEventListener('click', abrirPanel);
+        if (btnCerrarP) btnCerrarP.addEventListener('click', cerrarPanel);
+        if (btnDejar)   btnDejar.addEventListener('click', abrirModal);
+        if (btnCerrarM) btnCerrarM.addEventListener('click', cerrarModal);
+        if (modalOv)    modalOv.addEventListener('click', function(e){ if(e.target===modalOv) cerrarModal(); });
+        if (btnEnviar)  btnEnviar.addEventListener('click', enviar);
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ cerrarModal(); cerrarPanel(); } });
+    }
+
+    /* Manejo robusto del timing:
+       extra_html se renderiza DESPUÉS de extra_js, por lo que al ejecutarse este script,
+       los elementos del panel aún no están en el DOM. DOMContentLoaded sí los tendrá. */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        // DOM ya cargado (no debería ocurrir aquí, pero por si acaso)
+        init();
+    }
+
+})();
+</script>
+{% endblock %}

@@ -68,7 +68,7 @@ article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
 }
 
 .header .overlay .title {
-    font-size: clamp(30px, 6vw, 70px);
+    font-size: clamp(30px, 6vw, 70px) !important;
     font-weight: bold;
     color: white;
 }
@@ -144,7 +144,7 @@ article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 100px;
+    bottom: 150px;
     margin: auto;
 }
 
@@ -348,9 +348,9 @@ footer {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 120px;  
-    height: 120px;
-    background-color: var(--color-arena-claro);  
-    border-radius: 50%;
+    height: 90px;
+    background-color: #ffffff;  
+    border-radius: 20px;
     z-index: -1;
     transition: opacity 0.3s ease;
 }
@@ -651,4 +651,20 @@ footer {
     color: var(--color-gris-oscuro) !important;
     border-color: transparent !important;
     transform: translateX(8px);
+}
+
+/* ========================================
+   DIALOGFLOW MESSENGER — Estilo del sistema
+   ======================================== */
+df-messenger {
+    --df-messenger-button-titlebar-color: var(--color-gris-oscuro);
+    --df-messenger-button-titlebar-font-color: white;
+    --df-messenger-chat-background-color: var(--color-arena-claro);
+    --df-messenger-font-color: var(--color-gris-oscuro);
+    --df-messenger-send-icon: var(--color-gris-oscuro);
+    --df-messenger-user-message: var(--color-arena-oscuro);
+    --df-messenger-user-message-font-color: var(--color-gris-oscuro);
+    --df-messenger-bot-message: white;
+    --df-messenger-bot-message-font-color: var(--color-gris-oscuro);
+    z-index: 99999;
 }
