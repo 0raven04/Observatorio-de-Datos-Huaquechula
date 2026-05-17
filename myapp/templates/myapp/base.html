@@ -53,6 +53,7 @@
                             <ul class="submenu">
                                 {% if user.is_authenticated %}
                                     <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
+                                    <li><a class="nav-link submenu-item" href="{% url 'lista_registros' %}">Lista de Visitas</a></li>
                                     <li><form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="nav-link submenu-item" style="border:none; background:none; width:100%; text-align:left;">Cerrar sesión</button></form></li>
                                 {% else %}
                                     <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
@@ -79,6 +80,7 @@
                         <ul class="submenu">
                             {% if user.is_authenticated %}
                                 <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
+                                <li><a class="nav-link submenu-item" href="{% url 'lista_registros' %}">Lista de Visitas</a></li>
                                 <li>
                                     <form action="{% url 'logout' %}" method="post" id="logout-form">
                                         {% csrf_token %}
