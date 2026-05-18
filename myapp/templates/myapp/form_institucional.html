@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encuesta: Residente Local</title>
+    <title>Encuesta: Institucional</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,14 +12,14 @@
 
     <style>
         :root {
-            --residente-primary: #27ae60;
-            --residente-dark: #1e8449;
-            --residente-light: rgba(39, 174, 96, 0.08);
-            --residente-gradient: linear-gradient(135deg, #27ae60 0%, #1a5276 100%);
+            --institucional-primary: #e67e22;
+            --institucional-dark: #d35400;
+            --institucional-light: rgba(230, 126, 34, 0.08);
+            --institucional-gradient: linear-gradient(135deg, #e67e22 0%, #c0392b 100%);
             --tradicion-color: #8e44ad;
             --tradicion-light: rgba(142, 68, 173, 0.08);
-            --tbc-color: #e67e22;
-            --tbc-light: rgba(230, 126, 34, 0.08);
+            --tbc-color: #f39c12;
+            --tbc-light: rgba(243, 156, 18, 0.08);
         }
 
         body {
@@ -28,8 +28,8 @@
             color: #2c3e50;
         }
 
-        .residente-navbar {
-            background: var(--residente-gradient);
+        .institucional-navbar {
+            background: var(--institucional-gradient);
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
 
@@ -61,7 +61,7 @@
         .progress-pill.active-tbc {
             background: var(--tbc-light);
             color: var(--tbc-color);
-            border: 1px solid rgba(230, 126, 34, 0.2);
+            border: 1px solid rgba(243, 156, 18, 0.2);
         }
 
         /* Card */
@@ -139,7 +139,7 @@
         .q-number.tradicion { background: var(--tradicion-light); color: var(--tradicion-color); }
         .q-number.tbc { background: var(--tbc-light); color: var(--tbc-color); }
 
-        /* Radio Options */
+        /* Radio and Checkbox Options */
         .radio-option-list {
             display: flex;
             flex-direction: column;
@@ -158,27 +158,29 @@
             transition: all 0.2s ease;
         }
         .radio-option:hover {
-            border-color: var(--residente-primary);
-            background: rgba(39, 174, 96, 0.03);
+            border-color: var(--institucional-primary);
+            background: rgba(230, 126, 34, 0.03);
         }
 
-        .radio-option input[type="radio"] {
+        .radio-option input[type="radio"],
+        .radio-option input[type="checkbox"] {
             margin-top: 3px;
-            accent-color: var(--residente-primary);
+            accent-color: var(--institucional-primary);
             width: 18px;
             height: 18px;
             flex-shrink: 0;
         }
 
-        .radio-option input[type="radio"]:checked + label {
+        .radio-option input[type="radio"]:checked + label,
+        .radio-option input[type="checkbox"]:checked + label {
             color: #2c3e50;
             font-weight: 600;
         }
 
         .radio-option:has(input:checked) {
-            border-color: var(--residente-primary);
-            background: var(--residente-light);
-            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.1);
+            border-color: var(--institucional-primary);
+            background: var(--institucional-light);
+            box-shadow: 0 2px 8px rgba(230, 126, 34, 0.1);
         }
 
         .radio-option label {
@@ -189,8 +191,8 @@
         }
 
         /* Submit */
-        .btn-residente {
-            background: var(--residente-gradient);
+        .btn-institucional {
+            background: var(--institucional-gradient);
             color: white;
             border: none;
             padding: 12px 32px;
@@ -198,11 +200,11 @@
             font-weight: 700;
             font-size: 0.95rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
         }
-        .btn-residente:hover {
+        .btn-institucional:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
             color: white;
         }
 
@@ -214,10 +216,10 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar sticky-top residente-navbar">
+    <nav class="navbar sticky-top institucional-navbar">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'encuestador_dashboard' %}">
-                <h2 class="text-white mb-0" style="font-size: 1.25rem;"><i class="fas fa-arrow-left me-2"></i>Encuesta: Residente Local</h2>
+                <h2 class="text-white mb-0" style="font-size: 1.25rem;"><i class="fas fa-arrow-left me-2"></i>Encuesta: Institucional</h2>
             </a>
             <span class="text-white-50" style="font-size: 0.8rem;"><i class="fas fa-home me-1"></i>Observatorio Huaquechula</span>
         </div>
@@ -237,56 +239,8 @@
 
         <div class="form-card">
             <div class="p-4 p-md-5">
-                <form method="POST" id="residenteForm">
+                <form method="POST" id="institucionalForm">
                     {% csrf_token %}
-
-                    <!-- Datos demográficos -->
-                    <div class="section-header tradicion">
-                        <div class="section-icon tradicion"><i class="fas fa-user-circle"></i></div>
-                        <div>
-                            <div class="section-tag tradicion">Datos del encuestado</div>
-                            <h4>Información General</h4>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold" style="font-size: 0.85rem;">Edad</label>
-                            {{ form.edad }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold" style="font-size: 0.85rem;">Género</label>
-                            {{ form.genero }}
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label fw-bold" style="font-size: 0.85rem;">Barrio / Colonia</label>
-                            <div style="display: none;">
-                                {{ form.barrio_colonia }}
-                            </div>
-                            <select id="select_barrio_colonia" class="form-select">
-                                <option value="">--- Selecciona un Barrio / Colonia ---</option>
-                                <option value="15 de Agosto">15 de Agosto</option>
-                                <option value="Ampliación Cacaloxúchitl">Ampliación Cacaloxúchitl</option>
-                                <option value="Ampliación San Juan Bautista">Ampliación San Juan Bautista</option>
-                                <option value="Barrio de Guadalupe">Barrio de Guadalupe</option>
-                                <option value="Bugambilias">Bugambilias</option>
-                                <option value="Colonia del Fresnillo">Colonia del Fresnillo</option>
-                                <option value="El Esfuerzo">El Esfuerzo</option>
-                                <option value="El Progreso">El Progreso</option>
-                                <option value="Emiliano Zapata (Colonia San Miguel)">Emiliano Zapata (Colonia San Miguel)</option>
-                                <option value="Jardines de Morelos">Jardines de Morelos</option>
-                                <option value="La Junta (Huaquechula Dos)">La Junta (Huaquechula Dos)</option>
-                                <option value="La Libertad (San Lorenzo Tajonar)">La Libertad (San Lorenzo Tajonar)</option>
-                                <option value="Las Bugambilias">Las Bugambilias</option>
-                                <option value="Las Flores">Las Flores</option>
-                                <option value="Mártir Cuauhtémoc (San José Cuauhtémoc)">Mártir Cuauhtémoc (San José Cuauhtémoc)</option>
-                                <option value="Otro">Otro (Especificar)</option>
-                            </select>
-                            <input type="text" id="manual_barrio_colonia" class="form-control mt-2 d-none" placeholder="Escribe el barrio o colonia...">
-                        </div>
-                    </div>
-
-                    <hr class="my-4" style="border-color: #e8ecf1;">
 
                     <!-- ═══════════════════════════════════════════════ -->
                     <!-- BLOQUE A: Tradición y Patrimonio               -->
@@ -298,18 +252,15 @@
                             <h4>Eje de Tradición y Patrimonio</h4>
                         </div>
                     </div>
-                    <p class="text-muted mb-4" style="font-size: 0.82rem;">
-                        Este bloque mide las tensiones y los esfuerzos de preservación de festividades como los Altares Monumentales de Día de Muertos o la Santa Cruz.
-                    </p>
 
                     <!-- P1 -->
                     <div class="question-block">
                         <div class="q-label">
                             <span class="q-number tradicion">1</span>
-                            Durante las principales festividades tradicionales del municipio, ¿qué tanto considera que la afluencia de visitantes altera negativamente su rutina diaria (tráfico, ruido, aglomeraciones)?
+                            ¿Cuenta la administración municipal actual con registros, inventarios actualizados o indicadores formales para dar seguimiento periódico al estado de conservación del Patrimonio Cultural Inmaterial (PCI) del municipio?
                         </div>
                         <div class="radio-option-list">
-                            {% for radio in form.alteracion_rutina %}
+                            {% for radio in form.registro_pci %}
                             <div class="radio-option">
                                 {{ radio.tag }}
                                 <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
@@ -322,47 +273,27 @@
                     <div class="question-block">
                         <div class="q-label">
                             <span class="q-number tradicion">2</span>
-                            Durante las temporadas festivas, ¿cómo califica el acceso y la disponibilidad de los servicios públicos (agua potable, recolección de basura, seguridad, estacionamiento) para los que viven aquí?
+                            ¿Cuáles son los canales oficiales y mecanismos institucionales implementados en el último año para la difusión nacional e internacional del PCI de Huaquechula? (Seleccione todas las que apliquen)
                         </div>
                         <div class="radio-option-list">
-                            {% for radio in form.acceso_servicios_festividades %}
+                            {% for checkbox in form.canales_difusion %}
                             <div class="radio-option">
-                                {{ radio.tag }}
-                                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                {{ checkbox.tag }}
+                                <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
 
-                    <!-- P3 -->
+                    <!-- P3 (Nueva pregunta) -->
                     <div class="question-block">
                         <div class="q-label">
                             <span class="q-number tradicion">3</span>
-                            ¿Considera que la llegada del turismo ha provocado cambios que desvirtúan u alteran el significado religioso, cultural o simbólico original de nuestras tradiciones?
+                            Número de visitantes registrados al municipio durante la tradición (temporada de festividades)
                         </div>
-                        <div class="radio-option-list">
-                            {% for radio in form.desvirtuacion_tradicion %}
-                            <div class="radio-option">
-                                {{ radio.tag }}
-                                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- P4 -->
-                    <div class="question-block">
-                        <div class="q-label">
-                            <span class="q-number tradicion">4</span>
-                            ¿Participa usted de forma activa en actividades familiares o comunitarias de preservación, como la elaboración de artesanías, herencia de saberes de cocina tradicional o la instalación de los altares monumentales?
-                        </div>
-                        <div class="radio-option-list">
-                            {% for radio in form.participacion_preservacion %}
-                            <div class="radio-option">
-                                {{ radio.tag }}
-                                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                            </div>
-                            {% endfor %}
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-users"></i></span>
+                            {{ form.visitantes_tradicion }}
                         </div>
                     </div>
 
@@ -375,7 +306,23 @@
                         <div class="section-icon tbc"><i class="fas fa-hands-helping"></i></div>
                         <div>
                             <div class="section-tag tbc">Bloque B</div>
-                            <h4>Eje de Turismo de Base Comunitaria</h4>
+                            <h4>Eje de Turismo de Base Comunitaria (TBC)</h4>
+                        </div>
+                    </div>
+
+                    <!-- P4 -->
+                    <div class="question-block">
+                        <div class="q-label">
+                            <span class="q-number tbc">4</span>
+                            ¿Qué mecanismos normativos o reglamentos locales posee el ayuntamiento para regular el flujo turístico, evitar la saturación de los espacios públicos y proteger los derechos de los artesanos y portadores de identidad?
+                        </div>
+                        <div class="radio-option-list">
+                            {% for radio in form.mecanismos_regulacion %}
+                            <div class="radio-option">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
 
@@ -383,10 +330,10 @@
                     <div class="question-block">
                         <div class="q-label">
                             <span class="q-number tbc">5</span>
-                            ¿Ha participado o ha sido convocado a reuniones ejidales, vecinales o comités locales para decidir cómo debe gestionarse el turismo en su localidad?
+                            ¿Dispone el municipio de un Plan de Desarrollo Turístico Municipal u otras herramientas de gestión técnica que prioricen la participación social de las comunidades rurales anfitrionas?
                         </div>
                         <div class="radio-option-list">
-                            {% for radio in form.participacion_decisiones %}
+                            {% for radio in form.plan_desarrollo %}
                             <div class="radio-option">
                                 {{ radio.tag }}
                                 <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
@@ -399,10 +346,10 @@
                     <div class="question-block">
                         <div class="q-label">
                             <span class="q-number tbc">6</span>
-                            ¿Ha recibido capacitación, talleres o información clara por parte de instituciones locales acerca de cómo emprender o atender al turismo de manera responsable?
+                            ¿Qué porcentaje de las comunidades rurales con vocación turística del municipio (por ejemplo, Cacaloxúchitl o San Diego el Organal) están integradas activamente en los corredores o proyectos turísticos oficiales promovidos por el ayuntamiento?
                         </div>
                         <div class="radio-option-list">
-                            {% for radio in form.capacitacion_turistica %}
+                            {% for radio in form.porcentaje_comunidades %}
                             <div class="radio-option">
                                 {{ radio.tag }}
                                 <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
@@ -411,35 +358,15 @@
                         </div>
                     </div>
 
-                    <!-- P7 -->
+                    <!-- P7 (Nueva pregunta) -->
                     <div class="question-block">
                         <div class="q-label">
                             <span class="q-number tbc">7</span>
-                            ¿Su hogar percibe un beneficio económico o social directo derivado de algún proyecto o emprendimiento turístico local (venta de alimentos tradicionales, artesanías de barro policromado, ceras, etc.)?
+                            Número de visitantes registrados al municipio durante el año
                         </div>
-                        <div class="radio-option-list">
-                            {% for radio in form.beneficio_economico %}
-                            <div class="radio-option">
-                                {{ radio.tag }}
-                                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- P8 -->
-                    <div class="question-block">
-                        <div class="q-label">
-                            <span class="q-number tbc">8</span>
-                            En su hogar o entorno cercano, ¿las generaciones más jóvenes (niños y jóvenes) muestran interés y están aprendiendo activamente los saberes, técnicas y significados de nuestras tradiciones (como la elaboración de altares, artesanías o cocina tradicional)?
-                        </div>
-                        <div class="radio-option-list">
-                            {% for radio in form.interes_jovenes %}
-                            <div class="radio-option">
-                                {{ radio.tag }}
-                                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                            </div>
-                            {% endfor %}
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-calendar-alt"></i></span>
+                            {{ form.visitantes_ano }}
                         </div>
                     </div>
 
@@ -462,7 +389,7 @@
                         <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary px-4" style="border-radius: 10px;">
                             <i class="fas fa-times me-1"></i>Cancelar
                         </a>
-                        <button type="submit" class="btn btn-residente px-5">
+                        <button type="submit" class="btn btn-institucional px-5">
                             <i class="fas fa-paper-plane me-2"></i>Guardar Encuesta
                         </button>
                     </div>
@@ -485,29 +412,27 @@
                 });
                 // Highlight selected
                 const parent = this.closest('.radio-option');
-                parent.style.borderColor = '#27ae60';
-                parent.style.background = 'rgba(39, 174, 96, 0.06)';
-                parent.style.boxShadow = '0 2px 8px rgba(39, 174, 96, 0.12)';
+                parent.style.borderColor = '#e67e22';
+                parent.style.background = 'rgba(230, 126, 34, 0.06)';
+                parent.style.boxShadow = '0 2px 8px rgba(230, 126, 34, 0.12)';
             });
         });
 
-        // Barrio / Colonia Choice Synchronization
-        const selectBarrio = document.getElementById('select_barrio_colonia');
-        const manualBarrio = document.getElementById('manual_barrio_colonia');
-        const hiddenBarrio = document.getElementById('id_barrio_colonia');
-
-        function updateBarrioValue() {
-            if (selectBarrio.value === 'Otro') {
-                manualBarrio.classList.remove('d-none');
-                hiddenBarrio.value = manualBarrio.value.trim();
-            } else {
-                manualBarrio.classList.add('d-none');
-                hiddenBarrio.value = selectBarrio.value;
-            }
-        }
-
-        selectBarrio.addEventListener('change', updateBarrioValue);
-        manualBarrio.addEventListener('input', updateBarrioValue);
+        // Highlight selected checkbox option card
+        document.querySelectorAll('.radio-option input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const parent = this.closest('.radio-option');
+                if(this.checked) {
+                    parent.style.borderColor = '#e67e22';
+                    parent.style.background = 'rgba(230, 126, 34, 0.06)';
+                    parent.style.boxShadow = '0 2px 8px rgba(230, 126, 34, 0.12)';
+                } else {
+                    parent.style.borderColor = '#e8ecf1';
+                    parent.style.background = 'white';
+                    parent.style.boxShadow = 'none';
+                }
+            });
+        });
     </script>
 </body>
 </html>

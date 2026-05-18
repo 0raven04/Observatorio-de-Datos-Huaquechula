@@ -1,62 +1,280 @@
-{% extends 'myapp/base.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal del Encuestador — Huaquechula</title>
+    <link rel="icon" href="{% static 'myapp/image/huaquechula_favicon.png' %}" type="image/png">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-{% block title %}Portal del Encuestador{% endblock %}
-
-{% block content %}
-    <div class="text-center mb-5">
-        <h1 style="color: var(--color-gris-oscuro); font-weight: 800;">Portal del Encuestador</h1>
-        <p class="text-muted text-center">Seleccione el tipo de levantamiento que desea realizar en campo.</p>
-    </div>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="row g-4 justify-content-center">
-        <!-- Tarjeta Turista -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 text-center" style="border-radius: 12px; transition: transform 0.3s ease;">
-                <div class="card-body p-4">
-                    <i class="fas fa-map-marked-alt fa-3x mb-3" style="color: var(--color-naranja);"></i>
-                    <h4 class="card-title fw-bold">Turista / Visitante</h4>
-                    <p class="card-text text-muted mb-4">Registro de visitantes, procedencia, motivo de viaje y transporte.</p>
-                    <a href="{% url 'lista_registros' %}" class="btn btn-outline-primary w-100" style="border-radius: 8px; border-color: var(--color-naranja); color: var(--color-naranja);">Ir a Registros de Visita</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta Residente -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 text-center" style="border-radius: 12px; background: linear-gradient(145deg, #ffffff, var(--color-arena-claro)); transition: transform 0.3s ease;">
-                <div class="card-body p-4">
-                    <i class="fas fa-home fa-3x mb-3" style="color: #27ae60;"></i>
-                    <h4 class="card-title fw-bold">Residente Local</h4>
-                    <p class="card-text text-muted mb-4">Percepción de seguridad, medio ambiente y tensión sobre tradiciones.</p>
-                    <a href="{% url 'nueva_encuesta_residente' %}" class="btn w-100 text-white" style="background-color: #27ae60; border-radius: 8px;">Levantar Encuesta</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta Comercio -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 text-center" style="border-radius: 12px; background: linear-gradient(145deg, #ffffff, #fff3e0); transition: transform 0.3s ease;">
-                <div class="card-body p-4">
-                    <i class="fas fa-store fa-3x mb-3" style="color: var(--color-naranja);"></i>
-                    <h4 class="card-title fw-bold">Comercio / Artesano</h4>
-                    <p class="card-text text-muted mb-4">Participación comunitaria, capacitación y gestión turística.</p>
-                    <a href="{% url 'nueva_encuesta_comercio' %}" class="btn w-100 text-white" style="background-color: var(--color-naranja); border-radius: 8px;">Levantar Encuesta</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}?v={% now 'U' %}">
     
     <style>
-        .card:hover { transform: translateY(-5px); }
+        .survey-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-bottom: var(--space-xl);
+            transition: var(--transition-base);
+        }
+        .survey-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .survey-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--color-arena-claro);
+        }
+        .survey-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        .survey-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-gris-oscuro);
+            margin: 0;
+        }
+        .info-section {
+            margin-bottom: 15px;
+        }
+        .info-title {
+            font-weight: 600;
+            color: var(--color-naranja);
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-content {
+            font-size: 0.95rem;
+            color: var(--color-gris-medio);
+            line-height: 1.6;
+        }
     </style>
-{% endblock %}
+</head>
+<body class="dashboard-page">
+    <!-- ── Navbar ──────────────────────────────── -->
+    <nav class="navbar dashboard-navbar navbar-expand-md navbar-dark">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="{% url 'vista_inicio' %}">
+                    <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo Huaquechula" style="height: 50px; width: auto;">
+                </a>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-center" id="dashboardNav">
+                <ul class="navbar-nav d-flex justify-content-around" style="gap: 0.25rem;">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Observatorio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link active" href="{% url 'encuestador_dashboard' %}" style="color: var(--color-dorado) !important;"><i class="fas fa-clipboard-list me-1"></i>Portal Encuestador</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5 mb-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="border-radius: var(--radius-md);">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="text-center mb-5">
+            <h1 style="color: var(--color-gris-oscuro); font-weight: 800; font-size: 2.5rem;">Portal del Encuestador</h1>
+            <p style="color: var(--color-gris-medio); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Seleccione el tipo de levantamiento que desea realizar y consulte las especificaciones metodológicas para cada encuesta.</p>
+        </div>
+
+        <div class="row">
+            <!-- Encuesta Turista / Visitante -->
+            <div class="col-12">
+                <div class="survey-card">
+                    <div class="survey-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="survey-icon" style="background-color: #3498db;">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <h2 class="survey-title mb-0">Visitante / Turista</h2>
+                        </div>
+                        <a href="{% url 'encuesta_visitante' %}" class="btn btn-primary fw-bold px-4 py-2" style="background-color: #3498db; border: none; border-radius: 8px; font-size: 1.1rem;"><i class="fas fa-edit me-2"></i> Levantar Encuesta</a>
+                    </div>
+                    
+                    <div>
+                        <button class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center p-3" type="button" data-bs-toggle="collapse" data-bs-target="#infoVisitante" aria-expanded="false" aria-controls="infoVisitante" style="border-radius: 8px; font-weight: 600; color: var(--color-gris-oscuro); background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                            <span><i class="fas fa-book-open me-2" style="color: #3498db;"></i> Especificaciones Metodológicas</span>
+                            <i class="fas fa-chevron-down text-muted"></i>
+                        </button>
+                        
+                        <div class="collapse mt-3" id="infoVisitante">
+                            <div class="card card-body border-0 bg-light p-4" style="border-radius: 8px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-info-circle"></i> Información a recopilar</div>
+                                            <div class="info-content">Recopila datos sobre el perfil demográfico (edad, género, composición del grupo), procedencia geográfica nacional e internacional (origen y conectividad), gasto promedio diario, estadía, motivos del viaje, mapa de calor de zonas más visitadas dentro del territorio, índice de satisfacción general y reseñas de la experiencia.</div>
+                                        </div>
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-users"></i> A quién se debe realizar</div>
+                                            <div class="info-content">A personas no residentes (tanto turistas que pernoctan como visitantes de un día) que se encuentren físicamente en los puntos de interés turístico o flujos de acceso del municipio.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-clock"></i> Cuándo realizarla</div>
+                                            <div class="info-content">Debe ejecutarse bajo un esquema de muestreo estacional intermitente. Los momentos críticos e indispensables son durante las temporadas de máxima afluencia histórica: la celebración de las Ofrendas Altares Monumentales (octubre-noviembre) y la festividad de la Santa Cruz (mayo). De forma complementaria, se pueden realizar levantamientos aleatorios en fines de semana regulares del año.</div>
+                                        </div>
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-chart-pie"></i> Tamaño de la muestra</div>
+                                            <div class="info-content"><strong>Meta: Entre 375 y 385 encuestas válidas por temporada alta.</strong> Dado que los flujos históricos de visitantes oscilan drásticamente entre 14,000 y 60,000 personas, metodológicamente se aplica la fórmula para poblaciones infinitas. Con 95% de confianza y 5% de margen de error, se requieren mínimo 384 respuestas para garantizar representatividad estadística.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encuesta Residente -->
+            <div class="col-12">
+                <div class="survey-card">
+                    <div class="survey-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="survey-icon" style="background-color: #27ae60;">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <h2 class="survey-title mb-0">Residente</h2>
+                        </div>
+                        <a href="{% url 'nueva_encuesta_residente' %}" class="btn btn-success fw-bold px-4 py-2" style="background-color: #27ae60; border: none; border-radius: 8px; font-size: 1.1rem;"><i class="fas fa-edit me-2"></i> Levantar Encuesta</a>
+                    </div>
+                    
+                    <div>
+                        <button class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center p-3" type="button" data-bs-toggle="collapse" data-bs-target="#infoResidente" aria-expanded="false" aria-controls="infoResidente" style="border-radius: 8px; font-weight: 600; color: var(--color-gris-oscuro); background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                            <span><i class="fas fa-book-open me-2" style="color: #27ae60;"></i> Especificaciones Metodológicas</span>
+                            <i class="fas fa-chevron-down text-muted"></i>
+                        </button>
+                        
+                        <div class="collapse mt-3" id="infoResidente">
+                            <div class="card card-body border-0 bg-light p-4" style="border-radius: 8px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-info-circle"></i> Información a recopilar</div>
+                                            <div class="info-content">Evalúa indicadores de impacto social como la tensión sobre la población y los servicios públicos locales durante las fiestas tradicionales, las tensiones físicas y simbólicas sobre el patrimonio, la participación comunitaria en la salvaguardia del Patrimonio Cultural Inmaterial (PCI) y la endoculturación frente a la migración. También mide la gobernanza, acceso a capacitación y la percepción de beneficios económicos directos por proyectos de Turismo de Base Comunitaria (TBC).</div>
+                                        </div>
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-users"></i> A quién se debe realizar</div>
+                                            <div class="info-content">A los habitantes permanentes del municipio mayores de edad, asegurando representatividad tanto de la cabecera municipal como de las principales localidades rurales (tales como Cacaloxúchitl, San Diego el Organal, Tezonteopan de Bonilla o Soledad Morelos).</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-clock"></i> Cuándo realizarla</div>
+                                            <div class="info-content">Se debe realizar con una periodicidad anual o semestral. El momento ideal para aplicarla es dos semanas después de concluidas las festividades mayores (Día de Muertos o Santa Cruz), ya que esto permite capturar una percepción fresca y realista del impacto del turismo sobre la infraestructura local y los servicios públicos.</div>
+                                        </div>
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-chart-pie"></i> Tamaño de la muestra</div>
+                                            <div class="info-content"><strong>Meta: Aproximadamente 380 encuestas en total.</strong> El municipio registra una población total de 29,233 habitantes. Al aplicar la fórmula de muestreo para poblaciones finitas (95% de confianza y 5% de error), el tamaño óptimo es de 380 encuestas. Debe distribuirse: aproximadamente 11% en la cabecera municipal y el 89% restante en las localidades rurales más pobladas.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encuesta Institucional -->
+            <div class="col-12">
+                <div class="survey-card">
+                    <div class="survey-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="survey-icon" style="background-color: #e67e22;">
+                                <i class="fas fa-university"></i>
+                            </div>
+                            <h2 class="survey-title mb-0">Institucional</h2>
+                        </div>
+                        <a href="{% url 'nueva_encuesta_institucional' %}" class="btn btn-warning fw-bold px-4 py-2 text-white" style="background-color: #e67e22; border: none; border-radius: 8px; font-size: 1.1rem;"><i class="fas fa-edit me-2"></i> Levantar Encuesta</a>
+                    </div>
+                    
+                    <div>
+                        <button class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center p-3" type="button" data-bs-toggle="collapse" data-bs-target="#infoInstitucional" aria-expanded="false" aria-controls="infoInstitucional" style="border-radius: 8px; font-weight: 600; color: var(--color-gris-oscuro); background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                            <span><i class="fas fa-book-open me-2" style="color: #e67e22;"></i> Especificaciones Metodológicas</span>
+                            <i class="fas fa-chevron-down text-muted"></i>
+                        </button>
+                        
+                        <div class="collapse mt-3" id="infoInstitucional">
+                            <div class="card card-body border-0 bg-light p-4" style="border-radius: 8px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-info-circle"></i> Información a recopilar</div>
+                                            <div class="info-content">Mide el estado de las herramientas de planeación técnica, la existencia de normativas o reglamentos de regulación turística, los mecanismos oficiales de difusión del PCI, el seguimiento gubernamental a los planes de salvaguardia y el porcentaje de inclusión de las localidades rurales en los proyectos oficiales del ayuntamiento.</div>
+                                        </div>
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-users"></i> A quién se debe realizar</div>
+                                            <div class="info-content">A los funcionarios públicos técnico-operativos y tomadores de decisiones de la administración municipal en turno, específicamente de las direcciones o regidurías de Turismo, Cultura, Planeación y Servicios Públicos.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-clock"></i> Cuándo realizarla</div>
+                                            <div class="info-content">Se aplica de manera semestral o al cierre de cada año fiscal/administrativo, con el objetivo de evaluar el avance físico y financiero de las políticas públicas y actualizar las matrices normativas del observatorio.</div>
+                                        </div>
+                                        <div class="info-section">
+                                            <div class="info-title"><i class="fas fa-chart-pie"></i> Tamaño de la muestra</div>
+                                            <div class="info-content"><strong>Meta: Censo total (de 5 a 10 entrevistas/formularios).</strong> Al tratarse de un universo cerrado, específico y muy pequeño de funcionarios clave involucrados en la toma de decisiones del municipio, no se utiliza una muestra estadística. Se aplica el cuestionario al 100% de los titulares y mandos medios de las áreas implicadas para obtener un diagnóstico institucional completo.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
