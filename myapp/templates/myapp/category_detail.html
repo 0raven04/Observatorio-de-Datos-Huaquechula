@@ -136,8 +136,39 @@
                 <div class="indicator-card-header">
                     <span class="indicator-name">{{ indicador.nombre }}</span>
                     <span class="indicator-source-badge {% if indicador.data_source == 'inegi' %}inegi{% else %}local{% endif %}">
-                        {{ indicador.data_source|upper }}
+                        {% if eje.nombre == 'Bienestar Social' %}
+                            {% if indicador.data_source == 'inegi' %}API INEGI{% else %}OTRO{% endif %}
+                        {% elif eje.nombre == 'Tradición y Patrimonio' or eje.nombre == 'Turismo Comunitario' or eje.nombre == 'Indicadores del evento' %}
+                            ENCUESTA
+                        {% else %}
+                            {{ indicador.data_source|upper }}
+                        {% endif %}
                     </span>
+                    {% if eje.nombre == 'Tradición y Patrimonio' or eje.nombre == 'Turismo Comunitario' or eje.nombre == 'Indicadores del evento' %}
+                        {% if indicador.encuesta_tipo == 'institucional' %}
+                            <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(52, 152, 219, 0.12);color:#2980b9;border-radius:4px;font-weight:600;">
+                                Institucional
+                            </span>
+                        {% elif indicador.encuesta_tipo == 'residente' %}
+                            <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(155, 89, 182, 0.12);color:#8e44ad;border-radius:4px;font-weight:600;">
+                                Residente
+                            </span>
+                        {% elif indicador.encuesta_tipo == 'visitante' %}
+                            <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(230, 126, 34, 0.12);color:#d35400;border-radius:4px;font-weight:600;">
+                                Turista/Visitante
+                            </span>
+                        {% else %}
+                            <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(127, 140, 141, 0.12);color:#7f8c8d;border-radius:4px;font-weight:600;">
+                                Encuesta
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        {% if indicador.data_source == 'inegi' %}
+                            <span class="indicator-level-badge {{ indicador.nivel_geografico }}" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;">
+                                {{ indicador.nivel_geografico|title }}
+                            </span>
+                        {% endif %}
+                    {% endif %}
                 </div>
 
                 {% with last_med=indicador.mediciones.last %}

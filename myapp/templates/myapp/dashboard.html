@@ -1,65 +1,121 @@
-{% extends 'myapp/base.html' %}
 {% load static %}
-
-{% block title %}Observatorio Territorial — Huaquechula{% endblock %}
-
-{% block extra_head %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatorio Territorial — Huaquechula</title>
     <link rel="icon" href="{% static 'myapp/image/huaquechula_favicon.png' %}" type="image/png">
     <meta name="description" content="Dashboard de indicadores estratégicos del Observatorio Territorial de Huaquechula. Datos de Bienestar Social, Tradición, Patrimonio y Turismo Comunitario.">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Dashboard CSS -->
-    <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}?v={% now 'U' %}">
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- jsPDF for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        /* Ajustes para integrar con base.html */
-        .dashboard-layout { margin-top: 0; min-height: auto; }
-        .dashboard-sidebar { top: 140px; height: calc(100vh - 140px); background: #fff; z-index: 900; }
-        .dashboard-main { padding-top: 0; }
-        @media (max-width: 768px) {
-            .dashboard-sidebar { top: 0; position: relative; height: auto; }
-            .dashboard-main { margin-left: 0; }
-        }
-        /* Forzar paleta de base.css */
-        :root {
-            --color-naranja: #D35400;
-            --color-gris-oscuro: #4A4A4A;
-            --color-arena-claro: #EDEBE3;
-            --color-arena-oscuro: #D6CEAA;
-        }
-        body { background-color: var(--color-arena-claro) !important; }
-    </style>
-{% endblock %}
+</head>
+<body class="dashboard-page">
+    <!-- ── Navbar ──────────────────────────────── -->
+    <nav class="navbar dashboard-navbar navbar-expand-md navbar-dark">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn sidebar-toggle-btn-nav" onclick="toggleSidebar()" aria-label="Toggle Sidebar" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; cursor: pointer;">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="{% url 'vista_inicio' %}">
+                    <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo Huaquechula" style="height: 50px; width: auto;">
+                </a>
+            </div>
 
-{% block content %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-center" id="dashboardNav">
+                <ul class="navbar-nav d-flex justify-content-around" style="gap: 0.25rem;">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'encuestador_dashboard' %}" style="color: var(--color-dorado) !important;"><i class="fas fa-clipboard-list me-1"></i>Portal Encuestador</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <div class="dashboard-layout">
         <!-- ── Sidebar ─────────────────────────── -->
-        <aside class="dashboard-sidebar">
-            <div class="sidebar-title">Dimensiones</div>
-            <nav>
-                <button class="sidebar-nav-item active" data-filter="all">
+        <aside class="dashboard-sidebar" id="sidebar">
+            <div class="sidebar-header-row d-flex justify-content-between align-items-center mb-4">
+                <div class="sidebar-title m-0">Dimensiones</div>
+                <button class="btn btn-sm text-muted d-md-none" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <nav class="sidebar-tree">
+                <!-- All dimensions button -->
+                <button class="sidebar-all-dimensions-btn mb-3" onclick="showAllDimensions()">
                     <span class="sidebar-nav-icon"><i class="fas fa-th-large"></i></span>
-                    Todas las dimensiones
-                    <span class="sidebar-nav-badge">{{ total_indicadores }}</span>
+                    <span class="all-text">Todas las dimensiones</span>
+                    <span class="sidebar-nav-badge ms-auto">{{ total_indicadores }}</span>
                 </button>
 
+                <!-- Ejes List -->
                 {% for eje in ejes %}
-                <button class="sidebar-nav-item" data-filter="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}">
-                    <span class="sidebar-nav-icon">
-                        {% if 'Bienestar' in eje.nombre %}
-                            <i class="fas fa-heart"></i>
-                        {% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}
-                            <i class="fas fa-landmark"></i>
-                        {% elif 'Turismo' in eje.nombre %}
-                            <i class="fas fa-route"></i>
-                        {% else %}
-                            <i class="fas fa-chart-pie"></i>
-                        {% endif %}
-                    </span>
-                    {{ eje.nombre }}
-                    <span class="sidebar-nav-badge">{{ eje.indicator_count }}</span>
-                </button>
+                <div class="sidebar-tree-eje">
+                    <button class="sidebar-eje-toggle" onclick="toggleEjeCollapse(this, 'eje-child-{{ eje.id }}')">
+                        <span class="eje-icon">
+                            {% if 'Bienestar' in eje.nombre %}
+                                <i class="fas fa-heartbeat"></i>
+                            {% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}
+                                <i class="fas fa-monument"></i>
+                            {% elif 'Turismo' in eje.nombre %}
+                                <i class="fas fa-hiking"></i>
+                            {% else %}
+                                <i class="fas fa-chart-bar"></i>
+                            {% endif %}
+                        </span>
+                        <span class="eje-name">{{ eje.nombre }}</span>
+                        <i class="fas fa-chevron-right arrow-indicator ms-auto"></i>
+                    </button>
+                    
+                    <!-- Categories -->
+                    <div class="sidebar-categories-collapse" id="eje-child-{{ eje.id }}" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+                        {% for categoria in eje.categorias.all %}
+                        <div class="sidebar-tree-cat">
+                            <button class="sidebar-cat-toggle" onclick="toggleCatCollapse(this, 'cat-child-{{ categoria.id }}')">
+                                <i class="fas fa-chevron-right arrow-indicator-sm me-2"></i>
+                                <span class="cat-name">{{ categoria.nombre }}</span>
+                            </button>
+                            
+                            <!-- Indicators -->
+                            <div class="sidebar-indicators-collapse" id="cat-child-{{ categoria.id }}" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+                                {% for indicador in categoria.indicadores.all %}
+                                <button class="sidebar-ind-toggle" onclick="navigateToIndicator('indicator-{{ indicador.id }}', {{ indicador.id }}, '{{ indicador.nombre|escapejs }}')">
+                                    <i class="far fa-circle ind-dot me-2"></i>
+                                    <span class="ind-name">{{ indicador.nombre }}</span>
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
                 {% endfor %}
             </nav>
 
@@ -87,7 +143,7 @@
             <!-- Page Header -->
             <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
                 <div>
-                    <h1 style="color: var(--color-gris-oscuro); font-weight: 800;"><i class="fas fa-chart-line me-2" style="color: var(--color-naranja);"></i>Observatorio Territorial</h1>
+                    <h1><i class="fas fa-chart-line me-2" style="color: var(--color-naranja);"></i>Observatorio Territorial</h1>
                     <p class="subtitle mb-0">Indicadores estratégicos del municipio de Huaquechula, Puebla</p>
                 </div>
                 
@@ -163,28 +219,55 @@
                             <div class="indicator-card-header">
                                 <span class="indicator-name">{{ indicador.nombre }}</span>
                                 <span class="indicator-source-badge {% if indicador.data_source == 'inegi' %}inegi{% else %}local{% endif %}">
-                                    {{ indicador.data_source|upper }}
+                                    {% if eje.nombre == 'Bienestar Social' %}
+                                        {% if indicador.data_source == 'inegi' %}API INEGI{% else %}OTRO{% endif %}
+                                    {% elif eje.nombre == 'Tradición y Patrimonio' or eje.nombre == 'Turismo Comunitario' or eje.nombre == 'Indicadores del evento' %}
+                                        ENCUESTA
+                                    {% else %}
+                                        {{ indicador.data_source|upper }}
+                                    {% endif %}
                                 </span>
+                                {% if eje.nombre == 'Tradición y Patrimonio' or eje.nombre == 'Turismo Comunitario' or eje.nombre == 'Indicadores del evento' %}
+                                    {% if indicador.encuesta_tipo == 'institucional' %}
+                                        <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(52, 152, 219, 0.12);color:#2980b9;border-radius:4px;font-weight:600;">
+                                            Institucional
+                                        </span>
+                                    {% elif indicador.encuesta_tipo == 'residente' %}
+                                        <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(155, 89, 182, 0.12);color:#8e44ad;border-radius:4px;font-weight:600;">
+                                            Residente
+                                        </span>
+                                    {% elif indicador.encuesta_tipo == 'visitante' %}
+                                        <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(230, 126, 34, 0.12);color:#d35400;border-radius:4px;font-weight:600;">
+                                            Turista/Visitante
+                                        </span>
+                                    {% else %}
+                                        <span class="indicator-level-badge" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;background:rgba(127, 140, 141, 0.12);color:#7f8c8d;border-radius:4px;font-weight:600;">
+                                            Encuesta
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    {% if indicador.data_source == 'inegi' %}
+                                        <span class="indicator-level-badge {{ indicador.nivel_geografico }}" style="font-size:0.75rem;padding:4px 10px;margin-left:4px;">
+                                            {{ indicador.nivel_geografico|title }}
+                                        </span>
+                                    {% endif %}
+                                {% endif %}
                             </div>
 
                             {% with last_med=indicador.mediciones.last %}
+                            {% if last_med %}
                             <div class="indicator-value-row">
-                                {% if last_med %}
-                                    <span class="indicator-main-value">{{ last_med.valor }}</span>
-                                    <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
-                                {% else %}
-                                    <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 0.9rem;">Sin datos</span>
-                                    <span class="indicator-main-unit"></span>
-                                {% endif %}
+                                <span class="indicator-main-value">{{ last_med.valor }}</span>
+                                <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
                             </div>
-                            
                             <div class="indicator-period">
-                                {% if last_med %}
-                                    <i class="far fa-clock me-1"></i>{{ last_med.periodo }}
-                                {% else %}
-                                    <span style="color: transparent;">-</span>
-                                {% endif %}
+                                <i class="far fa-calendar-alt me-1"></i>Período {{ last_med.periodo }}
                             </div>
+                            {% else %}
+                            <div class="indicator-value-row">
+                                <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 1rem;">Sin datos</span>
+                            </div>
+                            {% endif %}
                             {% endwith %}
 
                             <!-- Sparkline -->
@@ -278,8 +361,14 @@
             </div>
         </div>
     </div>
-{% endblock %}
 
-{% block extra_js %}
-    <script src="{% static 'myapp/JAV/dashboard.js' %}"></script>
-{% endblock %}
+    <!-- ── Footer ──────────────────────────────── -->
+    <footer class="dashboard-footer">
+        <p class="mb-0">&copy; 2025 Observatorio Turístico de Huaquechula · Datos actualizados periódicamente</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'myapp/JAV/dashboard.js' %}?v={% now 'U' %}"></script>
+</body>
+</html>

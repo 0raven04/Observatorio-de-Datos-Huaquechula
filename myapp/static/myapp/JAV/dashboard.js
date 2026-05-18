@@ -151,29 +151,120 @@
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    // ── Sidebar Filtering ────────────────────────────
-    function initSidebar() {
-        const navItems = document.querySelectorAll('.sidebar-nav-item');
-        const axisSections = document.querySelectorAll('.axis-section');
+    // ── Sidebar Toggle and Tree Navigation ───────────
+    window.toggleSidebar = function () {
+        const body = document.body;
+        body.classList.toggle('sidebar-collapsed');
+        const isCollapsed = body.classList.contains('sidebar-collapsed');
+        localStorage.setItem('huaquechula_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    };
 
-        navItems.forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
-                navItems.forEach(n => n.classList.remove('active'));
-                this.classList.add('active');
-
-                const filter = this.getAttribute('data-filter');
-                axisSections.forEach(section => {
-                    if (filter === 'all' || section.getAttribute('data-eje') === filter) {
-                        section.style.display = '';
-                        section.style.animation = 'fadeInUp 0.4s ease-out both';
-                    } else {
-                        section.style.display = 'none';
-                    }
-                });
-            });
+    window.toggleEjeCollapse = function (btn, containerId) {
+        const container = document.getElementById(containerId);
+        const arrow = btn.querySelector('.arrow-indicator');
+        
+        // Collapse all other axes for a clean accordion effect
+        document.querySelectorAll('.sidebar-categories-collapse').forEach(el => {
+            if (el.id !== containerId && el.style.maxHeight !== '0px' && el.style.maxHeight !== '') {
+                el.style.maxHeight = '0px';
+                const siblingBtn = el.previousElementSibling;
+                if (siblingBtn) {
+                    const sibArrow = siblingBtn.querySelector('.arrow-indicator');
+                    if (sibArrow) sibArrow.classList.remove('rotated');
+                    siblingBtn.classList.remove('expanded');
+                }
+            }
         });
-    }
+
+        if (container.style.maxHeight === '0px' || !container.style.maxHeight) {
+            container.style.maxHeight = container.scrollHeight + 'px';
+            if (arrow) arrow.classList.add('rotated');
+            btn.classList.add('expanded');
+        } else {
+            container.style.maxHeight = '0px';
+            if (arrow) arrow.classList.remove('rotated');
+            btn.classList.remove('expanded');
+        }
+    };
+
+    window.toggleCatCollapse = function (btn, containerId) {
+        const container = document.getElementById(containerId);
+        const arrow = btn.querySelector('.arrow-indicator-sm');
+        const parentEjeCollapse = container.closest('.sidebar-categories-collapse');
+        
+        // Collapse other categories in the same axis
+        const parentTree = btn.closest('.sidebar-categories-collapse');
+        if (parentTree) {
+            parentTree.querySelectorAll('.sidebar-indicators-collapse').forEach(el => {
+                if (el.id !== containerId && el.style.maxHeight !== '0px' && el.style.maxHeight !== '') {
+                    el.style.maxHeight = '0px';
+                    const siblingBtn = el.previousElementSibling;
+                    if (siblingBtn) {
+                        const sibArrow = siblingBtn.querySelector('.arrow-indicator-sm');
+                        if (sibArrow) sibArrow.classList.remove('rotated');
+                        siblingBtn.classList.remove('expanded');
+                    }
+                }
+            });
+        }
+
+        if (container.style.maxHeight === '0px' || !container.style.maxHeight) {
+            container.style.maxHeight = container.scrollHeight + 'px';
+            if (arrow) arrow.classList.add('rotated');
+            btn.classList.add('expanded');
+            
+            // Adjust parent container height to fit expanded content
+            if (parentEjeCollapse) {
+                setTimeout(() => {
+                    parentEjeCollapse.style.maxHeight = 'none';
+                }, 300);
+            }
+        } else {
+            container.style.maxHeight = '0px';
+            if (arrow) arrow.classList.remove('rotated');
+            btn.classList.remove('expanded');
+        }
+    };
+
+    window.navigateToIndicator = function (elementId, indicatorId, indicatorName) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        // Auto collapse sidebar on mobile
+        if (window.innerWidth <= 992) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        // Highlight selected nav item
+        document.querySelectorAll('.sidebar-ind-toggle').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Find matching toggle button
+        const activeNavBtn = Array.from(document.querySelectorAll('.sidebar-ind-toggle')).find(btn => {
+            return btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(elementId);
+        });
+        if (activeNavBtn) activeNavBtn.classList.add('active');
+
+        // Smooth scroll to card
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Pulse animation effect
+        el.classList.remove('highlight-active');
+        void el.offsetWidth; // trigger reflow
+        el.classList.add('highlight-active');
+    };
+
+    window.showAllDimensions = function () {
+        // Scroll to top
+        const main = document.querySelector('.dashboard-main');
+        if (main) {
+            main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Reset active sidebar items
+        document.querySelectorAll('.sidebar-ind-toggle').forEach(btn => btn.classList.remove('active'));
+    };
 
     // ── KPI Counter Init ─────────────────────────────
     function initKPICounters() {
@@ -439,9 +530,17 @@
 
         // Data source badge
         var sourceIsInegi = data.data_source === 'inegi';
-        var sourceBadge = sourceIsInegi
-            ? '<span class="indicator-source-badge inegi" style="font-size:0.75rem;padding:4px 10px;"><i class="fas fa-university me-1"></i>INEGI</span>'
-            : '<span class="indicator-source-badge local" style="font-size:0.75rem;padding:4px 10px;"><i class="fas fa-map-marker-alt me-1"></i>LOCAL</span>';
+        var labelText = sourceIsInegi ? 'INEGI' : 'LOCAL';
+        var isSurveyAxis = data.axis === 'Tradición y Patrimonio' || data.axis === 'Turismo Comunitario' || data.axis === 'Indicadores del evento';
+        if (data.axis === 'Bienestar Social') {
+            labelText = sourceIsInegi ? 'API INEGI' : 'OTRO';
+        } else if (isSurveyAxis) {
+            labelText = 'ENCUESTA';
+        }
+        
+        var sourceBadge = (sourceIsInegi && !isSurveyAxis)
+            ? '<span class="indicator-source-badge inegi" style="font-size:0.75rem;padding:4px 10px;"><i class="fas fa-university me-1"></i>' + labelText + '</span>'
+            : '<span class="indicator-source-badge local" style="font-size:0.75rem;padding:4px 10px;"><i class="fas fa-clipboard-list me-1"></i>' + labelText + '</span>';
         var inegiLine = (sourceIsInegi && data.inegi_id)
             ? '<div style="font-size:0.75rem;color:var(--color-gris-claro);margin-top:2px;">ID INEGI: ' + data.inegi_id + '</div>'
             : '';
@@ -559,7 +658,14 @@
         // ── Source info ─────────────────────────────
         doc.setFontSize(9);
         doc.setTextColor(93, 109, 126);
-        var srcIcon = data.data_source === 'inegi' ? '[INEGI]' : '[LOCAL]';
+        var labelTextPDF = data.data_source === 'inegi' ? 'INEGI' : 'LOCAL';
+        var isSurveyAxis = data.axis === 'Tradición y Patrimonio' || data.axis === 'Turismo Comunitario' || data.axis === 'Indicadores del evento';
+        if (data.axis === 'Bienestar Social') {
+            labelTextPDF = data.data_source === 'inegi' ? 'API INEGI' : 'OTRO';
+        } else if (isSurveyAxis) {
+            labelTextPDF = 'ENCUESTA';
+        }
+        var srcIcon = '[' + labelTextPDF + ']';
         doc.text('Fuente: ' + srcIcon + ' ' + (data.data_source_label || ''), margin, yPos);
         if (data.inegi_id) {
             yPos += 5;
@@ -626,7 +732,17 @@
 
     // ── Init ─────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
-        initSidebar();
+        // Restore sidebar state from localStorage
+        const savedCollapsed = localStorage.getItem('huaquechula_sidebar_collapsed');
+        if (savedCollapsed === 'true') {
+            document.body.classList.add('sidebar-collapsed');
+        } else if (savedCollapsed === 'false') {
+            document.body.classList.remove('sidebar-collapsed');
+        } else if (window.innerWidth <= 992) {
+            // Default collapsed on smaller screens
+            document.body.classList.add('sidebar-collapsed');
+        }
+
         initKPICounters();
         initSparklines();
         initScrollAnimations();
