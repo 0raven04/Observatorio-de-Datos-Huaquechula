@@ -57,7 +57,7 @@ class LoginMobileView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        if not check_password(password, usuario.contrasenia):
+        if not check_password(password, usuario.password):
             return Response(
                 {'error': 'Credenciales incorrectas'},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -105,10 +105,7 @@ def _get_encuestador(request):
     if usuario.tipo == 'encuestador':
         encuestador = Encuestador.objects.get(id_usuario=usuario)
     else:
-        encuestador, _ = Encuestador.objects.get_or_create(
-            clave_encuestador=f'ADMIN_{usuario.id_usuario}',
-            defaults={'id_usuario': usuario}
-        )
+        encuestador, _ = Encuestador.objects.get_or_create(id_usuario=usuario)
     return encuestador
 
 
@@ -125,7 +122,7 @@ class VisitasListCreateView(APIView):
         except (Usuario.DoesNotExist, Encuestador.DoesNotExist):
             return Response({'error': 'Encuestador no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
-        registros = RegistroVisita.objects.filter(id_encuestador=encuestador).order_by('-fecha')
+        registros = RegistroVisita.objects.filter(clave_encuestador=encuestador).order_by('-fecha')
         serializer = RegistroVisitaSerializer(registros, many=True)
         return Response(serializer.data)
 
@@ -136,7 +133,7 @@ class VisitasListCreateView(APIView):
             return Response({'error': 'Encuestador no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
         data = request.data.copy()
-        data['id_encuestador'] = encuestador.clave_encuestador
+        data['clave_encuestador'] = encuestador.clave_encuestador
 
         serializer = RegistroVisitaSerializer(data=data)
         if serializer.is_valid():
