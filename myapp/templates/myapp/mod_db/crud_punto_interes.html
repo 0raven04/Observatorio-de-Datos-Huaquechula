@@ -1,0 +1,267 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+
+{% block title %}Gestor de Puntos de Interés{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 0 auto;">
+  
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12 mb-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="fw-bold text-dark"><i class="fas fa-map-marker-alt me-2"></i> Puntos de Interés</h3>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mb-4">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nombre o descripción...">
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <select class="form-control" id="filterCategoria">
+          <option value="">Todas las categorías</option>
+          <option value="ofrenda">Ofrendas</option>
+          <option value="sitio_turistico">Sitios Turísticos</option>
+          <option value="servicio">Servicios</option>
+          <option value="evento">Eventos</option>
+          <option value="otro">Otros</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <select class="form-control" id="filterStatus">
+          <option value="">Todos los estados</option>
+          <option value="activo">Activos (Visibles)</option>
+          <option value="inactivo">Inactivos (Ocultos)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="card mb-4">
+    <div class="card-header py-3" style="background-color: var(--color-gris-oscuro);">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-white"><i class="fas fa-list me-2"></i> Listado de Lugares</h5>
+        <div class="text-white"><i class="fas fa-filter me-1"></i> <span id="filteredCount">{{ puntos|length }}</span> lugares encontrados</div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered mb-0" id="puntosTable">
+          <thead class="text-white" style="background-color: var(--color-gris-oscuro);">
+            <tr>
+              <th class="text-center align-middle" style="width: 40%;">Lugar / Información</th>
+              <th class="text-center align-middle" style="width: 15%;">Categoría</th>
+              <th class="text-center align-middle" style="width: 15%;">Estado (Visible)</th>
+              <th class="text-center align-middle" style="width: 15%;">Origen</th>
+              <th class="text-center align-middle" style="width: 15%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for punto in puntos %}
+            <tr class="punto-row text-center align-middle" 
+                data-id="{{ punto.id_punto }}"
+                data-categoria="{{ punto.categoria }}"
+                data-estado="{{ punto.estado }}"
+                data-name="{{ punto.nombre|lower }}"
+                data-desc="{{ punto.descripcion|lower|default:'' }}">
+              
+              <td class="text-start align-middle">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="text-center mt-1" style="color: var(--color-naranja); min-width: 30px;">
+                    <i class="fas 
+                      {% if punto.categoria == 'ofrenda' %}fa-candle-holder
+                      {% elif punto.categoria == 'sitio_turistico' %}fa-map-marked-alt
+                      {% elif punto.categoria == 'servicio' %}fa-concierge-bell
+                      {% else %}fa-map-pin{% endif %} fa-2x">
+                    </i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <strong class="d-block text-dark" style="font-size: 1.1rem;">{{ punto.nombre }}</strong>
+                    {% if punto.descripcion %}
+                      <small class="text-muted d-block mt-1"><i class="fas fa-align-left me-1"></i>{{ punto.descripcion|truncatechars:70 }}</small>
+                    {% endif %}
+                    {% if punto.fecha_inicio %}
+                        <small class="text-primary mt-1 d-block"><i class="far fa-calendar-alt me-1"></i>{{ punto.fecha_inicio|date:"d M Y" }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <td class="text-center align-middle">
+                {% if punto.categoria == 'ofrenda' %}
+                  <span class="badge bg-warning text-dark"><i class="fas fa-fire me-1"></i>Ofrenda</span>
+                {% elif punto.categoria == 'sitio_turistico' %}
+                  <span class="badge bg-danger"><i class="fas fa-camera me-1"></i>Sitio Turístico</span>
+                {% elif punto.categoria == 'servicio' %}
+                  <span class="badge bg-success"><i class="fas fa-info-circle me-1"></i>Servicio</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ punto.get_categoria_display }}</span>
+                {% endif %}
+              </td>
+
+              <td class="text-center align-middle">
+                <div class="d-flex justify-content-center align-items-center flex-column">
+                  <div class="form-check form-switch" style="transform: scale(1.5); margin-bottom: 5px;">
+                    <input class="form-check-input toggle-estado" type="checkbox" role="switch"
+                           data-punto-id="{{ punto.id_punto }}"
+                           {% if punto.estado == 'activo' %}checked{% endif %}>
+                  </div>
+                  <small class="text-muted estado-texto">
+                      {% if punto.estado == 'activo' %}Activo{% else %}Inactivo{% endif %}
+                  </small>
+                </div>
+              </td>
+
+              <td class="text-center align-middle">
+                  {% if punto.id_geometria and punto.id_geometria.id_archivo %}
+                      <span class="badge bg-light text-dark border" title="Extraído automáticamente">
+                          <i class="fas fa-file-import me-1 text-primary"></i>KML
+                      </span>
+                  {% else %}
+                      <span class="badge bg-light text-dark border" title="Creado manualmente">
+                          <i class="fas fa-user-edit me-1 text-secondary"></i>Manual
+                      </span>
+                  {% endif %}
+              </td>
+
+              <td class="text-center align-middle">
+                <button onclick="abrirModalEdicionPunto({{ punto.id_punto }})" class="btn btn-sm d-inline-flex flex-column align-items-center justify-content-center p-1" style="width: 65px; height: 50px; background-color: #D6CEAA; border: none; color: #4A4A4A;">
+                    <i class="fas fa-edit"></i><span class="small mt-1">Editar</span>
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-5 align-middle">
+                <div class="text-muted">
+                  <i class="fas fa-map-marker-slash fa-3x mb-3" style="color: var(--color-beige);"></i>
+                  <h5 style="color: var(--color-gris-oscuro);">No hay puntos de interés registrados</h5>
+                  <p>Importa un archivo KML o crea uno manualmente.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'myapp/mod_db/upload_punto_interes.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Buscador
+        const searchInput = document.getElementById('searchInput');
+        if(searchInput) searchInput.addEventListener('keyup', aplicarFiltros);
+        
+        // Filtros
+        const filterCategoria = document.getElementById('filterCategoria');
+        const filterStatus = document.getElementById('filterStatus');
+        if(filterCategoria) filterCategoria.addEventListener('change', aplicarFiltros);
+        if(filterStatus) filterStatus.addEventListener('change', aplicarFiltros);
+
+        // Configurar Toggles de Activo/Inactivo
+        document.querySelectorAll('.toggle-estado').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                cambiarEstadoPunto(this.getAttribute('data-punto-id'), this.checked, this);
+            });
+        });
+    });
+
+    function aplicarFiltros() {
+        const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const cat = document.getElementById('filterCategoria')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || '';
+        
+        let visibles = 0;
+        document.querySelectorAll('#puntosTable tbody .punto-row').forEach(row => {
+            const rCat = row.getAttribute('data-categoria');
+            const rStatus = row.getAttribute('data-estado');
+            const rName = row.getAttribute('data-name');
+            const rDesc = row.getAttribute('data-desc');
+            
+            let show = true;
+            if (cat && rCat !== cat) show = false;
+            if (status && rStatus !== status) show = false;
+            if (search && !rName.includes(search) && !rDesc.includes(search)) show = false;
+            
+            row.style.display = show ? '' : 'none';
+            if (show) visibles++;
+        });
+        
+        document.getElementById('filteredCount').textContent = visibles;
+    }
+
+function cambiarEstadoPunto(id, esActivo, toggleElement) {
+
+        fetch(`/puntos/toggle-visibilidad/${id}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ activo: esActivo })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                showToast(data.message, 'success');
+                const row = toggleElement.closest('tr');
+                row.setAttribute('data-estado', data.nuevo_estado);
+                const textLabel = toggleElement.parentElement.nextElementSibling;
+                if(textLabel) textLabel.textContent = esActivo ? 'Activo' : 'Inactivo';
+            } else {
+                showToast('Error: ' + data.error, 'error');
+                toggleElement.checked = !esActivo;
+            }
+        })
+        .catch(err => {
+            showToast('Error de red', 'error');
+            toggleElement.checked = !esActivo;
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
+        toast.style.backgroundColor = type === 'success' ? '#28a745' : type === 'error' ? '#e74c3c' : '#17a2b8';
+        toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span>${message}</span></div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+{% endblock %}

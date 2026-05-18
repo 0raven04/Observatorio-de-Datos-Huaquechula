@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
     Usuario, Encuestador,
-    RegistroVisita, PersonaVisita,
+    RegistroVisita,
     Eje,
     EncuestaResidente, EncuestaInstitucional,
 )
@@ -88,7 +88,7 @@ class PerfilView(APIView):
 
     def get(self, request):
         try:
-            usuario = Usuario.objects.get(nombre_usuario=request.user.username)
+            usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)
             return Response(UsuarioSerializer(usuario).data)
         except Usuario.DoesNotExist:
             return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
@@ -98,7 +98,7 @@ class PerfilView(APIView):
 
 def _get_encuestador(request):
     """Helper: retorna el Encuestador asociado al usuario autenticado."""
-    usuario = Usuario.objects.get(nombre_usuario=request.user.username)
+    usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)
     if usuario.tipo not in ['encuestador', 'admin']:
         raise PermissionDenied("Solo encuestadores y administradores pueden gestionar visitas.")
 
@@ -240,7 +240,7 @@ class DashboardSummaryView(APIView):
 def _get_encuestador_safe(request):
     """Helper que retorna el Encuestador o None si no existe en la BD legáda."""
     try:
-        usuario = Usuario.objects.get(nombre_usuario=request.user.username)
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)
         if usuario.tipo not in ['encuestador', 'admin']:
             raise PermissionDenied('Solo encuestadores y administradores pueden enviar encuestas.')
         try:

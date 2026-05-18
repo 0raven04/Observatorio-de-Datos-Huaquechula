@@ -16,6 +16,8 @@ from django.contrib.auth.views import LogoutView
 from django.shortcuts import redirect
 from myapp import views
 from myapp.views import backup_database
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # URL para la página de inicio de sesión
@@ -41,7 +43,9 @@ urlpatterns = [
     # - Llama a la vista backup_database definida en myapp/views.py
     # - Nombre de la ruta: 'backup_database'
     path('backup/', backup_database, name='backup_database'),
-    
+
+    # URL para acceder a la vista de gráficos e indicadores turísticos
+    path('graficos_indicadores/', views.graficos_indicadores, name='graficos_indicadores'),
     # URL raíz que incluye las URLs de la aplicación 'myapp'
     path('', include('myapp.urls')),
 
@@ -49,13 +53,10 @@ urlpatterns = [
     path('', include('myapp.api_urls')),
 ]
 
-# Recomendaciones importantes:
-# 1. Eliminar la definición duplicada de 'logout/' (línea 30)
-# 2. El orden de las URLs es importante - Django procesa los patrones en orden
-# 3. Las URLs más específicas deberían definirse primero
-# 4. La inclusión de 'myapp.urls' con path('', ...) hace que las URLs de la app sean accesibles desde la raíz
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Estructura final recomendada sin la redundancia:
+
 """
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),

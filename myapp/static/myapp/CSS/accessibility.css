@@ -1,0 +1,786 @@
+/**
+ * ESTILOS DE ACCESIBILIDAD GLOBAL
+ * Sistema de tamaño de texto dinámico + Modo Oscuro
+ *
+ * Variables CSS base que se modifican dinámicamente desde JavaScript
+ * Incluir este archivo en base.html después de otros CSS
+ */
+
+/* ================================================================
+   VARIABLES GLOBALES — Modo Claro (predeterminado)
+   ================================================================ */
+:root {
+    /* Tamaño de fuente dinámico */
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-large: 18px;
+
+    /* Paleta del sistema */
+    --color-gris-oscuro:  #4A4A4A;
+    --color-arena-claro:  #EDEBE3;
+    --color-arena-oscuro: #D6CEAA;
+    --color-beige:        #B3B3B3;
+
+    /* Tokens de tema — Modo Claro */
+    --theme-bg:           #EDEBE3;
+    --theme-bg-secondary: #ffffff;
+    --theme-text:         #4A4A4A;
+    --theme-text-muted:   #777777;
+    --theme-border:       #D6CEAA;
+    --theme-card-bg:      #ffffff;
+    --theme-navbar-bg:    #4A4A4A;
+    --theme-sidebar-bg:   #4A4A4A;
+    --theme-input-bg:     #EDEBE3;
+    --theme-modal-bg:     #ffffff;
+    --theme-footer-bg:    #4A4A4A;
+    --theme-shadow:       rgba(74, 74, 74, 0.15);
+    --theme-scrollbar:    #D6CEAA;
+    --theme-highlight:    #D6CEAA;
+}
+
+/* ================================================================
+   MODO OSCURO — [data-theme="dark"] en <html>
+   ================================================================ */
+[data-theme="dark"] {
+    --theme-bg:           #121212;
+    --theme-bg-secondary: #1e1e1e;
+    --theme-text:         #f1f1f1;
+    --theme-text-muted:   #9e9e9e;
+    --theme-border:       #3a3a3a;
+    --theme-card-bg:      #1e1e1e;
+    --theme-navbar-bg:    #0d0d0d;
+    --theme-sidebar-bg:   #0d0d0d;
+    --theme-input-bg:     #2a2a2a;
+    --theme-modal-bg:     #1e1e1e;
+    --theme-footer-bg:    #0d0d0d;
+    --theme-shadow:       rgba(0, 0, 0, 0.45);
+    --theme-scrollbar:    #3a3a3a;
+    --theme-highlight:    rgba(214, 206, 170, 0.15);
+}
+
+/* ================================================================
+   TRANSICIÓN SUAVE GLOBAL — sin !important para no romper animaciones
+   ================================================================ */
+html,
+body,
+.navbar, .sidebar, .card, .modal-content,
+.offcanvas, footer, .dropdown-menu,
+.form-control, .form-select, input, textarea, select,
+.table, td, th, .list-group-item {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease;
+}
+
+/* ================================================================
+   MODO OSCURO — todos los overrides de elemento SOLO aquí
+   El modo claro NO recibe ningún override (usa sus propios CSS)
+   ================================================================ */
+
+[data-theme="dark"] body {
+    background-color: var(--theme-bg) !important;
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] li,
+[data-theme="dark"] label {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] a {
+    color: var(--theme-text);
+}
+
+/* NAVBAR */
+[data-theme="dark"] .navbar,
+[data-theme="dark"] nav.navbar {
+    background-color: var(--theme-navbar-bg) !important;
+    border-bottom-color: var(--theme-border) !important;
+}
+
+/* SIDEBAR */
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] aside.sidebar {
+    background-color: var(--theme-sidebar-bg) !important;
+    border-right-color: var(--theme-border) !important;
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .sidebar-title,
+[data-theme="dark"] .sidebar-subtitle,
+[data-theme="dark"] .sidebar nav a,
+[data-theme="dark"] .sidebar .nav-link {
+    color: var(--theme-text) !important;
+}
+
+/* CARDS */
+[data-theme="dark"] .card {
+    background-color: var(--theme-card-bg) !important;
+    border-color: var(--theme-border) !important;
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .card-text,
+[data-theme="dark"] .card-subtitle {
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .card-body {
+    color: var(--theme-text) !important;
+}
+
+/* TABLAS */
+[data-theme="dark"] .table,
+[data-theme="dark"] table {
+    background-color: var(--theme-bg-secondary);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table thead th {
+    background-color: #0d0d0d !important;
+    color: #f1f1f1 !important;
+    border-color: var(--theme-border) !important;
+}
+
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table tr {
+    background-color: var(--theme-bg-secondary);
+    color: var(--theme-text);
+    border-color: var(--theme-border) !important;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--theme-bg) !important;
+}
+
+/* FORMULARIOS */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background-color: var(--theme-input-bg) !important;
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border) !important;
+}
+
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--theme-text-muted) !important;
+}
+
+[data-theme="dark"] label,
+[data-theme="dark"] .form-label {
+    color: var(--theme-text) !important;
+}
+
+/* BOTONES */
+[data-theme="dark"] .btn-light,
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-outline-secondary {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border) !important;
+}
+
+/* MODALES Y OFFCANVAS */
+[data-theme="dark"] .modal-content {
+    background-color: var(--theme-modal-bg) !important;
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border) !important;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--theme-border) !important;
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .modal-title {
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .modal-body {
+    color: var(--theme-text) !important;
+    background-color: var(--theme-modal-bg) !important;
+}
+
+[data-theme="dark"] .offcanvas {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .offcanvas-title {
+    color: var(--theme-text) !important;
+}
+
+/* DROPDOWNS */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--theme-bg-secondary) !important;
+    border-color: var(--theme-border) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--theme-text) !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: var(--theme-highlight) !important;
+}
+
+/* ALERTS */
+[data-theme="dark"] .alert {
+    background-color: var(--theme-bg-secondary) !important;
+    border-color: var(--theme-border) !important;
+    color: var(--theme-text) !important;
+}
+
+/* FOOTER */
+[data-theme="dark"] footer {
+    background: var(--theme-footer-bg) !important;
+    border-top-color: var(--theme-border) !important;
+}
+
+/* LIST GROUPS */
+[data-theme="dark"] .list-group-item {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border) !important;
+}
+
+
+
+/* ================================================================
+   CHAT WIDGET
+   ================================================================ */
+[data-theme="dark"] #chat-window {
+    background: #1e1e1e !important;
+    border-color: #3a3a3a !important;
+}
+
+[data-theme="dark"] #chat-messages {
+    background: #161616 !important;
+}
+
+[data-theme="dark"] .msg-bot {
+    background: #2a2a2a !important;
+    color: #f1f1f1 !important;
+    border-color: #3a3a3a !important;
+}
+
+[data-theme="dark"] #chat-input-area {
+    background: #1e1e1e !important;
+    border-top-color: #3a3a3a !important;
+}
+
+[data-theme="dark"] #chat-input {
+    background: #2a2a2a !important;
+    color: #f1f1f1 !important;
+    border-color: #3a3a3a !important;
+}
+
+/* ================================================================
+   LEAFLET (MAPAS)
+   ================================================================ */
+[data-theme="dark"] .leaflet-popup-content-wrapper {
+    background: #1e1e1e !important;
+    color: #f1f1f1 !important;
+    border: 1px solid #3a3a3a !important;
+}
+
+[data-theme="dark"] .leaflet-popup-tip {
+    background: #1e1e1e !important;
+}
+
+[data-theme="dark"] .leaflet-tooltip {
+    background: #1e1e1e !important;
+    color: #f1f1f1 !important;
+    border-color: #3a3a3a !important;
+}
+
+[data-theme="dark"] .leaflet-control-zoom a {
+    background-color: #2a2a2a !important;
+    color: #f1f1f1 !important;
+    border-color: #3a3a3a !important;
+}
+
+[data-theme="dark"] .leaflet-bar {
+    border-color: #3a3a3a !important;
+}
+
+/* ================================================================
+   LIST GROUPS
+   ================================================================ */
+.list-group-item {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border) !important;
+}
+
+/* ================================================================
+   SCROLLBAR (modo oscuro)
+   ================================================================ */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background-color: #1a1a1a !important;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background-color: #3a3a3a !important;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background-color: #555 !important;
+}
+
+/* ================================================================
+   IMPRESIÓN — ocultar controles
+   ================================================================ */
+@media print {
+    .accessibility-menu,
+    .accessibility-dropdown-menu { display: none !important; }
+}
+
+/**
+ * Aplicar variables CSS globales a elementos base
+ */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+    line-height: 1.6;
+}
+
+/* Headings con escala proporcional */
+h1, .h1 {
+    font-size: calc(var(--font-size-base) + 8px);
+    transition: font-size 0.2s ease;
+}
+
+h2, .h2 {
+    font-size: calc(var(--font-size-base) + 6px);
+    transition: font-size 0.2s ease;
+}
+
+h3, .h3 {
+    font-size: calc(var(--font-size-base) + 4px);
+    transition: font-size 0.2s ease;
+}
+
+h4, .h4 {
+    font-size: calc(var(--font-size-base) + 2px);
+    transition: font-size 0.2s ease;
+}
+
+h5, .h5 {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+h6, .h6 {
+    font-size: calc(var(--font-size-base) - 2px);
+    transition: font-size 0.2s ease;
+}
+
+/* Párrafos */
+p, .text-body {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+small, .small, .text-muted {
+    font-size: var(--font-size-small);
+    transition: font-size 0.2s ease;
+}
+
+/* Enlaces */
+a, .nav-link {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+/* Botones */
+button, .btn, input[type="button"], input[type="submit"], input[type="reset"] {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+.btn-lg {
+    font-size: calc(var(--font-size-base) + 2px);
+}
+
+.btn-sm {
+    font-size: calc(var(--font-size-base) - 2px);
+}
+
+/* Inputs, Textareas y Selects */
+input, textarea, select {
+    font-size: var(--font-size-base) !important;
+    transition: font-size 0.2s ease;
+}
+
+input::placeholder, textarea::placeholder {
+    font-size: var(--font-size-base);
+}
+
+/* Labels */
+label, .form-label {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+/* Tablas */
+table, .table {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+th, thead {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+td {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+/* Cards */
+.card, .card-body {
+    font-size: var(--font-size-base);
+}
+
+.card-title {
+    font-size: calc(var(--font-size-base) + 2px);
+    transition: font-size 0.2s ease;
+}
+
+.card-text, .card-subtitle {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+/* Navbars */
+.navbar, .navbar-brand {
+    font-size: calc(var(--font-size-base) - 1px);
+}
+
+.nav-link {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+/* Modales */
+.modal-header, .modal-title {
+    font-size: calc(var(--font-size-base) + 4px);
+    transition: font-size 0.2s ease;
+}
+
+.modal-body {
+    font-size: var(--font-size-base);
+}
+
+.modal-footer {
+    font-size: var(--font-size-base);
+}
+
+/* Offcanvas (menú móvil) */
+.offcanvas-title {
+    font-size: calc(var(--font-size-base) + 2px);
+    transition: font-size 0.2s ease;
+}
+
+.offcanvas-body {
+    font-size: var(--font-size-base);
+}
+
+/* Footer */
+footer, .foter_leter {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    font-size: calc(var(--font-size-base) - 1px);
+    transition: font-size 0.2s ease;
+}
+
+/* Alerts */
+.alert {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+/* Badges */
+.badge {
+    font-size: calc(var(--font-size-base) - 2px);
+    transition: font-size 0.2s ease;
+}
+
+/* Dropdowns */
+.dropdown-menu, .dropdown-item {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+/* Tooltips y Popovers */
+.tooltip-inner, .popover-body {
+    font-size: var(--font-size-small);
+    transition: font-size 0.2s ease;
+}
+
+/* Leaflet Map Elements */
+.leaflet-popup-content {
+    font-size: calc(var(--font-size-base) - 2px);
+    transition: font-size 0.2s ease;
+}
+
+.leaflet-popup-content p {
+    font-size: calc(var(--font-size-base) - 2px);
+    transition: font-size 0.2s ease;
+}
+
+.leaflet-tooltip {
+    font-size: calc(var(--font-size-base) - 2px);
+    transition: font-size 0.2s ease;
+}
+
+/* Chat Widget */
+#chat-widget {
+    font-size: var(--font-size-base);
+}
+
+#chat-header {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+#chat-messages, .msg-bot, .msg-user {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+    line-height: 1.5;
+}
+
+#chat-input {
+    font-size: var(--font-size-base);
+    transition: font-size 0.2s ease;
+}
+
+/* ============================================ */
+/* MENÚ DE ACCESIBILIDAD - ESTILOS */
+/* ============================================ */
+
+/**
+ * Contenedor del menú de accesibilidad
+ * Se coloca en el navbar
+ */
+.accessibility-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.accessibility-menu:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/**
+ * Botón individual de accesibilidad
+ */
+.accessibility-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    background-color: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: calc(var(--font-size-base) - 2px);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+}
+
+.accessibility-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+.accessibility-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+/* Estado deshabilitado */
+.accessibility-btn:disabled,
+.accessibility-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/**
+ * Botón para abrir/cerrar menú de accesibilidad (versión móvil)
+ */
+.accessibility-toggle-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: calc(var(--font-size-base) + 4px);
+    cursor: pointer;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.accessibility-toggle-btn:hover {
+    transform: scale(1.2);
+}
+
+/**
+ * Menú dropdown de accesibilidad (se despliega en móvil)
+ */
+.accessibility-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    padding: 12px;
+    background-color: var(--accessibility-bg);
+    border: 1px solid var(--accessibility-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.accessibility-dropdown-menu.show {
+    display: flex;
+}
+
+/**
+ * Indicador de tamaño actual
+ */
+.accessibility-size-display {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+/**
+ * Contenedor flex para grupo de botones
+ */
+.accessibility-button-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Responsive - en móvil el menú se comporta diferente */
+@media (max-width: 768px) {
+    .accessibility-menu {
+        padding: 4px 8px;
+        gap: 4px;
+    }
+
+    .accessibility-btn {
+        min-width: 32px;
+        min-height: 32px;
+        padding: 4px 8px;
+        font-size: calc(var(--font-size-base) - 3px);
+    }
+
+    .accessibility-size-display {
+        min-width: 36px;
+        font-size: var(--font-size-small);
+    }
+}
+
+/* Animación de pulso para botón activo */
+@keyframes accessibility-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}
+
+.accessibility-btn:active:not(:disabled) {
+    animation: accessibility-pulse 0.6s ease-out;
+}
+
+/* Dark mode support (si el proyecto lo implementa) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --accessibility-bg: #2d2d2d;
+        --accessibility-hover: #3d3d3d;
+        --accessibility-border: #444;
+        --accessibility-text: #f0f0f0;
+    }
+
+    .accessibility-menu {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .accessibility-menu:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .accessibility-btn:hover:not(:disabled) {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .accessibility-dropdown-menu {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Impresión - ocultar controles en impresión */
+@media print {
+    .accessibility-menu,
+    .accessibility-dropdown-menu {
+        display: none !important;
+    }
+}

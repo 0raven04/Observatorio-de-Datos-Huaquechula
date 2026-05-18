@@ -1,4 +1,5 @@
 {% load crispy_forms_tags %}
+{% load static %}
 
 <div class="row p-3">
     <!-- Información básica -->
@@ -6,66 +7,148 @@
         {{ formulario.fecha|as_crispy_field }}
     </div>
     <div class="col-md-4">
-        {{ formulario.tamanio_grupo|as_crispy_field }}
+        {{ formulario.estancia_dias|as_crispy_field }}
     </div>
+    <div class="col-md-4">
+        {{ formulario.visitas_previas|as_crispy_field }}
+    </div>
+    
+    <!-- Campo para extranjero -->
     <div class="col-md-4">
         {{ formulario.es_extranjero|as_crispy_field }}
     </div>
 
     <!-- Campos condicionales para extranjeros -->
-    <div class="col-md-6" id="pais-origen-group" style="display: {% if formulario.instance.es_extranjero %}block{% else %}none{% endif %};">
+    <div class="col-md-4{% if not formulario.instance.es_extranjero %} d-none{% endif %}" id="pais-origen-group">
         {{ formulario.pais_origen|as_crispy_field }}
     </div>
     
-    <!-- Información de procedencia y transporte -->
-    <div class="col-md-6">
+    <!-- Información de procedencia -->
+    <div class="col-md-4">
         {{ formulario.procedencia|as_crispy_field }}
     </div>
-    <div class="col-md-6">
-        {{ formulario.tipo_transporte|as_crispy_field }}
-    </div>
     
-    <!-- Motivo de visita -->
+    <!-- Motivo de visita y transporte -->
     <div class="col-md-6">
         {{ formulario.motivo_visita|as_crispy_field }}
     </div>
     
-    <!-- Duración de la visita -->
-    <div class="col-md-3">
-        {{ formulario.estancia_dias|as_crispy_field }}
-    </div>
-    <div class="col-md-3">
-        {{ formulario.numero_visitas|as_crispy_field }}
+    <div class="col-md-6">
+        {{ formulario.tipo_transporte|as_crispy_field }}
     </div>
     
-    <!-- Sección para personas del grupo -->
+    <!-- Sección para distribución por edad y género -->
     <div class="col-12 mt-4">
-        <h5>Datos de las personas en el grupo</h5>
-        <div id="personas-container">
-            {% for persona in personas %}
-            <div class="row persona-row mb-3">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Edad</label>
-                        <input type="number" name="edad{{ forloop.counter }}" value="{{ persona.edad }}" class="form-control" required>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Sexo</label>
-                        <select name="sexo{{ forloop.counter }}" class="form-select" required>
-                            <option value="Hombre" {% if persona.sexo == 'Hombre' %}selected{% endif %}>Hombre</option>
-                            <option value="Mujer" {% if persona.sexo == 'Mujer' %}selected{% endif %}>Mujer</option>
-                            <option value="Otro" {% if persona.sexo == 'Otro' %}selected{% endif %}>Otro</option>
-                        </select>
-                    </div>
+        <h5>Distribución por edad y género</h5>
+        <div class="row">
+            <!-- Mujeres -->
+            <div class="col-md-6">
+                <h6>Mujeres</h6>
+                <div class="row">
+                    <div class="col-md-6">{{ formulario.mujeres_0_15|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.mujeres_16_30|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.mujeres_31_45|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.mujeres_46_60|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.mujeres_61_75|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.mujeres_76_mas|as_crispy_field }}</div>
                 </div>
             </div>
-            {% endfor %}
+            
+            <!-- Hombres -->
+            <div class="col-md-6">
+                <h6>Hombres</h6>
+                <div class="row">
+                    <div class="col-md-6">{{ formulario.hombres_0_15|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.hombres_16_30|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.hombres_31_45|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.hombres_46_60|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.hombres_61_75|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ formulario.hombres_76_mas|as_crispy_field }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Totales por género -->
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="alert alert-secondary">
+                    <strong>Total Mujeres:</strong> 
+                    <span id="total-mujeres">0</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-secondary">
+                    <strong>Total Hombres:</strong> 
+                    <span id="total-hombres">0</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-info">
+                    <strong>Total Personas:</strong> 
+                    <span id="total-personas">0</span>
+                </div>
+            </div>
         </div>
     </div>
     
     <!-- Campos ocultos -->
-    <input type="hidden" name="id_registro" value="{{ id_registro }}">
+    <input type="hidden" name="id_registro" value="{{ formulario.instance.id_registro }}">
+    <input type="hidden" name="clave_encuestador" value="{{ formulario.instance.clave_encuestador }}">
+    <input type="hidden" id="total-personas-hidden" name="total_personas" value="0">
 </div>
 
+<style>
+/* Estilos para mejorar la presentación de los campos de edad */
+input[name*="mujeres_"], input[name*="hombres_"] {
+    text-align: center;
+}
+
+.alert {
+    margin-bottom: 0;
+    text-align: center;
+    padding: 0.75rem 1.25rem;
+}
+
+.alert-secondary {
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+    color: #495057;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+h5 {
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+h6 {
+    color: #6c757d;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Mejorar espaciado entre campos */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Estilo para los labels de crispy forms */
+label {
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+}
+</style>
+
+{% block extra_js %}
+<!-- CORREGIDO: nombre del archivo -->
+<script src="{% static 'myapp/JAV/js_lista_regstros.js' %}" defer></script>
+{% endblock %}

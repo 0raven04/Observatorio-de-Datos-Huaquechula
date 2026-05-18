@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="zcalo" id="zcalo">
+	<SimpleField name="CVEGEO" type="string"></SimpleField>
+	<SimpleField name="CVE_ENT" type="string"></SimpleField>
+	<SimpleField name="CVE_MUN" type="string"></SimpleField>
+	<SimpleField name="CVE_LOC" type="string"></SimpleField>
+	<SimpleField name="CVE_AGEB" type="string"></SimpleField>
+	<SimpleField name="CVE_MZA" type="string"></SimpleField>
+	<SimpleField name="AMBITO" type="string"></SimpleField>
+	<SimpleField name="TIPOMZA" type="string"></SimpleField>
+	<SimpleField name="Nombre" type="string"></SimpleField>
+</Schema>
+<Folder><name>zcalo</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#zcalo">
+		<SimpleData name="CVEGEO">2106900010097015</SimpleData>
+		<SimpleData name="CVE_ENT">21</SimpleData>
+		<SimpleData name="CVE_MUN">069</SimpleData>
+		<SimpleData name="CVE_LOC">0001</SimpleData>
+		<SimpleData name="CVE_AGEB">0097</SimpleData>
+		<SimpleData name="CVE_MZA">015</SimpleData>
+		<SimpleData name="AMBITO">Urbana</SimpleData>
+		<SimpleData name="TIPOMZA">Típica</SimpleData>
+		<SimpleData name="Nombre">Zócalo</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Polygon><outerBoundaryIs><LinearRing><coordinates>-98.5415992802308,18.7705627697771 -98.5414980501674,18.7704098604221 -98.5415726803412,18.7699156499428 -98.5421160498907,18.7699931702217 -98.5422355401444,18.7699520296086 -98.5423918296798,18.7699787795923 -98.5423234603228,18.7703433699457 -98.5425517697419,18.7703786497595 -98.542489019733,18.7707131695661 -98.5420405095585,18.7706449200621 -98.54161868991,18.770580719841 -98.5415992802308,18.7705627697771</coordinates></LinearRing></outerBoundaryIs></Polygon></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

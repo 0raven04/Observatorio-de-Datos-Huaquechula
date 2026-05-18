@@ -1,0 +1,381 @@
+/* Estilos para el menú lateral */
+:root {
+    --sidebar-width: 280px;
+    --sidebar-bg-color: #4A4A4A; /* Cambiado: color-gris-oscuro */
+    --sidebar-text-color: #EDEBE3; /* Cambiado: color-arena-claro */
+    --sidebar-hover-color: #5A5A5A; /* Versión más clara del gris oscuro */
+    --sidebar-active-color: #D35400; /* Cambiado: color-naranja */
+    --transition-speed: 0.3s;
+
+    --color-gris-oscuro: #4A4A4A;
+    --color-arena-claro: #EDEBE3;
+    --color-arena-oscuro: #D6CEAA;
+    --color-beige: #B3B3B3;
+    --color-naranja: #D35400;
+    --color-naranja-claro: #FF8C00;
+    --font-sans: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 1. Sticky Footer Setup (Importante) */
+/* El body debe ser un contenedor flexbox en modo columna */
+.min-vh-100 {
+    min-height: 100vh;
+}
+/* La clase 'd-flex flex-column' se añade al body en el HTML */
+
+/* El contenido principal debe crecer para empujar el footer */
+.main-content {
+    transition: margin-left var(--transition-speed) ease;
+    padding-top: 80px; /* Offset de la navbar fija */
+    background-color: #f8f9fa; /* Fondo claro para el contenido principal */
+}
+
+/* El footer se mantiene al final con mt-auto (Bootstrap) y el setup del body */
+
+/* 2. Ajuste para navbar fija */
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-arena-claro);
+}
+
+/* 3. Navbar */
+.navbar {
+    z-index: 1100;
+    height: 80px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background-color: black !important;
+    color: var(--color-arena-claro);
+}
+
+/* Estilos para elementos dentro de la navbar */
+.navbar-brand, 
+.navbar-nav .nav-link {
+    color: var(--color-arena-claro) !important;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--color-naranja-claro) !important;
+}
+
+/* 4. Sidebar principal - INICIALMENTE OCULTO */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: black;
+    color: var(--sidebar-text-color);
+    position: fixed;
+    top: 80px; /* Debajo de la navbar */
+    left: calc(var(--sidebar-width) * -1); /* Inicialmente oculto fuera de pantalla */
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    transition: left var(--transition-speed) ease;
+    z-index: 1000;
+    box-shadow: 3px 0 10px rgba(0,0,0,0.2);
+    display: flex; /* Para que el user-info-sidebar de abajo se pegue al fondo */
+    flex-direction: column;
+    font-family: var(--font-sans);
+}
+
+/* Sidebar visible */
+.sidebar.open {
+    left: 0;
+}
+
+/* Overlay para móvil */
+.sidebar-overlay {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+    opacity: 0; /* Para la animación de opacidad */
+    transition: opacity var(--transition-speed) ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Contenido principal */
+/* Cuando sidebar está abierto, desplaza contenido en desktop */
+@media (min-width: 768px) {
+    .sidebar.open ~ .main-content {
+        margin-left: var(--sidebar-width);
+    }
+}
+
+/* Estilos para items del sidebar */
+.sidebar-header {
+    padding: 25px 20px;
+    background-color: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--color-beige);
+    text-align: center;
+}
+
+.sidebar-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-arena-claro);
+}
+
+.sidebar-nav {
+    padding: 20px 0;
+}
+
+.sidebar-item {
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    color: var(--sidebar-text-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+    font-size: 1.05rem;
+}
+
+.sidebar-item:hover {
+    background-color: var(--color-gris-oscuro);
+    text-decoration: none;
+    color: white;
+    padding-left: 30px;
+    border-left-color: var(--sidebar-active-color);
+}
+
+.sidebar-item.active {
+    background-color: var(--color-gris-oscuro);
+    border-left-color: var(--color-naranja-claro);
+    color: white;
+    font-weight: 500;
+}
+
+.sidebar-item i {
+    margin-right: 15px;
+    width: 24px;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.sidebar-item span {
+    flex: 1;
+}
+
+/* Botones en sidebar */
+.sidebar-buttons {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Botones con colores personalizados */
+.btn-primary-custom {
+    background-color: var(--color-naranja);
+    border-color: var(--color-naranja);
+    color: white;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--color-naranja-claro);
+    border-color: var(--color-naranja-claro);
+}
+
+.btn-secondary-custom {
+    background-color: var(--color-beige);
+    border-color: var(--color-beige);
+    color: var(--color-gris-oscuro);
+}
+
+.btn-secondary-custom:hover {
+    background-color: var(--color-arena-oscuro);
+    border-color: var(--color-arena-oscuro);
+}
+
+/* Información de usuario en sidebar */
+.user-info-sidebar {
+    padding: 20px;
+    background-color: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--color-beige);
+    text-align: center;
+}
+
+.user-info-sidebar.bottom {
+    margin-top: auto; /* Empuja esta sección al final del sidebar */
+}
+
+.user-info-sidebar strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-arena-claro);
+    font-size: 1.1rem;
+}
+
+.user-info-sidebar .user-email {
+    color: var(--color-beige);
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+/* Botón hamburguesa en navbar */
+.sidebar-hamburger {
+    background: none;
+    border: none;
+    color: var(--color-arena-claro);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: 5px;
+    transition: all 0.2s ease, transform 0.3s ease;
+    margin-right: 15px;
+}
+
+.sidebar-hamburger:hover {
+    background-color: rgba(255,255,255,0.1);
+    transform: scale(1.1);
+    color: var(--color-arena-claro);
+}
+
+/* Ajustes para navbar */
+.navbar-buttons {
+    display: none;
+}
+
+/* Estilos responsive */
+@media (max-width: 767px) {
+    .sidebar {
+        width: 85%;
+        max-width: 300px;
+    }
+    
+    .main-content {
+        padding-top: 80px; /* Mantener offset */
+    }
+}
+
+/* Separador en sidebar */
+.sidebar-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-beige), transparent);
+    margin: 20px 25px;
+}
+
+/* Subtítulo en sidebar */
+.sidebar-subtitle {
+    padding: 10px 25px;
+    color: var(--color-beige);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+/* Badge para items activos */
+.active-badge {
+    background-color: var(--color-arena-claro);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+/* Footer */
+footer {
+    width: 100%;
+    flex-shrink: 0; /* Asegura que el footer no se comprima */
+    background-color: var(--color-gris-oscuro);
+    color: var(--color-arena-claro);
+    padding: 20px 0;
+}
+
+/* Estilos para enlaces en el footer */
+footer a {
+    color: var(--color-naranja-claro);
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: var(--color-arena-claro);
+    text-decoration: underline;
+}
+
+/* Estilos para tarjetas y contenedores */
+.card-custom {
+    background-color: white;
+    border: 1px solid var(--color-arena-oscuro);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-custom .card-header {
+    background-color: var(--color-gris-oscuro);
+    color: var(--color-arena-claro);
+    border-bottom: 1px solid var(--color-beige);
+}
+
+/* Botones generales */
+.btn-naranja {
+    background-color: var(--color-naranja);
+    border-color: var(--color-naranja);
+    color: white;
+}
+
+.btn-naranja:hover {
+    background-color: var(--color-naranja-claro);
+    border-color: var(--color-naranja-claro);
+    color: white;
+}
+
+.btn-arena {
+    background-color: var(--color-arena-oscuro);
+    border-color: var(--color-arena-oscuro);
+    color: var(--color-gris-oscuro);
+}
+
+.btn-arena:hover {
+    background-color: var(--color-beige);
+    border-color: var(--color-beige);
+}
+
+/* Tablas personalizadas */
+.table-custom {
+    background-color: white;
+    border: 1px solid var(--color-beige);
+}
+
+.table-custom thead {
+    background-color: var(--color-gris-oscuro);
+    color: var(--color-arena-claro);
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(214, 206, 170, 0.1); /* color-arena-oscuro con opacidad */
+}
+
+/* Alertas personalizadas */
+.alert-naranja {
+    background-color: rgba(211, 84, 0, 0.1);
+    border-color: var(--color-naranja);
+    color: var(--color-naranja);
+}
+
+.alert-arena {
+    background-color: rgba(237, 235, 227, 0.2);
+    border-color: var(--color-arena-oscuro);
+    color: var(--color-gris-oscuro);
+}
+
+/* Formularios */
+.form-control:focus {
+    border-color: var(--color-naranja-claro);
+    box-shadow: 0 0 0 0.25rem rgba(211, 84, 0, 0.25);
+}
+
+/* Selectores personalizados */
+.custom-select:focus {
+    border-color: var(--color-naranja-claro);
+    box-shadow: 0 0 0 0.25rem rgba(211, 84, 0, 0.25);
+}

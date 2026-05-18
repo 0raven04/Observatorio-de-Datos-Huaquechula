@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="la_cruz_y_las_cosechas" id="la_cruz_y_las_cosechas">
+	<SimpleField name="id" type="float"></SimpleField>
+	<SimpleField name="Nombre" type="string"></SimpleField>
+</Schema>
+<Folder><name>la_cruz_y_las_cosechas</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#la_cruz_y_las_cosechas">
+		<SimpleData name="id">1</SimpleData>
+		<SimpleData name="Nombre">La Cruz y las cosechas</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-98.5392738126999,18.7718859799367 -98.5395698140812,18.7703946660828</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

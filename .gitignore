@@ -1,3 +1,18 @@
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+db.sqlite3
+media/
+temp_backups/
+.vscode/
+.DS_Store
 # Python / Django
 venv/
 __pycache__/
