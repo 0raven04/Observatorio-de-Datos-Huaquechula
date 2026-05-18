@@ -39,7 +39,8 @@ class INEGIService:
         indicator_id: str, 
         language: str = "es",
         recent_only: bool = False,
-        source: str = "BISE"
+        source: str = "BISE",
+        geo_code: Optional[str] = None
     ) -> Optional[Dict]:
         """
         Obtiene datos de un indicador específico del INEGI para Huaquechula.
@@ -53,7 +54,8 @@ class INEGIService:
         Returns:
             dict: Datos procesados con estructura {periodo: valor, ...} o None si hay error
         """
-        url = self._build_url(indicator_id, language, recent_only, source)
+        geo_code = geo_code or self.HUAQUECHULA_CODE
+        url = self._build_url(indicator_id, language, recent_only, source, geo_code)
         
         try:
             logger.info(f"Consultando INEGI para indicador {indicator_id}")
@@ -81,7 +83,8 @@ class INEGIService:
         indicator_id: str, 
         language: str, 
         recent_only: bool,
-        source: str
+        source: str,
+        geo_code: str
     ) -> str:
         """
         Construye la URL de consulta según la especificación INEGI.
@@ -94,7 +97,7 @@ class INEGIService:
             f"{self.BASE_URL}/"
             f"{indicator_id}/"
             f"{language}/"
-            f"{self.HUAQUECHULA_CODE}/"
+            f"{geo_code}/"
             f"{recent}/"
             f"{source}/"
             f"{self.VERSION}/"
@@ -194,7 +197,8 @@ class INEGIService:
         from myapp.models import Medicion
         
         # Obtener datos del INEGI
-        data = self.fetch_indicator_data(indicator_id)
+        geo_code = getattr(indicador_model, 'geo_code', self.HUAQUECHULA_CODE)
+        data = self.fetch_indicator_data(indicator_id, geo_code=geo_code)
         
         if not data:
             logger.warning(f"No se obtuvieron datos para indicador {indicator_id}")
@@ -225,7 +229,8 @@ class INEGIService:
         indicator_id: str,
         language: str = "es",
         recent_only: bool = False,
-        source: str = "BISE"
+        source: str = "BISE",
+        geo_code: Optional[str] = None
     ) -> Optional[Dict]:
         """
         Obtiene datos en formato JSON-stat del INEGI.
@@ -239,7 +244,7 @@ class INEGIService:
         Returns:
             dict: Datos en formato JSON-stat o None si hay error
         """
-        url = self._build_jsonstat_url(indicator_id, language, recent_only, source)
+        url = self._build_jsonstat_url(indicator_id, language, recent_only, source, geo_code)
         
         try:
             logger.info(f"Consultando INEGI JSON-stat para indicador {indicator_id}")
@@ -266,14 +271,16 @@ class INEGIService:
         indicator_id: str,
         language: str,
         recent_only: bool,
-        source: str
+        source: str,
+        geo_code: Optional[str] = None
     ) -> str:
         """
         Construye URL para consulta JSON-stat.
         Nota: INEGI puede no tener endpoint específico JSON-stat,
         usamos el mismo y convertimos la respuesta.
         """
-        return self._build_url(indicator_id, language, recent_only, source)
+        geo_code = geo_code or self.HUAQUECHULA_CODE
+        return self._build_url(indicator_id, language, recent_only, source, geo_code)
     
     def _convert_to_jsonstat(self, inegi_data: Dict, indicator_id: str) -> Dict:
         """

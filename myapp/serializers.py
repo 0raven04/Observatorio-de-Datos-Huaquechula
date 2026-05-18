@@ -7,7 +7,7 @@ from .models import (
     Usuario, Encuestador,
     RegistroVisita, PersonaVisita,
     Eje, CategoriaIndicador, Indicador, Medicion,
-    EncuestaResidente, EncuestaComercio
+    EncuestaResidente, EncuestaInstitucional
 )
 
 
@@ -107,7 +107,7 @@ class IndicadorSerializer(serializers.ModelSerializer):
         model = Indicador
         fields = [
             'id', 'nombre', 'descripcion', 'unidad_medida',
-            'data_source', 'last_sync', 'mediciones'
+            'data_source', 'last_sync', 'encuesta_tipo', 'encuesta_pregunta', 'mediciones'
         ]
 
 
@@ -142,9 +142,10 @@ class EncuestaResidenteSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'fecha', 'encuestador_clave',
             'edad', 'genero', 'barrio_colonia',
-            'confianza_policia', 'percepcion_inseguridad',
-            'tension_festividades', 'acceso_servicios_festividades', 'perdida_tradicion',
-            'calidad_aire', 'gestion_residuos',
+            'alteracion_rutina', 'acceso_servicios_festividades',
+            'desvirtuacion_tradicion', 'participacion_preservacion',
+            'participacion_decisiones', 'capacitacion_turistica',
+            'beneficio_economico', 'interes_jovenes',
         ]
         read_only_fields = ['id', 'fecha', 'encuestador_clave']
 
@@ -152,18 +153,19 @@ class EncuestaResidenteSerializer(serializers.ModelSerializer):
         return obj.encuestador.clave_encuestador if obj.encuestador else None
 
 
-class EncuestaComercioSerializer(serializers.ModelSerializer):
+class EncuestaInstitucionalSerializer(serializers.ModelSerializer):
     """
-    Serializer para encuestas de Comercios / Artesanos.
+    Serializer para encuestas Institucionales.
     """
     encuestador_clave = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = EncuestaComercio
+        model = EncuestaInstitucional
         fields = [
             'id', 'fecha', 'encuestador_clave',
-            'tipo_comercio',
-            'participacion_decisiones', 'capacitacion_turistica', 'integracion_turistica',
+            'registro_pci', 'canales_difusion', 'mecanismos_regulacion',
+            'plan_desarrollo', 'porcentaje_comunidades',
+            'visitantes_ano', 'visitantes_tradicion',
         ]
         read_only_fields = ['id', 'fecha', 'encuestador_clave']
 

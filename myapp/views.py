@@ -11,8 +11,8 @@ import subprocess
 from django.conf import settings
 from datetime import datetime
 import os
-from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
-from .forms import EncuestaResidenteForm, EncuestaComercioForm
+from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaInstitucional, EncuestaVisitante
+from .forms import EncuestaResidenteForm, EncuestaInstitucionalForm, EncuestaVisitanteForm
 
 # Vista principal para el registro de visitas
 # - Maneja tanto la creación de nuevos registros como la visualización de registros existentes
@@ -629,6 +629,7 @@ def indicator_chart_data(request, indicator_id):
         source_labels = {
             'manual': 'Datos locales (captura manual)',
             'inegi': 'INEGI — Instituto Nacional de Estadística y Geografía',
+            'encuesta': 'Encuesta del Observatorio Territorial',
             'other': 'Fuente externa',
         }
         
@@ -654,6 +655,7 @@ def indicator_chart_data(request, indicator_id):
             'description': indicador.descripcion or '',
             'data_source': indicador.data_source,
             'data_source_label': source_labels.get(indicador.data_source, 'Desconocida'),
+            'encuesta_tipo': indicador.encuesta_tipo or '',
             'inegi_id': indicador.inegi_indicator_id or '',
             'last_updated': last_updated_str,
         }
@@ -829,7 +831,7 @@ def nueva_encuesta_residente(request):
     return render(request, 'myapp/form_residente.html', {'form': form})
 
 @login_required
-def nueva_encuesta_comercio(request):
+def nueva_encuesta_institucional(request):
     try:  
         usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
         if usuario.tipo not in ['encuestador', 'admin']:  
@@ -845,15 +847,43 @@ def nueva_encuesta_comercio(request):
         pass
 
     if request.method == 'POST':
-        form = EncuestaComercioForm(request.POST)
+        form = EncuestaInstitucionalForm(request.POST)
         if form.is_valid():
             encuesta = form.save(commit=False)
             encuesta.encuestador = encuestador
             encuesta.save()
-            messages.success(request, 'Encuesta a comercio guardada exitosamente.')
+            messages.success(request, 'Encuesta institucional guardada exitosamente.')
             return redirect('encuestador_dashboard')
     else:
-        form = EncuestaComercioForm()
+        form = EncuestaInstitucionalForm()
 
-    return render(request, 'myapp/form_comercio.html', {'form': form})
+    return render(request, 'myapp/form_institucional.html', {'form': form})
 
+@login_required
+def nueva_encuesta_visitante(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.username)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    # Intentar obtener el encuestador
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = EncuestaVisitanteForm(request.POST)
+        if form.is_valid():
+            encuesta = form.save(commit=False)
+            encuesta.encuestador = encuestador
+            encuesta.save()
+            messages.success(request, 'Encuesta a visitante guardada exitosamente.')
+            return redirect('encuestador_dashboard')
+    else:
+        form = EncuestaVisitanteForm()
+
+    return render(request, 'myapp/form_visitante.html', {'form': form})

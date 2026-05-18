@@ -15,14 +15,14 @@ from .models import (
     Usuario, Encuestador,
     RegistroVisita, PersonaVisita,
     Eje,
-    EncuestaResidente, EncuestaComercio,
+    EncuestaResidente, EncuestaInstitucional,
 )
 from .serializers import (
     UsuarioSerializer,
     RegistroVisitaSerializer,
     EjeSerializer,
     EncuestaResidenteSerializer,
-    EncuestaComercioSerializer,
+    EncuestaInstitucionalSerializer,
 )
 
 
@@ -286,29 +286,20 @@ class EncuestaResidenteView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class EncuestaComercioView(APIView):
+class EncuestaInstitucionalView(APIView):
     """
-    GET  /api/mobile/encuestas/comercio/  → Lista las encuestas capturadas
-    POST /api/mobile/encuestas/comercio/  → Crea una nueva encuesta de comercio
-
-    Cuerpo POST esperado:
-    {
-        "tipo_comercio": "Artesanía",
-        "participacion_decisiones": 2,
-        "capacitacion_turistica": 1,
-        "integracion_turistica": 2
-    }
+    Lista y crea encuestas Institucionales (solo para Encuestadores).
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        encuestas = EncuestaComercio.objects.all().order_by('-fecha')
-        serializer = EncuestaComercioSerializer(encuestas, many=True)
+        encuestas = EncuestaInstitucional.objects.all().order_by('-fecha')
+        serializer = EncuestaInstitucionalSerializer(encuestas, many=True)
         return Response(serializer.data)
 
     def post(self, request):
         encuestador = _get_encuestador_safe(request)
-        serializer = EncuestaComercioSerializer(data=request.data)
+        serializer = EncuestaInstitucionalSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(encuestador=encuestador)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
