@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User 
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
+import django.utils.timezone
 
 
 class Usuario(models.Model):
@@ -432,4 +433,272 @@ class EncuestaVisitante(models.Model):
 
     def __str__(self):
         return f"Encuesta Visitante {self.id} - {self.ciudad_origen} - {self.fecha.strftime('%Y-%m-%d')}"
+
+
+class Categoria_Sitio(models.Model):
+    id_categoria = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100, unique=True)
+    codigo_slug = models.CharField(max_length=50, unique=True)
+    
+    class Meta:
+        db_table = 'Categoria_Sitio'
+        verbose_name = 'Categoría de Sitio'
+        verbose_name_plural = 'Categorías de Sitios'
+        ordering = ['nombre']
+
+class ArchivoKMZ(models.Model):
+    id_archivo = models.AutoField(primary_key=True)
+    nombre_archivo = models.CharField(max_length=255)
+    archivo_path = models.URLField(max_length=1000, blank=True, null=True, verbose_name='URL del archivo')
+    descripcion = models.TextField(blank=True, null=True)
+    tamanio = models.BigIntegerField(default=0)
+    hash_archivo = models.CharField(max_length=64, blank=True, null=True)
+    TIPO_CHOICES = [
+        ('kml', 'KML (Archivo geográfico)'),
+        ('kmz', 'KMZ (Archivo comprimido)'),
+        ('imagen', 'Imagen (JPG, PNG, GIF, etc.)'),
+        ('video', 'Video (MP4, AVI, etc.)'),
+        ('audio', 'Audio (MP3, WAV, etc.)'),
+        ('pdf', 'Documento PDF'),
+        ('otro', 'Otro tipo de archivo'),
+    ]
+    tipo_archivo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='kmz')
+    procesado = models.BooleanField(default=False)
+    error_procesamiento = models.TextField(blank=True, null=True)
+    fecha_subida = models.DateTimeField(default=django.utils.timezone.now)
+    procesado_en = models.DateTimeField(blank=True, null=True)
+    visible = models.BooleanField(default=True)
+    url_disponible = models.BooleanField(default=True, verbose_name='URL disponible')
+    ultima_verificacion_url = models.DateTimeField(blank=True, null=True)
+    codigo_respuesta_url = models.IntegerField(blank=True, null=True)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, db_column='usuario_id')
+    
+    class Meta:
+        db_table = 'ArchivoKMZ'
+        verbose_name = 'Archivo por URL'
+        verbose_name_plural = 'Archivos por URL'
+        ordering = ['-fecha_subida']
+        indexes = [
+            models.Index(fields=['usuario', 'tipo_archivo']),
+            models.Index(fields=['visible', 'fecha_subida']),
+            models.Index(fields=['procesado']),
+        ]
+
+class Documento(models.Model):
+    id_documento = models.AutoField(primary_key=True)
+    titulo = models.CharField(max_length=200)
+    fecha_carga = models.DateTimeField(default=django.utils.timezone.now)
+    descripcion = models.TextField(blank=True, null=True)
+    url = models.TextField(blank=True, default='')
+    fecha_actualizacion = models.DateTimeField(blank=True, null=True)
+    CLASIFICACION_CHOICES = [
+        ('publico', 'Público'),
+        ('privado', 'Privado'),
+        ('confidencial', 'Confidencial'),
+    ]
+    clasificacion = models.CharField(max_length=13, choices=CLASIFICACION_CHOICES, default='publico')
+    clave_admin = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, db_column='clave_admin')
+    
+    class Meta:
+        db_table = 'Documento'
+        verbose_name = 'Documento'
+        verbose_name_plural = 'Documentos'
+        ordering = ['-fecha_carga']
+
+class GeometriaEspacial(models.Model):
+    id_geometria = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=255, blank=True, null=True)
+    TIPO_CHOICES = [
+        ('punto', 'Punto'),
+        ('linea', 'Línea'),
+        ('poligono', 'Polígono'),
+        ('multipoligono', 'Multipolígono'),
+        ('multipunto', 'Multipunto'),
+    ]
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    coordenadas = models.JSONField()
+    propiedades = models.JSONField(blank=True, null=True)
+    estilo = models.JSONField(blank=True, null=True)
+    perimetro = models.DecimalField(max_digits=15, decimal_places=6, blank=True, null=True)
+    area = models.DecimalField(max_digits=15, decimal_places=6, blank=True, null=True)
+    fecha_creacion = models.DateTimeField(default=django.utils.timezone.now)
+    id_archivo = models.ForeignKey(ArchivoKMZ, on_delete=models.CASCADE, blank=True, null=True, db_column='id_archivo')
+    
+    class Meta:
+        db_table = 'GeometriaEspacial'
+        verbose_name = 'Geometría Espacial'
+        verbose_name_plural = 'Geometrías Espaciales'
+        indexes = [
+            models.Index(fields=['id_archivo', 'tipo']),
+            models.Index(fields=['tipo']),
+        ]
+
+class Punto_Interes(models.Model):
+    id_punto = models.AutoField(primary_key=True)
+    CATEGORIA_CHOICES = [
+        ('ofrenda', 'Ofrenda'),
+        ('servicio', 'Servicio'),
+        ('sitio_turistico', 'Sitio Turístico'),
+        ('evento', 'Evento'),
+        ('otro', 'Otro'),
+    ]
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True, null=True)
+    imagen_portada = models.URLField(max_length=500, blank=True, null=True, verbose_name='URL de imagen portada')
+    ESTADO_CHOICES = [
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+    ]
+    estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo')
+    fecha_inicio = models.DateField(blank=True, null=True)
+    fecha_fin = models.DateField(blank=True, null=True)
+    hora_apertura = models.TimeField(blank=True, null=True)
+    hora_cierre = models.TimeField(blank=True, null=True)
+    dias_semana = models.CharField(max_length=100, blank=True, null=True)
+    fecha_registro = models.DateTimeField(default=django.utils.timezone.now)
+    id_geometria = models.ForeignKey(GeometriaEspacial, on_delete=models.SET_NULL, blank=True, null=True, db_column='id_geometria')
+    usuario_creacion = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, db_column='usuario_creacion')
+    
+    class Meta:
+        db_table = 'Punto_Interes'
+        verbose_name = 'Punto de Interés'
+        verbose_name_plural = 'Puntos de Interés'
+        ordering = ['nombre']
+        indexes = [
+            models.Index(fields=['categoria', 'estado']),
+            models.Index(fields=['nombre']),
+            models.Index(fields=['fecha_inicio', 'fecha_fin']),
+        ]
+
+class Ofrenda(models.Model):
+    id_ofrenda = models.AutoField(primary_key=True)
+    anfitrion = models.CharField(max_length=100)
+    id_punto = models.OneToOneField(Punto_Interes, on_delete=models.CASCADE, db_column='id_punto')
+    
+    class Meta:
+        db_table = 'Ofrenda'
+        verbose_name = 'Ofrenda'
+        verbose_name_plural = 'Ofrendas'
+
+class Galeria_Multimedia(models.Model):
+    id_foto = models.AutoField(primary_key=True)
+    url_archivo = models.URLField(max_length=1000, verbose_name='URL del archivo')
+    TIPO_CHOICES = [
+        ('imagen', 'Imagen'),
+        ('video', 'Video'),
+        ('audio', 'Audio'),
+    ]
+    tipo_archivo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='imagen')
+    descripcion = models.TextField(blank=True, null=True)
+    es_portada = models.BooleanField(default=False)
+    fecha_subida = models.DateTimeField(default=django.utils.timezone.now)
+    id_punto = models.ForeignKey(Punto_Interes, on_delete=models.CASCADE, db_column='id_punto')
+    
+    class Meta:
+        db_table = 'Galeria_Multimedia'
+        verbose_name = 'Multimedia'
+        verbose_name_plural = 'Galería Multimedia'
+        ordering = ['-es_portada', '-fecha_subida']
+
+class Ruta(models.Model):
+    id_ruta = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True, null=True)
+    duracion_estimada = models.IntegerField(default=0, help_text='Duración en minutos')
+    longitud_km = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
+    DIFICULTAD_CHOICES = [
+        ('facil', 'Fácil'),
+        ('moderada', 'Moderada'),
+        ('dificil', 'Difícil'),
+    ]
+    dificultad = models.CharField(max_length=10, choices=DIFICULTAD_CHOICES, default='moderada')
+    ESTADO_CHOICES = [
+        ('activa', 'Activa'),
+        ('inactiva', 'Inactiva'),
+    ]
+    estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activa')
+    clave_propietario = models.ForeignKey(User, on_delete=models.CASCADE, db_column='clave_propietario', default=1)
+    id_geometria = models.ForeignKey(GeometriaEspacial, on_delete=models.SET_NULL, blank=True, null=True, db_column='id_geometria')
+
+class Ruta_Detalle(models.Model):
+    id_ruta_detalle = models.AutoField(primary_key=True)
+    orden = models.IntegerField()
+    tiempo_parada = models.IntegerField(blank=True, null=True, help_text='Tiempo en minutos')
+    actividad_sugerida = models.TextField(blank=True, null=True)
+    id_punto = models.ForeignKey(Punto_Interes, on_delete=models.CASCADE, db_column='id_punto')
+    id_ruta = models.ForeignKey(Ruta, on_delete=models.CASCADE, db_column='id_ruta')
+    
+    class Meta:
+        db_table = 'Ruta_Detalle'
+        verbose_name = 'Detalle de Ruta'
+        verbose_name_plural = 'Detalles de Ruta'
+        ordering = ['id_ruta', 'orden']
+        unique_together = [['id_ruta', 'orden']]
+
+class Servicio(models.Model):
+    id_servicio = models.AutoField(primary_key=True)
+    TIPO_CHOICES = [
+        ('cajero', 'Cajero'),
+        ('hospedaje', 'Hospedaje'),
+        ('modulo', 'Módulo'),
+        ('salud', 'Salud'),
+        ('transporte', 'Transporte'),
+    ]
+    tipo_servicio = models.CharField(max_length=20, choices=TIPO_CHOICES, default='hospedaje')
+    contacto = models.CharField(max_length=100, blank=True, null=True)
+    tipo_pago = models.CharField(max_length=100, default='efectivo')
+    id_punto = models.OneToOneField(Punto_Interes, on_delete=models.CASCADE, db_column='id_punto')
+    
+    class Meta:
+        db_table = 'Servicio'
+        verbose_name = 'Servicio'
+        verbose_name_plural = 'Servicios'
+
+class Sitio_turistico(models.Model):
+    id_sitio = models.AutoField(primary_key=True)
+    reglas_acceso = models.TextField(blank=True, null=True)
+    id_categoria = models.ForeignKey(Categoria_Sitio, on_delete=models.CASCADE, db_column='id_categoria')
+    id_punto = models.OneToOneField(Punto_Interes, on_delete=models.CASCADE, db_column='id_punto')
+    
+    class Meta:
+        db_table = 'Sitio_turistico'
+        verbose_name = 'Sitio Turístico'
+        verbose_name_plural = 'Sitios Turísticos'
+
+class Propietario(models.Model):
+    clave_propietario = models.AutoField(primary_key=True)
+    id_usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, db_column='id_usuario', related_name='propietario')
+    
+    class Meta:
+        db_table = 'Propietario'
+
+class Administrador(models.Model):
+    clave_admin = models.AutoField(primary_key=True)
+    id_usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, db_column='id_usuario', related_name='administrador')
+    
+    class Meta:
+        db_table = 'Administrador'
+
+class ResenaGlobal(models.Model):
+    id_resena = models.AutoField(primary_key=True)
+    nombre_visitante = models.CharField(max_length=100, blank=True, null=True)
+    calificacion = models.PositiveSmallIntegerField()
+    comentario = models.TextField(blank=True, null=True)
+    fecha_publicacion = models.DateTimeField(auto_now_add=True)
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aprobada', 'Aprobada'),
+        ('oculta', 'Oculta'),
+    ]
+    estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='aprobada')
+    likes = models.PositiveIntegerField(default=0)
+    ip_visitante = models.GenericIPAddressField(blank=True, null=True)
+    id_usuario = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, db_column='id_usuario', related_name='resenas')
+    
+    class Meta:
+        db_table = 'Resena_Global'
+        verbose_name = 'Reseña Global'
+        verbose_name_plural = 'Reseñas Globales'
+        ordering = ['-fecha_publicacion']
 

@@ -187,7 +187,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
 
-AUTH_USER_MODEL = 'myapp.Usuario'
+# AUTH_USER_MODEL = 'myapp.Usuario'
 
 # =====================================================
 # GOOGLE reCAPTCHA v2

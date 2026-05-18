@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        """migrations.AddField(
             model_name='indicador',
             name='data_source',
             field=models.CharField(choices=[('manual', 'Manual'), ('inegi', 'INEGI'), ('other', 'Otra fuente')], default='manual', max_length=20),
@@ -24,5 +24,5 @@ class Migration(migrations.Migration):
             model_name='indicador',
             name='last_sync',
             field=models.DateTimeField(blank=True, help_text='Última sincronización con fuente externa', null=True),
-        ),
+        ),"""
     ]

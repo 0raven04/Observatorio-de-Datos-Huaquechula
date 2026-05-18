@@ -26,22 +26,27 @@ class Migration(migrations.Migration):
             name='genero',
             field=models.CharField(choices=[('Hombre', 'Hombre'), ('Mujer', 'Mujer'), ('Otro', 'Otro')], max_length=15, verbose_name='Género'),
         ),
-        migrations.CreateModel(
-            name='EncuestaVisitante',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('fecha', models.DateTimeField(auto_now_add=True)),
-                ('genero', models.CharField(choices=[('femenino', 'Femenino'), ('masculino', 'Masculino'), ('no_binario', 'No binario / Otro'), ('prefiero_no_decir', 'Prefiero no decirlo')], max_length=20, verbose_name='¿Con qué género te identificas?')),
-                ('edad', models.PositiveSmallIntegerField(verbose_name='¿Cuál es tu edad?')),
-                ('grupo_viaje', models.CharField(choices=[('solo', 'Solo / Sola'), ('pareja', 'En pareja'), ('familia_ninos', 'En familia (con niños)'), ('amigos_adultos', 'Con amigos / familiares (adultos)'), ('grupo_organizado', 'Grupo organizado / Excursión')], max_length=20, verbose_name='¿Con quién viajas en este viaje?')),
-                ('ciudad_origen', models.CharField(max_length=100, verbose_name='Ciudad de residencia')),
-                ('estado_origen', models.CharField(max_length=100, verbose_name='Estado / Provincia')),
-                ('pais_origen', models.CharField(default='México', max_length=100, verbose_name='País')),
-                ('zonas_visitadas', models.JSONField(blank=True, default=list, verbose_name='Zonas visitadas o por visitar')),
-                ('actividades', models.JSONField(blank=True, default=list, verbose_name='¿Qué actividades realizaste durante tu estancia?')),
-                ('calificacion', models.PositiveSmallIntegerField(choices=[(1, '⭐ Muy mala'), (2, '⭐⭐ Mala'), (3, '⭐⭐⭐ Regular'), (4, '⭐⭐⭐⭐ Buena'), (5, '⭐⭐⭐⭐⭐ Excelente')], verbose_name='¿Cómo calificarías tu experiencia en nuestro municipio?')),
-                ('comentario', models.TextField(blank=True, verbose_name='¿Qué fue lo que más te gustó de tu visita?')),
-                ('encuestador', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='myapp.encuestador')),
-            ],
-        ),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.CreateModel(
+                    name='EncuestaVisitante',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('fecha', models.DateTimeField(auto_now_add=True)),
+                        ('genero', models.CharField(choices=[('femenino', 'Femenino'), ('masculino', 'Masculino'), ('no_binario', 'No binario / Otro'), ('prefiero_no_decir', 'Prefiero no decirlo')], max_length=20, verbose_name='¿Con qué género te identificas?')),
+                        ('edad', models.PositiveSmallIntegerField(verbose_name='¿Cuál es tu edad?')),
+                        ('grupo_viaje', models.CharField(choices=[('solo', 'Solo / Sola'), ('pareja', 'En pareja'), ('familia_ninos', 'En familia (con niños)'), ('amigos_adultos', 'Con amigos / familiares (adultos)'), ('grupo_organizado', 'Grupo organizado / Excursión')], max_length=20, verbose_name='¿Con quién viajas en este viaje?')),
+                        ('ciudad_origen', models.CharField(max_length=100, verbose_name='Ciudad de residencia')),
+                        ('estado_origen', models.CharField(max_length=100, verbose_name='Estado / Provincia')),
+                        ('pais_origen', models.CharField(default='México', max_length=100, verbose_name='País')),
+                        ('zonas_visitadas', models.JSONField(blank=True, default=list, verbose_name='Zonas visitadas o por visitar')),
+                        ('actividades', models.JSONField(blank=True, default=list, verbose_name='¿Qué actividades realizaste durante tu estancia?')),
+                        ('calificacion', models.PositiveSmallIntegerField(choices=[(1, '⭐ Muy mala'), (2, '⭐⭐ Mala'), (3, '⭐⭐⭐ Regular'), (4, '⭐⭐⭐⭐ Buena'), (5, '⭐⭐⭐⭐⭐ Excelente')], verbose_name='¿Cómo calificarías tu experiencia en nuestro municipio?')),
+                        ('comentario', models.TextField(blank=True, verbose_name='¿Qué fue lo que más te gustó de tu visita?')),
+                        ('encuestador', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='myapp.encuestador')),
+                    ],
+                ),
+            ]
+        )
     ]

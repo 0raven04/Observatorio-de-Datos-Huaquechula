@@ -28,7 +28,7 @@ def create_table_raw(apps, schema_editor):
                     `encuestador_id` int(11) DEFAULT NULL,
                     PRIMARY KEY (`id`),
                     KEY `fk_visitante_enc` (`encuestador_id`),
-                    CONSTRAINT `fk_visitante_enc` FOREIGN KEY (`encuestador_id`) REFERENCES `encuestador` (`clave_encuestador`) ON DELETE SET NULL
+                    CONSTRAINT `fk_visitante_enc` FOREIGN KEY (`encuestador_id`) REFERENCES `Encuestador` (`clave_encuestador`) ON DELETE SET NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
             """)
 

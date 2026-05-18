@@ -30,9 +30,9 @@ admin.site.register(Documento)
 
 @admin.register(RegistroVisita)
 class RegistroVisitaAdmin(admin.ModelAdmin):
-    list_display = ['id_registro', 'fecha', 'total_personas', 'es_extranjero', 'procedencia', 'motivo_visita', 'clave_encuestador']
+    list_display = ['id_registro', 'fecha', 'total_personas', 'es_extranjero', 'procedencia', 'motivo_visita', 'id_encuestador']
     list_filter = ['es_extranjero', 'motivo_visita', 'tipo_transporte', 'fecha']
-    search_fields = ['procedencia', 'pais_origen', 'clave_encuestador__clave_encuestador']
+    search_fields = ['procedencia', 'pais_origen', 'id_encuestador__clave_encuestador']
     readonly_fields = ['fecha', 'total_personas']
     date_hierarchy = 'fecha'
     
@@ -58,7 +58,7 @@ class RegistroVisitaAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Encuestador', {
-            'fields': ('clave_encuestador',)
+            'fields': ('id_encuestador',)
         }),
         ('Resumen', {
             'fields': ('total_personas',),

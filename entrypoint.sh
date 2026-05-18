@@ -11,4 +11,8 @@ echo "Asegurando que la carpeta media y subcarpetas existen..."
 mkdir -p /vol/web/media/kmz_files
 
 echo "Iniciando servidor de desarrollo Django..."
-exec python manage.py runserver 0.0.0.0:8000
+if [ "$#" -eq 0 ]; then
+    exec python manage.py runserver 0.0.0.0:8000
+else
+    exec "$@"
+fi
