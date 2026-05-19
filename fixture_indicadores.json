@@ -1,0 +1,2846 @@
+[
+  {
+    "model": "myapp.eje",
+    "pk": 1,
+    "fields": {
+      "nombre": "Bienestar Social",
+      "descripcion": "Indicadores de salud, educaci¾n y vivienda"
+    }
+  },
+  {
+    "model": "myapp.eje",
+    "pk": 2,
+    "fields": {
+      "nombre": "Tradici¾n y Patrimonio",
+      "descripcion": "Preservaci¾n cultural y tensiones"
+    }
+  },
+  {
+    "model": "myapp.eje",
+    "pk": 3,
+    "fields": {
+      "nombre": "Turismo Comunitario",
+      "descripcion": "Impacto y gesti¾n turÝstica"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 1,
+    "fields": {
+      "eje": 1,
+      "nombre": "Salud"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 2,
+    "fields": {
+      "eje": 1,
+      "nombre": "EconomÝa"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 3,
+    "fields": {
+      "eje": 2,
+      "nombre": "Patrimonio Inmaterial"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 4,
+    "fields": {
+      "eje": 3,
+      "nombre": "Gesti¾n"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 5,
+    "fields": {
+      "eje": 1,
+      "nombre": "Accesibilidad a servicios"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 6,
+    "fields": {
+      "eje": 1,
+      "nombre": "Educaci¾n"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 7,
+    "fields": {
+      "eje": 1,
+      "nombre": "Vivienda"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 8,
+    "fields": {
+      "eje": 1,
+      "nombre": "Ingresos"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 9,
+    "fields": {
+      "eje": 1,
+      "nombre": "Empleo"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 10,
+    "fields": {
+      "eje": 1,
+      "nombre": "Seguridad"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 11,
+    "fields": {
+      "eje": 1,
+      "nombre": "Medio Ambiente"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 12,
+    "fields": {
+      "eje": 1,
+      "nombre": "Migraci¾n"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 13,
+    "fields": {
+      "eje": 2,
+      "nombre": "Tensi¾n sobre la comunidad y el Patrimonio Cultural Inmaterial PCI"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 14,
+    "fields": {
+      "eje": 2,
+      "nombre": "Salvaguardia"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 15,
+    "fields": {
+      "eje": 3,
+      "nombre": "Participaci¾n y gobernanza en el turismo"
+    }
+  },
+  {
+    "model": "myapp.categoriaindicador",
+    "pk": 16,
+    "fields": {
+      "eje": 3,
+      "nombre": "Gesti¾n del turismo"
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 1,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Esperanza de vida",
+      "descripcion": "",
+      "unidad_medida": "A±os",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 2,
+    "fields": {
+      "categoria": 2,
+      "nombre": "Poblaci¾n en pobreza",
+      "descripcion": "",
+      "unidad_medida": "Personas",
+      "inegi_indicator_id": "6200240364",
+      "data_source": "inegi",
+      "last_sync": "2026-05-17T23:12:19.939Z",
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 3,
+    "fields": {
+      "categoria": 3,
+      "nombre": "Talleres de artesanÝa",
+      "descripcion": "",
+      "unidad_medida": "Cantidad",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 4,
+    "fields": {
+      "categoria": 4,
+      "nombre": "Visitantes anuales",
+      "descripcion": "",
+      "unidad_medida": "Personas",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 5,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Esperanza de vida al nacer",
+      "descripcion": "",
+      "unidad_medida": "A±os",
+      "inegi_indicator_id": "6207019048",
+      "data_source": "inegi",
+      "last_sync": "2026-05-17T23:12:20.195Z",
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 6,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Tasa de natalidad",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": "6207019051",
+      "data_source": "inegi",
+      "last_sync": "2026-05-17T23:12:20.447Z",
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 7,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Tasa de obesidad",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 8,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Tasa de mortalidad infantil",
+      "descripcion": "",
+      "unidad_medida": "Por mil",
+      "inegi_indicator_id": "6207019049",
+      "data_source": "inegi",
+      "last_sync": "2026-05-17T23:12:20.701Z",
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 9,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Raz¾n de mortalidad materna",
+      "descripcion": "",
+      "unidad_medida": "Por 100,000",
+      "inegi_indicator_id": "6207019042",
+      "data_source": "inegi",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 10,
+    "fields": {
+      "categoria": 5,
+      "nombre": "Acceso a servicios de salud",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": "6207047047",
+      "data_source": "inegi",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 11,
+    "fields": {
+      "categoria": 5,
+      "nombre": "Acceso a los servicios de banda ancha",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "nacional",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 12,
+    "fields": {
+      "categoria": 5,
+      "nombre": "Vivienda con acceso de servicios bßsicos",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "nacional",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 13,
+    "fields": {
+      "categoria": 6,
+      "nombre": "Niveles de educaci¾n",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 14,
+    "fields": {
+      "categoria": 6,
+      "nombre": "Deserci¾n escolar",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 15,
+    "fields": {
+      "categoria": 6,
+      "nombre": "Grado promedio de escolaridad",
+      "descripcion": "",
+      "unidad_medida": "A±os",
+      "inegi_indicator_id": "6207019050",
+      "data_source": "inegi",
+      "last_sync": "2026-05-17T23:12:21.156Z",
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 16,
+    "fields": {
+      "categoria": 7,
+      "nombre": "Habitaciones por persona",
+      "descripcion": "",
+      "unidad_medida": "Promedio",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "nacional",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 17,
+    "fields": {
+      "categoria": 7,
+      "nombre": "Viviendas con techos de materiales resistentes",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "nacional",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 18,
+    "fields": {
+      "categoria": 8,
+      "nombre": "Gini del ingreso disponible de los hogares per cßpita",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": "6200240320",
+      "data_source": "inegi",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 19,
+    "fields": {
+      "categoria": 8,
+      "nombre": "Ingreso equivalente disponible de los hogares",
+      "descripcion": "",
+      "unidad_medida": "Pesos",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 22,
+    "fields": {
+      "categoria": 9,
+      "nombre": "Tasa de condiciones crÝticas de ocupaci¾n",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 23,
+    "fields": {
+      "categoria": 9,
+      "nombre": "Informalidad laboral",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 24,
+    "fields": {
+      "categoria": 9,
+      "nombre": "Tasa de desocupaci¾n",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 25,
+    "fields": {
+      "categoria": 9,
+      "nombre": "Participaci¾n econ¾mica",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 26,
+    "fields": {
+      "categoria": 10,
+      "nombre": "Tasa de homicidios",
+      "descripcion": "",
+      "unidad_medida": "Por 100,000",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 27,
+    "fields": {
+      "categoria": 10,
+      "nombre": "Confianza policÝa",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 28,
+    "fields": {
+      "categoria": 10,
+      "nombre": "Percepci¾n de inseguridad",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 29,
+    "fields": {
+      "categoria": 10,
+      "nombre": "Incidencia delictiva",
+      "descripcion": "",
+      "unidad_medida": "Por 100,000",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 30,
+    "fields": {
+      "categoria": 11,
+      "nombre": "Contaminaci¾n del aire",
+      "descripcion": "",
+      "unidad_medida": "PM2.5",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "estado",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 31,
+    "fields": {
+      "categoria": 11,
+      "nombre": "Disposici¾n de residuos",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "nacional",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 34,
+    "fields": {
+      "categoria": 13,
+      "nombre": "Tensi¾n sobre la poblaci¾n local",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 35,
+    "fields": {
+      "categoria": 13,
+      "nombre": "Acceso de la poblaci¾n a los servicios p·blicos durante la tradici¾n",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 36,
+    "fields": {
+      "categoria": 13,
+      "nombre": "Tensiones fÝsicas y simb¾licas sobre la tradici¾n",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 37,
+    "fields": {
+      "categoria": 14,
+      "nombre": "Procesos de salvaguardia del Patrimonio",
+      "descripcion": "",
+      "unidad_medida": "Cantidad",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 38,
+    "fields": {
+      "categoria": 14,
+      "nombre": "Seguimiento de salvaguardia",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 39,
+    "fields": {
+      "categoria": 14,
+      "nombre": "Difusi¾n de PCI",
+      "descripcion": "",
+      "unidad_medida": "Cantidad",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 40,
+    "fields": {
+      "categoria": 14,
+      "nombre": "Relaci¾n comunidad - PCI",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 41,
+    "fields": {
+      "categoria": 15,
+      "nombre": "Participaci¾n de la comunidad en la toma de decisiones",
+      "descripcion": "",
+      "unidad_medida": "Porcentaje",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 42,
+    "fields": {
+      "categoria": 15,
+      "nombre": "Capacitaci¾n, informaci¾n y comunicaci¾n",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 43,
+    "fields": {
+      "categoria": 15,
+      "nombre": "Regulaci¾n",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 44,
+    "fields": {
+      "categoria": 16,
+      "nombre": "Herramientas de gesti¾n",
+      "descripcion": "",
+      "unidad_medida": "Cantidad",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "institucional",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 45,
+    "fields": {
+      "categoria": 16,
+      "nombre": "Proyectos turÝsticos",
+      "descripcion": "",
+      "unidad_medida": "Cantidad",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 46,
+    "fields": {
+      "categoria": 16,
+      "nombre": "Integraci¾n turÝstica territorial",
+      "descripcion": "",
+      "unidad_medida": "═ndice",
+      "inegi_indicator_id": null,
+      "data_source": "encuesta",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": "residente",
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 49,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Poblaci¾n total",
+      "descripcion": "",
+      "unidad_medida": "Valor",
+      "inegi_indicator_id": "1002000001",
+      "data_source": "inegi",
+      "last_sync": "2026-05-17T23:12:21.998Z",
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 51,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Tasa de mortalidad",
+      "descripcion": "",
+      "unidad_medida": "Por mil",
+      "inegi_indicator_id": "6207019049",
+      "data_source": "inegi",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 1,
+    "fields": {
+      "indicador": 1,
+      "periodo": "2023",
+      "valor": "75.50",
+      "fecha_registro": "2026-01-18"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 3,
+    "fields": {
+      "indicador": 3,
+      "periodo": "2024",
+      "valor": "15.00",
+      "fecha_registro": "2026-01-18"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 4,
+    "fields": {
+      "indicador": 4,
+      "periodo": "2024",
+      "valor": "25000.00",
+      "fecha_registro": "2026-01-18"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 7,
+    "fields": {
+      "indicador": 7,
+      "periodo": "2023",
+      "valor": "33.40",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 9,
+    "fields": {
+      "indicador": 9,
+      "periodo": "2023",
+      "valor": "34.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 10,
+    "fields": {
+      "indicador": 10,
+      "periodo": "2023",
+      "valor": "82.30",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 11,
+    "fields": {
+      "indicador": 11,
+      "periodo": "2023",
+      "valor": "56.70",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 12,
+    "fields": {
+      "indicador": 12,
+      "periodo": "2023",
+      "valor": "91.20",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 13,
+    "fields": {
+      "indicador": 13,
+      "periodo": "2023",
+      "valor": "45.80",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 14,
+    "fields": {
+      "indicador": 14,
+      "periodo": "2023",
+      "valor": "8.30",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 16,
+    "fields": {
+      "indicador": 16,
+      "periodo": "2023",
+      "valor": "1.20",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 17,
+    "fields": {
+      "indicador": 17,
+      "periodo": "2023",
+      "valor": "87.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 18,
+    "fields": {
+      "indicador": 18,
+      "periodo": "2023",
+      "valor": "0.42",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 19,
+    "fields": {
+      "indicador": 19,
+      "periodo": "2023",
+      "valor": "8750.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 22,
+    "fields": {
+      "indicador": 22,
+      "periodo": "2023",
+      "valor": "12.80",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 23,
+    "fields": {
+      "indicador": 23,
+      "periodo": "2023",
+      "valor": "56.30",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 24,
+    "fields": {
+      "indicador": 24,
+      "periodo": "2023",
+      "valor": "3.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 25,
+    "fields": {
+      "indicador": 25,
+      "periodo": "2023",
+      "valor": "58.70",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 26,
+    "fields": {
+      "indicador": 26,
+      "periodo": "2023",
+      "valor": "15.20",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 27,
+    "fields": {
+      "indicador": 27,
+      "periodo": "2023",
+      "valor": "42.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 28,
+    "fields": {
+      "indicador": 28,
+      "periodo": "2023",
+      "valor": "68.90",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 29,
+    "fields": {
+      "indicador": 29,
+      "periodo": "2023",
+      "valor": "320.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 30,
+    "fields": {
+      "indicador": 30,
+      "periodo": "2023",
+      "valor": "28.30",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 31,
+    "fields": {
+      "indicador": 31,
+      "periodo": "2023",
+      "valor": "78.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 34,
+    "fields": {
+      "indicador": 34,
+      "periodo": "2023",
+      "valor": "2.30",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 35,
+    "fields": {
+      "indicador": 35,
+      "periodo": "2023",
+      "valor": "65.40",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 36,
+    "fields": {
+      "indicador": 36,
+      "periodo": "2023",
+      "valor": "1.80",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 37,
+    "fields": {
+      "indicador": 37,
+      "periodo": "2023",
+      "valor": "3.00",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 38,
+    "fields": {
+      "indicador": 38,
+      "periodo": "2023",
+      "valor": "2.50",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 39,
+    "fields": {
+      "indicador": 39,
+      "periodo": "2023",
+      "valor": "8.00",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 40,
+    "fields": {
+      "indicador": 40,
+      "periodo": "2023",
+      "valor": "3.20",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 41,
+    "fields": {
+      "indicador": 41,
+      "periodo": "2023",
+      "valor": "45.30",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 42,
+    "fields": {
+      "indicador": 42,
+      "periodo": "2023",
+      "valor": "2.80",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 43,
+    "fields": {
+      "indicador": 43,
+      "periodo": "2023",
+      "valor": "2.10",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 44,
+    "fields": {
+      "indicador": 44,
+      "periodo": "2023",
+      "valor": "4.00",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 45,
+    "fields": {
+      "indicador": 45,
+      "periodo": "2023",
+      "valor": "6.00",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 46,
+    "fields": {
+      "indicador": 46,
+      "periodo": "2023",
+      "valor": "2.70",
+      "fecha_registro": "2026-01-19"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 59,
+    "fields": {
+      "indicador": 7,
+      "periodo": "2020",
+      "valor": "30.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 60,
+    "fields": {
+      "indicador": 7,
+      "periodo": "2021",
+      "valor": "31.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 61,
+    "fields": {
+      "indicador": 7,
+      "periodo": "2022",
+      "valor": "32.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 62,
+    "fields": {
+      "indicador": 7,
+      "periodo": "2024",
+      "valor": "34.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 67,
+    "fields": {
+      "indicador": 9,
+      "periodo": "2020",
+      "valor": "42.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 68,
+    "fields": {
+      "indicador": 9,
+      "periodo": "2021",
+      "valor": "39.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 69,
+    "fields": {
+      "indicador": 9,
+      "periodo": "2022",
+      "valor": "37.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 70,
+    "fields": {
+      "indicador": 9,
+      "periodo": "2024",
+      "valor": "32.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 71,
+    "fields": {
+      "indicador": 10,
+      "periodo": "2020",
+      "valor": "74.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 72,
+    "fields": {
+      "indicador": 10,
+      "periodo": "2021",
+      "valor": "76.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 73,
+    "fields": {
+      "indicador": 10,
+      "periodo": "2022",
+      "valor": "79.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 74,
+    "fields": {
+      "indicador": 10,
+      "periodo": "2024",
+      "valor": "84.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 75,
+    "fields": {
+      "indicador": 11,
+      "periodo": "2020",
+      "valor": "38.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 76,
+    "fields": {
+      "indicador": 11,
+      "periodo": "2021",
+      "valor": "42.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 77,
+    "fields": {
+      "indicador": 11,
+      "periodo": "2022",
+      "valor": "48.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 78,
+    "fields": {
+      "indicador": 11,
+      "periodo": "2024",
+      "valor": "62.40",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 79,
+    "fields": {
+      "indicador": 12,
+      "periodo": "2020",
+      "valor": "85.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 80,
+    "fields": {
+      "indicador": 12,
+      "periodo": "2021",
+      "valor": "87.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 81,
+    "fields": {
+      "indicador": 12,
+      "periodo": "2022",
+      "valor": "89.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 82,
+    "fields": {
+      "indicador": 12,
+      "periodo": "2024",
+      "valor": "92.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 83,
+    "fields": {
+      "indicador": 13,
+      "periodo": "2020",
+      "valor": "40.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 84,
+    "fields": {
+      "indicador": 13,
+      "periodo": "2021",
+      "valor": "41.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 85,
+    "fields": {
+      "indicador": 13,
+      "periodo": "2022",
+      "valor": "43.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 86,
+    "fields": {
+      "indicador": 13,
+      "periodo": "2024",
+      "valor": "47.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 87,
+    "fields": {
+      "indicador": 14,
+      "periodo": "2020",
+      "valor": "11.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 88,
+    "fields": {
+      "indicador": 14,
+      "periodo": "2021",
+      "valor": "10.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 89,
+    "fields": {
+      "indicador": 14,
+      "periodo": "2022",
+      "valor": "9.60",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 90,
+    "fields": {
+      "indicador": 14,
+      "periodo": "2024",
+      "valor": "7.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 95,
+    "fields": {
+      "indicador": 16,
+      "periodo": "2020",
+      "valor": "1.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 96,
+    "fields": {
+      "indicador": 16,
+      "periodo": "2021",
+      "valor": "1.05",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 97,
+    "fields": {
+      "indicador": 16,
+      "periodo": "2022",
+      "valor": "1.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 98,
+    "fields": {
+      "indicador": 16,
+      "periodo": "2024",
+      "valor": "1.25",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 99,
+    "fields": {
+      "indicador": 17,
+      "periodo": "2020",
+      "valor": "80.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 100,
+    "fields": {
+      "indicador": 17,
+      "periodo": "2021",
+      "valor": "82.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 101,
+    "fields": {
+      "indicador": 17,
+      "periodo": "2022",
+      "valor": "84.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 102,
+    "fields": {
+      "indicador": 17,
+      "periodo": "2024",
+      "valor": "89.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 103,
+    "fields": {
+      "indicador": 18,
+      "periodo": "2020",
+      "valor": "0.46",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 104,
+    "fields": {
+      "indicador": 18,
+      "periodo": "2021",
+      "valor": "0.45",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 105,
+    "fields": {
+      "indicador": 18,
+      "periodo": "2022",
+      "valor": "0.44",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 106,
+    "fields": {
+      "indicador": 18,
+      "periodo": "2024",
+      "valor": "0.41",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 107,
+    "fields": {
+      "indicador": 19,
+      "periodo": "2020",
+      "valor": "6800.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 108,
+    "fields": {
+      "indicador": 19,
+      "periodo": "2021",
+      "valor": "7200.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 109,
+    "fields": {
+      "indicador": 19,
+      "periodo": "2022",
+      "valor": "7850.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 110,
+    "fields": {
+      "indicador": 19,
+      "periodo": "2024",
+      "valor": "9200.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 118,
+    "fields": {
+      "indicador": 22,
+      "periodo": "2020",
+      "valor": "16.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 119,
+    "fields": {
+      "indicador": 22,
+      "periodo": "2021",
+      "valor": "15.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 120,
+    "fields": {
+      "indicador": 22,
+      "periodo": "2022",
+      "valor": "14.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 121,
+    "fields": {
+      "indicador": 22,
+      "periodo": "2024",
+      "valor": "11.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 122,
+    "fields": {
+      "indicador": 23,
+      "periodo": "2020",
+      "valor": "62.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 123,
+    "fields": {
+      "indicador": 23,
+      "periodo": "2021",
+      "valor": "60.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 124,
+    "fields": {
+      "indicador": 23,
+      "periodo": "2022",
+      "valor": "58.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 125,
+    "fields": {
+      "indicador": 23,
+      "periodo": "2024",
+      "valor": "54.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 126,
+    "fields": {
+      "indicador": 24,
+      "periodo": "2020",
+      "valor": "5.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 127,
+    "fields": {
+      "indicador": 24,
+      "periodo": "2021",
+      "valor": "4.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 128,
+    "fields": {
+      "indicador": 24,
+      "periodo": "2022",
+      "valor": "4.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 129,
+    "fields": {
+      "indicador": 24,
+      "periodo": "2024",
+      "valor": "3.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 130,
+    "fields": {
+      "indicador": 25,
+      "periodo": "2020",
+      "valor": "52.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 131,
+    "fields": {
+      "indicador": 25,
+      "periodo": "2021",
+      "valor": "54.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 132,
+    "fields": {
+      "indicador": 25,
+      "periodo": "2022",
+      "valor": "56.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 133,
+    "fields": {
+      "indicador": 25,
+      "periodo": "2024",
+      "valor": "60.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 134,
+    "fields": {
+      "indicador": 26,
+      "periodo": "2020",
+      "valor": "18.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 135,
+    "fields": {
+      "indicador": 26,
+      "periodo": "2021",
+      "valor": "17.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 136,
+    "fields": {
+      "indicador": 26,
+      "periodo": "2022",
+      "valor": "16.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 137,
+    "fields": {
+      "indicador": 26,
+      "periodo": "2024",
+      "valor": "14.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 138,
+    "fields": {
+      "indicador": 27,
+      "periodo": "2020",
+      "valor": "35.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 139,
+    "fields": {
+      "indicador": 27,
+      "periodo": "2021",
+      "valor": "37.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 140,
+    "fields": {
+      "indicador": 27,
+      "periodo": "2022",
+      "valor": "39.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 141,
+    "fields": {
+      "indicador": 27,
+      "periodo": "2024",
+      "valor": "45.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 142,
+    "fields": {
+      "indicador": 28,
+      "periodo": "2020",
+      "valor": "78.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 143,
+    "fields": {
+      "indicador": 28,
+      "periodo": "2021",
+      "valor": "75.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 144,
+    "fields": {
+      "indicador": 28,
+      "periodo": "2022",
+      "valor": "72.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 145,
+    "fields": {
+      "indicador": 28,
+      "periodo": "2024",
+      "valor": "66.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 146,
+    "fields": {
+      "indicador": 29,
+      "periodo": "2020",
+      "valor": "410.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 147,
+    "fields": {
+      "indicador": 29,
+      "periodo": "2021",
+      "valor": "385.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 148,
+    "fields": {
+      "indicador": 29,
+      "periodo": "2022",
+      "valor": "350.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 149,
+    "fields": {
+      "indicador": 29,
+      "periodo": "2024",
+      "valor": "298.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 150,
+    "fields": {
+      "indicador": 30,
+      "periodo": "2020",
+      "valor": "32.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 151,
+    "fields": {
+      "indicador": 30,
+      "periodo": "2021",
+      "valor": "31.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 152,
+    "fields": {
+      "indicador": 30,
+      "periodo": "2022",
+      "valor": "29.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 153,
+    "fields": {
+      "indicador": 30,
+      "periodo": "2024",
+      "valor": "27.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 154,
+    "fields": {
+      "indicador": 31,
+      "periodo": "2020",
+      "valor": "68.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 155,
+    "fields": {
+      "indicador": 31,
+      "periodo": "2021",
+      "valor": "71.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 156,
+    "fields": {
+      "indicador": 31,
+      "periodo": "2022",
+      "valor": "74.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 157,
+    "fields": {
+      "indicador": 31,
+      "periodo": "2024",
+      "valor": "81.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 166,
+    "fields": {
+      "indicador": 34,
+      "periodo": "2020",
+      "valor": "3.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 167,
+    "fields": {
+      "indicador": 34,
+      "periodo": "2021",
+      "valor": "2.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 168,
+    "fields": {
+      "indicador": 34,
+      "periodo": "2022",
+      "valor": "2.60",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 169,
+    "fields": {
+      "indicador": 34,
+      "periodo": "2024",
+      "valor": "2.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 170,
+    "fields": {
+      "indicador": 35,
+      "periodo": "2020",
+      "valor": "55.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 171,
+    "fields": {
+      "indicador": 35,
+      "periodo": "2021",
+      "valor": "58.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 172,
+    "fields": {
+      "indicador": 35,
+      "periodo": "2022",
+      "valor": "61.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 173,
+    "fields": {
+      "indicador": 35,
+      "periodo": "2024",
+      "valor": "68.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 174,
+    "fields": {
+      "indicador": 36,
+      "periodo": "2020",
+      "valor": "2.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 175,
+    "fields": {
+      "indicador": 36,
+      "periodo": "2021",
+      "valor": "2.30",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 176,
+    "fields": {
+      "indicador": 36,
+      "periodo": "2022",
+      "valor": "2.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 177,
+    "fields": {
+      "indicador": 36,
+      "periodo": "2024",
+      "valor": "1.60",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 178,
+    "fields": {
+      "indicador": 37,
+      "periodo": "2020",
+      "valor": "1.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 179,
+    "fields": {
+      "indicador": 37,
+      "periodo": "2021",
+      "valor": "2.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 180,
+    "fields": {
+      "indicador": 37,
+      "periodo": "2022",
+      "valor": "2.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 181,
+    "fields": {
+      "indicador": 37,
+      "periodo": "2024",
+      "valor": "4.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 182,
+    "fields": {
+      "indicador": 38,
+      "periodo": "2020",
+      "valor": "1.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 183,
+    "fields": {
+      "indicador": 38,
+      "periodo": "2021",
+      "valor": "1.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 184,
+    "fields": {
+      "indicador": 38,
+      "periodo": "2022",
+      "valor": "2.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 185,
+    "fields": {
+      "indicador": 38,
+      "periodo": "2024",
+      "valor": "2.90",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 186,
+    "fields": {
+      "indicador": 39,
+      "periodo": "2020",
+      "valor": "4.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 187,
+    "fields": {
+      "indicador": 39,
+      "periodo": "2021",
+      "valor": "5.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 188,
+    "fields": {
+      "indicador": 39,
+      "periodo": "2022",
+      "valor": "6.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 189,
+    "fields": {
+      "indicador": 39,
+      "periodo": "2024",
+      "valor": "10.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 190,
+    "fields": {
+      "indicador": 40,
+      "periodo": "2020",
+      "valor": "2.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 191,
+    "fields": {
+      "indicador": 40,
+      "periodo": "2021",
+      "valor": "2.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 192,
+    "fields": {
+      "indicador": 40,
+      "periodo": "2022",
+      "valor": "2.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 193,
+    "fields": {
+      "indicador": 40,
+      "periodo": "2024",
+      "valor": "3.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 194,
+    "fields": {
+      "indicador": 41,
+      "periodo": "2020",
+      "valor": "32.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 195,
+    "fields": {
+      "indicador": 41,
+      "periodo": "2021",
+      "valor": "36.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 196,
+    "fields": {
+      "indicador": 41,
+      "periodo": "2022",
+      "valor": "40.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 197,
+    "fields": {
+      "indicador": 41,
+      "periodo": "2024",
+      "valor": "49.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 198,
+    "fields": {
+      "indicador": 42,
+      "periodo": "2020",
+      "valor": "1.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 199,
+    "fields": {
+      "indicador": 42,
+      "periodo": "2021",
+      "valor": "1.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 200,
+    "fields": {
+      "indicador": 42,
+      "periodo": "2022",
+      "valor": "2.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 201,
+    "fields": {
+      "indicador": 42,
+      "periodo": "2024",
+      "valor": "3.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 202,
+    "fields": {
+      "indicador": 43,
+      "periodo": "2020",
+      "valor": "1.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 203,
+    "fields": {
+      "indicador": 43,
+      "periodo": "2021",
+      "valor": "1.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 204,
+    "fields": {
+      "indicador": 43,
+      "periodo": "2022",
+      "valor": "1.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 205,
+    "fields": {
+      "indicador": 43,
+      "periodo": "2024",
+      "valor": "2.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 206,
+    "fields": {
+      "indicador": 44,
+      "periodo": "2020",
+      "valor": "2.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 207,
+    "fields": {
+      "indicador": 44,
+      "periodo": "2021",
+      "valor": "2.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 208,
+    "fields": {
+      "indicador": 44,
+      "periodo": "2022",
+      "valor": "3.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 209,
+    "fields": {
+      "indicador": 44,
+      "periodo": "2024",
+      "valor": "5.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 210,
+    "fields": {
+      "indicador": 45,
+      "periodo": "2020",
+      "valor": "3.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 211,
+    "fields": {
+      "indicador": 45,
+      "periodo": "2021",
+      "valor": "4.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 212,
+    "fields": {
+      "indicador": 45,
+      "periodo": "2022",
+      "valor": "4.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 213,
+    "fields": {
+      "indicador": 45,
+      "periodo": "2024",
+      "valor": "7.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 214,
+    "fields": {
+      "indicador": 46,
+      "periodo": "2020",
+      "valor": "1.50",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 215,
+    "fields": {
+      "indicador": 46,
+      "periodo": "2021",
+      "valor": "1.80",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 216,
+    "fields": {
+      "indicador": 46,
+      "periodo": "2022",
+      "valor": "2.20",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 217,
+    "fields": {
+      "indicador": 46,
+      "periodo": "2024",
+      "valor": "3.10",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 218,
+    "fields": {
+      "indicador": 2,
+      "periodo": "2020",
+      "valor": "0.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 220,
+    "fields": {
+      "indicador": 6,
+      "periodo": "2020",
+      "valor": "0.00",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 221,
+    "fields": {
+      "indicador": 6,
+      "periodo": "2015",
+      "valor": "0.23",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 223,
+    "fields": {
+      "indicador": 15,
+      "periodo": "2020",
+      "valor": "23.88",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 224,
+    "fields": {
+      "indicador": 15,
+      "periodo": "2015",
+      "valor": "21.75",
+      "fecha_registro": "2026-05-10"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 243,
+    "fields": {
+      "indicador": 51,
+      "periodo": "2020",
+      "valor": "6.50",
+      "fecha_registro": "2026-05-12"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 244,
+    "fields": {
+      "indicador": 51,
+      "periodo": "2021",
+      "valor": "7.20",
+      "fecha_registro": "2026-05-12"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 245,
+    "fields": {
+      "indicador": 51,
+      "periodo": "2022",
+      "valor": "6.10",
+      "fecha_registro": "2026-05-12"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 246,
+    "fields": {
+      "indicador": 51,
+      "periodo": "2023",
+      "valor": "5.80",
+      "fecha_registro": "2026-05-12"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 247,
+    "fields": {
+      "indicador": 51,
+      "periodo": "2024",
+      "valor": "5.50",
+      "fecha_registro": "2026-05-12"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 263,
+    "fields": {
+      "indicador": 5,
+      "periodo": "2015",
+      "valor": "1.29",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 264,
+    "fields": {
+      "indicador": 8,
+      "periodo": "2015",
+      "valor": "1.91",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 267,
+    "fields": {
+      "indicador": 49,
+      "periodo": "2020",
+      "valor": "103946.00",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 268,
+    "fields": {
+      "indicador": 49,
+      "periodo": "2010",
+      "valor": "97753.00",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 269,
+    "fields": {
+      "indicador": 49,
+      "periodo": "2005",
+      "valor": "90846.00",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 270,
+    "fields": {
+      "indicador": 49,
+      "periodo": "2000",
+      "valor": "83537.00",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 271,
+    "fields": {
+      "indicador": 49,
+      "periodo": "1995",
+      "valor": "75169.00",
+      "fecha_registro": "2026-05-17"
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 64,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Indicador Bienestar 1",
+      "descripcion": "",
+      "unidad_medida": "Unidades",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 65,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Indicador Bienestar 11",
+      "descripcion": "",
+      "unidad_medida": "Unidades",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.indicador",
+    "pk": 66,
+    "fields": {
+      "categoria": 1,
+      "nombre": "Indicador Bienestar 21",
+      "descripcion": "",
+      "unidad_medida": "Unidades",
+      "inegi_indicator_id": null,
+      "data_source": "manual",
+      "last_sync": null,
+      "nivel_geografico": "municipal",
+      "encuesta_tipo": null,
+      "encuesta_pregunta": null
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 278,
+    "fields": {
+      "indicador": 64,
+      "periodo": "2023",
+      "valor": "56.00",
+      "fecha_registro": "2026-01-18"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 279,
+    "fields": {
+      "indicador": 65,
+      "periodo": "2023",
+      "valor": "272.00",
+      "fecha_registro": "2026-01-18"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 280,
+    "fields": {
+      "indicador": 66,
+      "periodo": "2023",
+      "valor": "104.00",
+      "fecha_registro": "2026-01-18"
+    }
+  },
+  {
+    "model": "myapp.medicion",
+    "pk": 281,
+    "fields": {
+      "indicador": 6,
+      "periodo": "1994",
+      "valor": "450.00",
+      "fecha_registro": "2026-01-18"
+    }
+  }
+]

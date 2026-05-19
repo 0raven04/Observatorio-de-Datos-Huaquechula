@@ -843,8 +843,31 @@ class Categoria(models.Model):
 class Documento(models.Model):
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True)
-    archivo = models.FileField(upload_to='documentos/%Y/%m/')
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='documentos')
+    
+    # Soporte para archivos físicos (opcional)
+    archivo = models.FileField(upload_to='documentos/%Y/%m/', null=True, blank=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='documentos', null=True, blank=True)
+    
+    # Soporte para URLs (opcional)
+    url = models.URLField(max_length=500, blank=True, null=True)
+    clasificacion = models.CharField(
+        max_length=20, 
+        choices=[('publico', 'Público'), ('privado', 'Privado'), ('confidencial', 'Confidencial')], 
+        default='publico'
+    )
+    tipo = models.CharField(
+        max_length=20, 
+        choices=[('reporte', 'Reporte'), ('video', 'Video'), ('historico', 'Documento Histórico')], 
+        default='reporte'
+    )
+    clave_admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='documentos_creados'
+    )
+    
     fecha_subida = models.DateTimeField(default=timezone.now)
     tamaño = models.IntegerField(default=0)  # en bytes
     tipo_archivo = models.CharField(max_length=10, blank=True)
@@ -933,6 +956,12 @@ class Indicador(models.Model):
         ('other', 'Otra fuente')
     ])
     last_sync = models.DateTimeField(null=True, blank=True, help_text="Última sincronización con fuente externa")
+    geo_code = models.CharField(max_length=10, default='21071')
+
+    # Nuevos campos para coincidir con el fixture
+    nivel_geografico = models.CharField(max_length=50, blank=True, null=True)
+    encuesta_tipo = models.CharField(max_length=50, blank=True, null=True)
+    encuesta_pregunta = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre

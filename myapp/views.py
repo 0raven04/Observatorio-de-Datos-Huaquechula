@@ -2895,7 +2895,7 @@ def repositorio(request):
     return render(request, 'myapp/repositorio.html', context)
 
 @require_http_methods(["POST"])
-def subir_documento(request):
+def subir_documento_archivo(request):
     """Vista para subir documentos"""
     try:
         # Validar que venga el archivo
