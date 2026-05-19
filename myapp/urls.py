@@ -96,6 +96,7 @@ urlpatterns = [
     path('api/resenas/', views.api_resenas_globales, name='api_resenas_globales'),
     path('api/resenas/<int:resena_id>/like/', views.like_resena, name='like_resena'),
     path('api/resenas/<int:resena_id>/reportar/', views.reportar_resena, name='reportar_resena'),
+    path('api/visitor-stats/', views.api_visitor_stats, name='api_visitor_stats'),
 
     # Gestión administrativa de reseñas
     path('resenas/', views.gestionar_resenas, name='gestionar_resenas'),

@@ -379,6 +379,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function validarFormularioPersonalizado(form) {
+        // Solo aplicar esta validación al formulario de registro de visitas o edición
+        if (form.id !== 'formulario') {
+            return true;
+        }
+
         const totalPersonasElement = document.getElementById('total-personas') || document.getElementById('display-total');
         const totalGeneral = totalPersonasElement ? parseInt(totalPersonasElement.textContent) || 0 : 0;
         const esExtranjero = document.querySelector('input[name="es_extranjero"]:checked, input[name="gridRadios"]:checked');

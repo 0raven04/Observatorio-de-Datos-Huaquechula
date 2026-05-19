@@ -4,15 +4,15 @@
     "pk": 1,
     "fields": {
       "nombre": "Bienestar Social",
-      "descripcion": "Indicadores de salud, educaci¾n y vivienda"
+      "descripcion": "Indicadores de salud, educación y vivienda"
     }
   },
   {
     "model": "myapp.eje",
     "pk": 2,
     "fields": {
-      "nombre": "Tradici¾n y Patrimonio",
-      "descripcion": "Preservaci¾n cultural y tensiones"
+      "nombre": "Tradición y Patrimonio",
+      "descripcion": "Preservación cultural y tensiones"
     }
   },
   {
@@ -20,7 +20,7 @@
     "pk": 3,
     "fields": {
       "nombre": "Turismo Comunitario",
-      "descripcion": "Impacto y gesti¾n turÝstica"
+      "descripcion": "Impacto y gestión turística"
     }
   },
   {
@@ -36,7 +36,7 @@
     "pk": 2,
     "fields": {
       "eje": 1,
-      "nombre": "EconomÝa"
+      "nombre": "Economía"
     }
   },
   {
@@ -52,7 +52,7 @@
     "pk": 4,
     "fields": {
       "eje": 3,
-      "nombre": "Gesti¾n"
+      "nombre": "Gestión"
     }
   },
   {
@@ -68,7 +68,7 @@
     "pk": 6,
     "fields": {
       "eje": 1,
-      "nombre": "Educaci¾n"
+      "nombre": "Educación"
     }
   },
   {
@@ -116,7 +116,7 @@
     "pk": 12,
     "fields": {
       "eje": 1,
-      "nombre": "Migraci¾n"
+      "nombre": "Migración"
     }
   },
   {
@@ -124,7 +124,7 @@
     "pk": 13,
     "fields": {
       "eje": 2,
-      "nombre": "Tensi¾n sobre la comunidad y el Patrimonio Cultural Inmaterial PCI"
+      "nombre": "Tensión sobre la comunidad y el Patrimonio Cultural Inmaterial PCI"
     }
   },
   {
@@ -140,7 +140,7 @@
     "pk": 15,
     "fields": {
       "eje": 3,
-      "nombre": "Participaci¾n y gobernanza en el turismo"
+      "nombre": "Participación y gobernanza en el turismo"
     }
   },
   {
@@ -148,7 +148,7 @@
     "pk": 16,
     "fields": {
       "eje": 3,
-      "nombre": "Gesti¾n del turismo"
+      "nombre": "Gestión del turismo"
     }
   },
   {
@@ -158,7 +158,7 @@
       "categoria": 1,
       "nombre": "Esperanza de vida",
       "descripcion": "",
-      "unidad_medida": "A±os",
+      "unidad_medida": "Años",
       "inegi_indicator_id": null,
       "data_source": "manual",
       "last_sync": null,
@@ -172,7 +172,7 @@
     "pk": 2,
     "fields": {
       "categoria": 2,
-      "nombre": "Poblaci¾n en pobreza",
+      "nombre": "Población en pobreza",
       "descripcion": "",
       "unidad_medida": "Personas",
       "inegi_indicator_id": "6200240364",
@@ -188,7 +188,7 @@
     "pk": 3,
     "fields": {
       "categoria": 3,
-      "nombre": "Talleres de artesanÝa",
+      "nombre": "Talleres de artesanía",
       "descripcion": "",
       "unidad_medida": "Cantidad",
       "inegi_indicator_id": null,
@@ -222,7 +222,7 @@
       "categoria": 1,
       "nombre": "Esperanza de vida al nacer",
       "descripcion": "",
-      "unidad_medida": "A±os",
+      "unidad_medida": "Años",
       "inegi_indicator_id": "6207019048",
       "data_source": "inegi",
       "last_sync": "2026-05-17T23:12:20.195Z",
@@ -284,7 +284,7 @@
     "pk": 9,
     "fields": {
       "categoria": 1,
-      "nombre": "Raz¾n de mortalidad materna",
+      "nombre": "Razón de mortalidad materna",
       "descripcion": "",
       "unidad_medida": "Por 100,000",
       "inegi_indicator_id": "6207019042",
@@ -332,7 +332,7 @@
     "pk": 12,
     "fields": {
       "categoria": 5,
-      "nombre": "Vivienda con acceso de servicios bßsicos",
+      "nombre": "Vivienda con acceso de servicios básicos",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -348,7 +348,7 @@
     "pk": 13,
     "fields": {
       "categoria": 6,
-      "nombre": "Niveles de educaci¾n",
+      "nombre": "Niveles de educación",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -364,7 +364,7 @@
     "pk": 14,
     "fields": {
       "categoria": 6,
-      "nombre": "Deserci¾n escolar",
+      "nombre": "Deserción escolar",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -382,7 +382,7 @@
       "categoria": 6,
       "nombre": "Grado promedio de escolaridad",
       "descripcion": "",
-      "unidad_medida": "A±os",
+      "unidad_medida": "Años",
       "inegi_indicator_id": "6207019050",
       "data_source": "inegi",
       "last_sync": "2026-05-17T23:12:21.156Z",
@@ -428,9 +428,9 @@
     "pk": 18,
     "fields": {
       "categoria": 8,
-      "nombre": "Gini del ingreso disponible de los hogares per cßpita",
+      "nombre": "Gini del ingreso disponible de los hogares per cápita",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": "6200240320",
       "data_source": "inegi",
       "last_sync": null,
@@ -460,7 +460,7 @@
     "pk": 22,
     "fields": {
       "categoria": 9,
-      "nombre": "Tasa de condiciones crÝticas de ocupaci¾n",
+      "nombre": "Tasa de condiciones críticas de ocupación",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -492,7 +492,7 @@
     "pk": 24,
     "fields": {
       "categoria": 9,
-      "nombre": "Tasa de desocupaci¾n",
+      "nombre": "Tasa de desocupación",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -508,7 +508,7 @@
     "pk": 25,
     "fields": {
       "categoria": 9,
-      "nombre": "Participaci¾n econ¾mica",
+      "nombre": "Participación económica",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -540,7 +540,7 @@
     "pk": 27,
     "fields": {
       "categoria": 10,
-      "nombre": "Confianza policÝa",
+      "nombre": "Confianza policía",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -556,7 +556,7 @@
     "pk": 28,
     "fields": {
       "categoria": 10,
-      "nombre": "Percepci¾n de inseguridad",
+      "nombre": "Percepción de inseguridad",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -588,7 +588,7 @@
     "pk": 30,
     "fields": {
       "categoria": 11,
-      "nombre": "Contaminaci¾n del aire",
+      "nombre": "Contaminación del aire",
       "descripcion": "",
       "unidad_medida": "PM2.5",
       "inegi_indicator_id": null,
@@ -604,7 +604,7 @@
     "pk": 31,
     "fields": {
       "categoria": 11,
-      "nombre": "Disposici¾n de residuos",
+      "nombre": "Disposición de residuos",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -620,9 +620,9 @@
     "pk": 34,
     "fields": {
       "categoria": 13,
-      "nombre": "Tensi¾n sobre la poblaci¾n local",
+      "nombre": "Tensión sobre la población local",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -636,7 +636,7 @@
     "pk": 35,
     "fields": {
       "categoria": 13,
-      "nombre": "Acceso de la poblaci¾n a los servicios p·blicos durante la tradici¾n",
+      "nombre": "Acceso de la población a los servicios públicos durante la tradición",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -652,9 +652,9 @@
     "pk": 36,
     "fields": {
       "categoria": 13,
-      "nombre": "Tensiones fÝsicas y simb¾licas sobre la tradici¾n",
+      "nombre": "Tensiones físicas y simbólicas sobre la tradición",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -686,7 +686,7 @@
       "categoria": 14,
       "nombre": "Seguimiento de salvaguardia",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -700,7 +700,7 @@
     "pk": 39,
     "fields": {
       "categoria": 14,
-      "nombre": "Difusi¾n de PCI",
+      "nombre": "Difusión de PCI",
       "descripcion": "",
       "unidad_medida": "Cantidad",
       "inegi_indicator_id": null,
@@ -716,9 +716,9 @@
     "pk": 40,
     "fields": {
       "categoria": 14,
-      "nombre": "Relaci¾n comunidad - PCI",
+      "nombre": "Relación comunidad - PCI",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -732,7 +732,7 @@
     "pk": 41,
     "fields": {
       "categoria": 15,
-      "nombre": "Participaci¾n de la comunidad en la toma de decisiones",
+      "nombre": "Participación de la comunidad en la toma de decisiones",
       "descripcion": "",
       "unidad_medida": "Porcentaje",
       "inegi_indicator_id": null,
@@ -748,9 +748,9 @@
     "pk": 42,
     "fields": {
       "categoria": 15,
-      "nombre": "Capacitaci¾n, informaci¾n y comunicaci¾n",
+      "nombre": "Capacitación, información y comunicación",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -764,9 +764,9 @@
     "pk": 43,
     "fields": {
       "categoria": 15,
-      "nombre": "Regulaci¾n",
+      "nombre": "Regulación",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -780,7 +780,7 @@
     "pk": 44,
     "fields": {
       "categoria": 16,
-      "nombre": "Herramientas de gesti¾n",
+      "nombre": "Herramientas de gestión",
       "descripcion": "",
       "unidad_medida": "Cantidad",
       "inegi_indicator_id": null,
@@ -796,7 +796,7 @@
     "pk": 45,
     "fields": {
       "categoria": 16,
-      "nombre": "Proyectos turÝsticos",
+      "nombre": "Proyectos turísticos",
       "descripcion": "",
       "unidad_medida": "Cantidad",
       "inegi_indicator_id": null,
@@ -812,9 +812,9 @@
     "pk": 46,
     "fields": {
       "categoria": 16,
-      "nombre": "Integraci¾n turÝstica territorial",
+      "nombre": "Integración turística territorial",
       "descripcion": "",
-      "unidad_medida": "═ndice",
+      "unidad_medida": "Índice",
       "inegi_indicator_id": null,
       "data_source": "encuesta",
       "last_sync": null,
@@ -828,7 +828,7 @@
     "pk": 49,
     "fields": {
       "categoria": 1,
-      "nombre": "Poblaci¾n total",
+      "nombre": "Población total",
       "descripcion": "",
       "unidad_medida": "Valor",
       "inegi_indicator_id": "1002000001",

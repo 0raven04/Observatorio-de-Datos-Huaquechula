@@ -476,6 +476,68 @@
 `;
     document.head.appendChild(estiloOculto);
 
+    // --- FUNCIÓN PARA MOSTRAR ALERTAS PERSONALIZADAS ---
+    window.showCustomAlert = function(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: white;
+            z-index: 10000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 350px;
+        `;
+        
+        if (type === 'success') {
+            toast.style.backgroundColor = '#2ecc71';
+        } else if (type === 'error') {
+            toast.style.backgroundColor = '#e74c3c';
+        } else {
+            toast.style.backgroundColor = 'var(--color-naranja, #ff8c00)';
+        }
+        
+        const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+        
+        toast.innerHTML = `
+            <i class="fas fa-${icon} fa-lg"></i>
+            <div style="flex-grow: 1;">${message}</div>
+            <button type="button" style="background: none; border: none; color: white; cursor: pointer; padding: 0;" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        if (!document.querySelector('#toastAnimations')) {
+            const style = document.createElement('style');
+            style.id = 'toastAnimations';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+
     if (!window._mapaYaInicializado) {
         window._mapaYaInicializado = true;
 
@@ -1014,7 +1076,7 @@
 
                         // Ejecutamos la limpieza y el aviso
                         setTimeout(function () {
-                            alert("¡Has llegado al destino!");
+                            showCustomAlert("¡Has llegado al destino!", "success");
                             window.mostrarTodosLosMarcadores();
 
                             // Limpieza de capas de simulación
@@ -1041,7 +1103,7 @@
         // ==========================================
         window.irAlPuntoMasCercano = function () {
             if (!window.todosLosMarcadores || window.todosLosMarcadores.length === 0) {
-                alert("Aún no hay puntos cargados en el mapa.");
+                showCustomAlert("Aún no hay puntos cargados en el mapa.", "info");
                 return;
             }
 
@@ -1067,11 +1129,11 @@
             });
 
             if (idMarcadorMasCercano) {
-                alert("El punto más cercano está a " + Math.round(distanciaMinima) + " metros. Calculando ruta...");
+                showCustomAlert("El punto más cercano está a " + Math.round(distanciaMinima) + " metros. Calculando ruta...", "info");
                 window._leaflet_map_instance.setView(posicionDestinoFinal, 17);
                 window.trazarRuta(idMarcadorMasCercano);
             } else {
-                alert("No se encontraron puntos visibles cerca.");
+                showCustomAlert("No se encontraron puntos visibles cerca.", "error");
             }
         };
     }

@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ categoria.nombre }} - Detalle de Categoría</title>
-    <meta name="description" content="Detalle de categoría de indicadores territoriales: {{ categoria.nombre }}">
+    <title>{{ categoria.nombre }} — Observatorio Territorial</title>
+    <meta name="description" content="Detalle de indicadores de la categoría {{ categoria.nombre }} en el Observatorio Territorial de Huaquechula.">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,15 +13,79 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Dashboard CSS -->
+    <!-- Dashboard CSS (paleta y componentes base) -->
     <link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}">
+    <!-- Base site styles (navbar, accessibility, settings) -->
+    <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}">
+    <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}">
 
-    <!-- Chart.js -->
+    <!-- Chart.js + jsPDF -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
+
     <style>
+        /* ── Variables del proyecto ── */
+        :root {
+            --color-naranja:      #D35400;
+            --color-naranja-light:#E67E22;
+            --color-gris-oscuro:  #4A4A4A;
+            --color-gris-medio:   #6B6B6B;
+            --color-arena-claro:  #EDEBE3;
+            --color-arena-oscuro: #D6CEAA;
+            --color-beige:        #D6CEAA;
+        }
+
+        body {
+            background-color: var(--color-arena-claro);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        /* ── Navbar idéntico al del dashboard ── */
+        .detail-navbar {
+            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #1a252f 100%) !important;
+            padding: 0.75rem 0 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1100;
+        }
+        .detail-navbar .navbar-brand img {
+            border-radius: 12px;
+            height: 55px;
+            width: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        .detail-navbar .navbar-brand img:hover { transform: scale(1.05); }
+        .detail-navbar .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+        .detail-navbar .nav-link:hover {
+            color: #fff !important;
+            background: rgba(255,255,255,0.1);
+        }
+        .detail-navbar .nav-link.active {
+            color: var(--color-naranja) !important;
+            background: rgba(211, 84, 0, 0.15);
+        }
+
+        /* ── Contenido principal ── */
+        .detail-main {
+            padding: 2rem max(4vw, calc((100vw - 1300px) / 2));
+            margin-top: 110px;
+            min-height: calc(100vh - 110px);
+        }
+
+        /* ── Botón Volver ── */
         .back-btn {
             display: inline-flex;
             align-items: center;
@@ -29,107 +93,211 @@
             color: var(--color-gris-medio);
             text-decoration: none;
             font-weight: 500;
-            margin-bottom: var(--space-xl);
-            transition: var(--transition-base);
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+            font-size: 0.9rem;
         }
-        .back-btn:hover {
-            color: var(--color-naranja);
-        }
-        
+        .back-btn:hover { color: var(--color-naranja); }
+
+        /* ── Tarjeta de cabecera de categoría ── */
         .category-header-card {
             background: #fff;
-            border-radius: var(--radius-lg);
-            padding: var(--space-2xl);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: var(--space-2xl);
-            border-top: 4px solid var(--eje-bienestar);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            margin-bottom: 2rem;
+            border-left: 6px solid var(--color-gris-oscuro);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-        
-        .category-header-card[data-eje="bienestar"] { border-color: var(--eje-bienestar); }
-        .category-header-card[data-eje="tradicion"] { border-color: var(--eje-tradicion); }
-        .category-header-card[data-eje="turismo"] { border-color: var(--eje-turismo); }
-        
+        .category-header-card[data-eje="bienestar"] { border-color: #2980B9; }
+        .category-header-card[data-eje="tradicion"]  { border-color: #8E44AD; }
+        .category-header-card[data-eje="turismo"]    { border-color: #27AE60; }
+
+        .category-eje-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--color-naranja);
+            margin-bottom: 6px;
+        }
         .category-title {
-            font-family: var(--font-display);
             font-size: 2rem;
             font-weight: 800;
             color: var(--color-gris-oscuro);
-            margin-bottom: var(--space-sm);
+            margin: 0 0 6px 0;
+            line-height: 1.2;
         }
-        
         .category-meta {
-            color: var(--color-gris-medio);
             display: flex;
-            gap: 1rem;
             align-items: center;
+            gap: 0.5rem;
+            color: var(--color-gris-medio);
+            font-size: 0.9rem;
         }
-        
-        .comparative-chart-container {
+
+        /* ── Botón Imprimir ── */
+        .btn-print {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border: 2px solid var(--color-arena-oscuro);
+            border-radius: 10px;
             background: #fff;
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: var(--space-2xl);
-            height: 400px;
+            color: var(--color-gris-oscuro);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
-        
-        /* Modifying dashboard-main specifically for this detail page (no sidebar) */
-        .detail-main {
-            padding: var(--space-xl) max(5vw, calc((100vw - 1200px) / 2));
-            margin-top: 75px;
-            min-height: calc(100vh - 75px);
-            background: var(--color-arena-claro);
+        .btn-print:hover {
+            background: var(--color-arena-oscuro);
+            color: var(--color-gris-oscuro);
+        }
+
+        /* ── Sección de título de indicadores ── */
+        .section-heading {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-gris-oscuro);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-heading::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.25em;
+            background: var(--color-naranja);
+            border-radius: 4px;
+        }
+
+        /* ── Footer ── */
+        .detail-footer {
+            text-align: center;
+            padding: 1.25rem;
+            margin-top: 2rem;
+            font-size: 0.82rem;
+            color: var(--color-gris-medio);
+            border-top: 1px solid var(--color-arena-oscuro);
         }
     </style>
 </head>
 <body class="dashboard-page">
-    <!-- ── Navbar ──────────────────────────────── -->
-    <nav class="navbar dashboard-navbar navbar-expand-md navbar-dark">
+
+    <!-- ── Navbar (idéntico al de base.html) ── -->
+    <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top">
         <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'vista_inicio' %}">
-                <img src="{% static 'myapp/image/huaquechulaLogo.png' %}" alt="Logo Huaquechula" style="height: 50px; width: auto;">
+            <!-- Logo -->
+            <a class="navbar-brand mx-auto" href="{% url 'vista_inicio' %}">
+                <img src="{% static 'myapp/image/logo.png' %}" alt="Logo del Observatorio" class="img-fluid">
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNav">
+            <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse justify-content-center" id="dashboardNav">
-                <ul class="navbar-nav d-flex justify-content-around" style="gap: 0.25rem;">
+            <!-- Menú offcanvas (solo móvil) -->
+            <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu"
+                aria-labelledby="mobileMenuLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <ul class="navbar-nav mobile-nav">
+                        <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link submenu-toggle" href="#">
+                                Encuesta <span class="submenu-arrow">▼</span>
+                            </a>
+                            <ul class="submenu">
+                                {% if user.is_authenticated %}
+                                    <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
+                                    <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
+                                    <li><form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="nav-link submenu-item" style="border:none;background:none;width:100%;text-align:left;">Cerrar sesión</button></form></li>
+                                {% else %}
+                                    <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
+                                    <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Menú horizontal (solo escritorio) -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+                <ul class="navbar-nav d-flex justify-content-around w-75 desktop-nav">
                     <li class="nav-item"><a class="nav-link" href="{% url 'vista_inicio' %}">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
                     <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                    {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a></li>
-                    {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a></li>
-                    {% endif %}
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link submenu-toggle" href="#">
+                            Encuesta <span class="submenu-arrow">▼</span>
+                        </a>
+                        <ul class="submenu">
+                            {% if user.is_authenticated %}
+                                <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
+                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post" id="logout-form-cat">
+                                        {% csrf_token %}
+                                        <a class="nav-link submenu-item" href="#" onclick="document.getElementById('logout-form-cat').submit(); return false;">Cerrar sesión</a>
+                                    </form>
+                                </li>
+                            {% else %}
+                                <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
+                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- ── Contenido ── -->
+
     <div class="detail-main">
+
         <a href="{% url 'dashboard' %}" class="back-btn">
             <i class="fas fa-arrow-left"></i> Volver al Dashboard
         </a>
-        
-        <div class="category-header-card" data-eje="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}">
-            <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-naranja); margin-bottom: 8px;">
-                {{ eje.nombre }}
+
+        <!-- Cabecera de la categoría -->
+        <div class="category-header-card"
+             data-eje="{% if 'Bienestar' in eje.nombre %}bienestar{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}tradicion{% elif 'Turismo' in eje.nombre %}turismo{% else %}other{% endif %}">
+            <div>
+                <div class="category-eje-label">{{ eje.nombre }}</div>
+                <h1 class="category-title">{{ categoria.nombre }}</h1>
+                <div class="category-meta">
+                    <i class="fas fa-layer-group"></i>
+                    {{ indicadores.count }} indicador{{ indicadores.count|pluralize:",es" }}
+                </div>
             </div>
-            <h1 class="category-title">{{ categoria.nombre }}</h1>
-            <div class="category-meta">
-                <span><i class="fas fa-layer-group me-1"></i> {{ indicadores.count }} indicadores</span>
-                <button class="btn btn-sm btn-outline-secondary" onclick="window.print()" style="margin-left: auto;">
-                    <i class="fas fa-print"></i> Imprimir Reporte
-                </button>
-            </div>
+            <button class="btn-print" id="btn-imprimir-reporte" onclick="generateCategoryReport()">
+                <i class="fas fa-file-pdf"></i> Imprimir Reporte
+            </button>
         </div>
-        
-        <h3 class="mb-4" style="font-weight: 700; color: var(--color-gris-oscuro);">Indicadores de la Categoría</h3>
-        
+
+        <!-- Grid de indicadores -->
+        <div class="section-heading">Indicadores de la Categoría</div>
+
         <div class="indicators-grid mb-5">
             {% for indicador in indicadores %}
             <div class="indicator-card" onclick="showIndicatorChart({{ indicador.id }}, '{{ indicador.nombre|escapejs }}')">
@@ -147,11 +315,11 @@
                     <span class="indicator-main-unit">{{ indicador.unidad_medida }}</span>
                 </div>
                 <div class="indicator-period">
-                    <i class="far fa-calendar-alt me-1"></i>Período {{ last_med.periodo }}
+                    <i class="far fa-clock me-1"></i>{{ last_med.periodo }}
                 </div>
                 {% else %}
                 <div class="indicator-value-row">
-                    <span class="indicator-main-value" style="color: var(--color-gris-claro); font-size: 1rem;">Sin datos</span>
+                    <span class="indicator-main-value" style="color:#bbb; font-size:0.95rem;">Sin datos</span>
                 </div>
                 {% endif %}
                 {% endwith %}
@@ -159,7 +327,9 @@
                 <!-- Sparkline -->
                 {% if indicador.sparkline_values %}
                 <div class="indicator-sparkline">
-                    <canvas data-values="{{ indicador.sparkline_values }}" data-color="{% if 'Bienestar' in eje.nombre %}#2980B9{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}#8E44AD{% else %}#27AE60{% endif %}" height="40"></canvas>
+                    <canvas data-values="{{ indicador.sparkline_values }}"
+                            data-color="{% if 'Bienestar' in eje.nombre %}#2980B9{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}#8E44AD{% else %}#27AE60{% endif %}"
+                            height="40"></canvas>
                 </div>
                 {% endif %}
 
@@ -171,16 +341,24 @@
                     {% else %}
                     <span class="indicator-trend stable"><i class="fas fa-minus"></i> Estable</span>
                     {% endif %}
-                    <span class="indicator-view-btn">Ver detalle <i class="fas fa-arrow-right"></i></span>
+                    <span class="indicator-view-btn">Ver gráfica <i class="fas fa-arrow-right"></i></span>
                 </div>
             </div>
             {% empty %}
-            <div class="alert alert-info w-100">No hay indicadores registrados para esta categoría.</div>
+            <div style="grid-column: 1/-1; padding: 2rem; text-align: center; color: var(--color-gris-medio); background:#fff; border-radius:12px;">
+                <i class="fas fa-inbox fa-2x mb-2" style="display:block;"></i>
+                No hay indicadores registrados para esta categoría.
+            </div>
             {% endfor %}
         </div>
     </div>
-    
-    <!-- ── Chart Modal ─────────────────────────── -->
+
+    <!-- ── Footer ── -->
+    <footer class="detail-footer">
+        © 2025 Observatorio Turístico de Huaquechula · Datos actualizados periódicamente
+    </footer>
+
+    <!-- ── Modal de Gráfica ── -->
     <div class="modal fade chart-modal" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -188,7 +366,7 @@
                     <h5 class="modal-title" id="chartModalLabel">
                         <i class="fas fa-chart-line me-2"></i>Indicador
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="chart-type-switcher">
@@ -202,32 +380,441 @@
                             <i class="fas fa-chart-pie me-1"></i> Dona
                         </button>
                     </div>
-
                     <div style="position: relative; height: 380px;">
                         <canvas id="mainChartCanvas"></canvas>
                     </div>
-
                     <div id="chartMetadata"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm" onclick="downloadChartPDF()" style="background: var(--color-naranja); color: #fff; border: none; border-radius: 8px; padding: 6px 18px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" class="btn btn-sm" onclick="downloadChartPDF()"
+                            style="background:var(--color-naranja);color:#fff;border:none;border-radius:8px;padding:6px 18px;font-weight:600;font-size:0.85rem;display:inline-flex;align-items:center;gap:6px;">
                         <i class="fas fa-file-pdf"></i> Descargar PDF
                     </button>
-                    <button type="button" class="btn btn-sm" style="background: var(--color-arena-claro); color: var(--color-gris-oscuro); border-radius: 8px; padding: 6px 18px; font-weight: 500; font-size: 0.85rem;" data-bs-dismiss="modal">
-                        Cerrar
-                    </button>
+                    <button type="button" class="btn btn-sm"
+                            style="background:var(--color-arena-claro);color:var(--color-gris-oscuro);border-radius:8px;padding:6px 18px;font-weight:500;font-size:0.85rem;"
+                            data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ── Footer ──────────────────────────────── -->
-    <footer class="dashboard-footer" style="margin-left: 0;">
-        <p class="mb-0">&copy; 2025 Observatorio Turístico de Huaquechula · Datos actualizados periódicamente</p>
-    </footer>
+    <!-- Datos de indicadores para el reporte PDF -->
+    <script id="cat-report-data" type="application/json">
+    {
+        "categoria": "{{ categoria.nombre|escapejs }}",
+        "eje": "{{ eje.nombre|escapejs }}",
+        "ejeColor": "{% if 'Bienestar' in eje.nombre %}#2980B9{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}#8E44AD{% else %}#27AE60{% endif %}",
+        "total": {{ indicadores.count }},
+        "indicadores": [
+            {% for ind in indicadores %}
+            {
+                "id": {{ ind.id }},
+                "nombre": "{{ ind.nombre|escapejs }}",
+                "unidad": "{{ ind.unidad_medida|escapejs }}",
+                "fuente": "{{ ind.data_source|upper }}",
+                "tendencia": "{{ ind.trend_direction }}",
+                "tendencia_pct": "{{ ind.trend_percent }}",
+                "descripcion": "{{ ind.descripcion|default:''|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+    </script>
+
+    <!-- ── Overlay de generación de reporte ── -->
+    <div id="report-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:#fff; border-radius:16px; padding:2.5rem 3rem; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); min-width:280px;">
+            <div style="width:56px;height:56px;border:4px solid #EDEBE3;border-top-color:#D35400;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.25rem;"></div>
+            <p style="font-family:'Inter',sans-serif;font-weight:700;color:#4A4A4A;margin:0;font-size:1rem;">Generando reporte PDF…</p>
+            <p id="report-progress" style="font-family:'Inter',sans-serif;color:#6B6B6B;margin:0.5rem 0 0;font-size:0.85rem;">Cargando datos…</p>
+        </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+    <!-- Canvas oculto para renderizar gráficas antes de exportar -->
+    <canvas id="report-canvas" width="900" height="420" style="display:none;"></canvas>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'myapp/JAV/java.js' %}"></script>
+    <script src="{% static 'myapp/JAV/accessibility.js' %}" defer></script>
+    <script src="{% static 'myapp/JAV/settings.js' %}" defer></script>
     <script src="{% static 'myapp/JAV/dashboard.js' %}"></script>
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                document.querySelector('.navbar').classList.add('scrolled');
+            } else {
+                document.querySelector('.navbar').classList.remove('scrolled');
+            }
+        });
+
+        /* ============================================================
+           GENERADOR DE REPORTE PDF PROFESIONAL
+           Usa jsPDF (ya cargado por dashboard.js deps) + Chart.js
+        ============================================================ */
+        async function generateCategoryReport() {
+            const overlay    = document.getElementById('report-overlay');
+            const progressEl = document.getElementById('report-progress');
+            overlay.style.display = 'flex';
+
+            // Datos embebidos desde Django
+            const meta = JSON.parse(document.getElementById('cat-report-data').textContent);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            const PW = 210, PH = 297;
+            const MAR = 16;
+            const CONTENT_W = PW - MAR * 2;
+            const TODAY = new Date().toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric' });
+
+            const ORANGE  = [211, 84, 0];
+            const DARK    = [74,  74, 74];
+            const MID     = [107, 107, 107];
+            const LIGHT   = [237, 235, 227];
+            const WHITE   = [255, 255, 255];
+
+            // Colores de eje
+            let ejeRGB = [41, 128, 185]; // bienestar azul
+            if (meta.ejeColor === '#8E44AD') ejeRGB = [142, 68, 173];
+            if (meta.ejeColor === '#27AE60') ejeRGB = [39, 174, 96];
+
+            /* ── PORTADA ─────────────────────────── */
+            // Fondo gris oscuro en cabecera
+            doc.setFillColor(74, 74, 74);
+            doc.rect(0, 0, PW, 70, 'F');
+
+            // Banda de color del eje
+            doc.setFillColor(...ejeRGB);
+            doc.rect(0, 70, PW, 6, 'F');
+
+            // Texto cabecera
+            doc.setTextColor(...WHITE);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.text('OBSERVATORIO TERRITORIAL DE HUAQUECHULA', PW / 2, 22, { align: 'center' });
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Municipio de Huaquechula, Puebla', PW / 2, 29, { align: 'center' });
+
+            // Nombre del eje
+            doc.setFontSize(9);
+            doc.setTextColor(ejeRGB[0] + 80, ejeRGB[1] + 80, ejeRGB[2] + 80);
+            doc.text(meta.eje.toUpperCase(), PW / 2, 42, { align: 'center' });
+
+            // Nombre de la categoría
+            doc.setTextColor(...WHITE);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.text(meta.categoria, PW / 2, 57, { align: 'center' });
+
+            // Metadatos en zona blanca
+            doc.setFillColor(...LIGHT);
+            doc.rect(0, 76, PW, 42, 'F');
+
+            doc.setTextColor(...DARK);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+
+            const col1 = MAR + 10;
+            const col2 = PW / 2 + 10;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Fecha de generación', col1, 90);
+            doc.text('Total de indicadores', col2, 90);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+            doc.text(TODAY, col1, 97);
+            doc.text(String(meta.total), col2, 97);
+
+            // Lista de indicadores en portada
+            doc.setFillColor(...WHITE);
+            doc.rect(MAR, 122, CONTENT_W, meta.indicadores.length * 10 + 20, 'F');
+            doc.setDrawColor(...LIGHT);
+            doc.rect(MAR, 122, CONTENT_W, meta.indicadores.length * 10 + 20);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...ORANGE);
+            doc.text('INDICADORES INCLUIDOS', MAR + 8, 133);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...DARK);
+            meta.indicadores.forEach((ind, i) => {
+                const y = 143 + i * 10;
+                doc.setFillColor(...ejeRGB);
+                doc.circle(MAR + 12, y - 2, 1.5, 'F');
+                doc.text(ind.nombre, MAR + 18, y);
+            });
+
+            // Pie de portada
+            doc.setFontSize(8);
+            doc.setTextColor(...MID);
+            doc.text('Reporte generado automáticamente por el Sistema de Indicadores Territoriales', PW / 2, PH - 12, { align: 'center' });
+
+            /* ── PÁGINAS DE INDICADORES ──────────── */
+            for (let i = 0; i < meta.indicadores.length; i++) {
+                const ind = meta.indicadores[i];
+                progressEl.textContent = `Procesando indicador ${i + 1} de ${meta.indicadores.length}: ${ind.nombre}`;
+
+                let chartData = null;
+                try {
+                    const resp = await fetch(`/api/indicator/${ind.id}/chart-data/`);
+                    chartData = await resp.json();
+                } catch (e) {
+                    console.warn('No se pudo obtener datos del indicador', ind.id);
+                }
+
+                doc.addPage();
+
+                // Banda superior de página
+                doc.setFillColor(...DARK);
+                doc.rect(0, 0, PW, 14, 'F');
+                doc.setFillColor(...ejeRGB);
+                doc.rect(0, 14, PW, 2, 'F');
+
+                // Encabezado de página
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7);
+                doc.setTextColor(...WHITE);
+                doc.text(`${meta.eje} · ${meta.categoria}`, MAR, 9);
+                doc.text(`Indicador ${i + 1} / ${meta.total}`, PW - MAR, 9, { align: 'right' });
+
+                // Nombre del indicador
+                doc.setFillColor(...LIGHT);
+                doc.rect(0, 16, PW, 26, 'F');
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(15);
+                doc.setTextColor(...DARK);
+                const nombreLines = doc.splitTextToSize(ind.nombre, CONTENT_W - 40);
+                doc.text(nombreLines, MAR, 27);
+
+                // Badge de fuente
+                const badgeX = PW - MAR - 22;
+                doc.setFillColor(...ejeRGB);
+                doc.roundedRect(badgeX, 19, 22, 7, 1, 1, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7);
+                doc.setTextColor(...WHITE);
+                doc.text(ind.fuente, badgeX + 11, 24, { align: 'center' });
+
+                let yPos = 46;
+
+                // Si hay datos, mostrar valor actual destacado
+                if (chartData && chartData.values && chartData.values.length > 0) {
+                    const lastVal = chartData.values[chartData.values.length - 1];
+                    const lastLbl = chartData.labels[chartData.labels.length - 1];
+
+                    // Tarjeta de valor actual
+                    doc.setFillColor(...WHITE);
+                    doc.setDrawColor(...ejeRGB);
+                    doc.setLineWidth(0.8);
+                    doc.roundedRect(MAR, yPos, 60, 24, 3, 3, 'FD');
+                    doc.setLineWidth(0.2);
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(18);
+                    doc.setTextColor(...ejeRGB);
+                    doc.text(String(lastVal.toLocaleString('es-MX')), MAR + 30, yPos + 12, { align: 'center' });
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(...MID);
+                    doc.text(chartData.unit || ind.unidad, MAR + 30, yPos + 18, { align: 'center' });
+
+                    // Etiqueta
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    doc.setTextColor(...MID);
+                    doc.text('VALOR ACTUAL', MAR + 5, yPos + 4);
+
+                    // Tarjeta de período
+                    doc.setFillColor(...WHITE);
+                    doc.setDrawColor(...LIGHT);
+                    doc.roundedRect(MAR + 64, yPos, 44, 24, 3, 3, 'FD');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    doc.setTextColor(...MID);
+                    doc.text('PERÍODO', MAR + 69, yPos + 4);
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(13);
+                    doc.setTextColor(...DARK);
+                    doc.text(String(lastLbl), MAR + 86, yPos + 14, { align: 'center' });
+
+                    // Tarjeta de tendencia
+                    doc.setFillColor(...WHITE);
+                    doc.roundedRect(MAR + 112, yPos, 44, 24, 3, 3, 'FD');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    doc.setTextColor(...MID);
+                    doc.text('TENDENCIA', MAR + 117, yPos + 4);
+
+                    const trendColor = ind.tendencia === 'up' ? [39,174,96] : ind.tendencia === 'down' ? [192,57,43] : [107,107,107];
+                    const trendArrow = ind.tendencia === 'up' ? '↑' : ind.tendencia === 'down' ? '↓' : '→';
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(13);
+                    doc.setTextColor(...trendColor);
+                    const trendText = ind.tendencia_pct ? `${trendArrow} ${ind.tendencia_pct}%` : `${trendArrow} Estable`;
+                    doc.text(trendText, MAR + 134, yPos + 14, { align: 'center' });
+
+                    yPos += 30;
+
+                    // Fuente de datos
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...MID);
+                    const sourceLabel = chartData.data_source_label || ind.fuente;
+                    doc.text(`Fuente: ${sourceLabel}  ·  Última actualización: ${chartData.last_updated || 'N/D'}`, MAR, yPos);
+                    yPos += 7;
+
+                    /* ── GRÁFICA DE LÍNEA ── */
+                    if (chartData.labels && chartData.labels.length > 0) {
+                        progressEl.textContent = `Renderizando gráfica ${i + 1}…`;
+
+                        // Renderizar en canvas oculto
+                        const offCanvas = document.getElementById('report-canvas');
+                        offCanvas.width = 900;
+                        offCanvas.height = 400;
+                        const ctx = offCanvas.getContext('2d');
+                        ctx.clearRect(0, 0, 900, 400);
+
+                        // Destruir chart anterior si existe
+                        if (window._reportChart) { window._reportChart.destroy(); }
+
+                        const r = ejeRGB[0], g = ejeRGB[1], b = ejeRGB[2];
+                        window._reportChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: chartData.labels,
+                                datasets: [{
+                                    label: ind.nombre,
+                                    data: chartData.values,
+                                    borderColor: `rgb(${r},${g},${b})`,
+                                    backgroundColor: `rgba(${r},${g},${b},0.12)`,
+                                    borderWidth: 3,
+                                    pointBackgroundColor: `rgb(${r},${g},${b})`,
+                                    pointRadius: 5,
+                                    tension: 0.35,
+                                    fill: true,
+                                }]
+                            },
+                            options: {
+                                responsive: false,
+                                animation: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { enabled: false }
+                                },
+                                scales: {
+                                    x: { grid: { color: '#eee' }, ticks: { font: { size: 13 } } },
+                                    y: { grid: { color: '#eee' }, ticks: { font: { size: 13 } } }
+                                }
+                            }
+                        });
+
+                        // Esperar que Chart.js termine el render
+                        await new Promise(r => setTimeout(r, 300));
+
+                        const chartImgData = offCanvas.toDataURL('image/png');
+                        const chartH = 68;
+                        doc.setFillColor(...WHITE);
+                        doc.setDrawColor(...LIGHT);
+                        doc.roundedRect(MAR, yPos, CONTENT_W, chartH + 6, 3, 3, 'FD');
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7);
+                        doc.setTextColor(...MID);
+                        doc.text('EVOLUCIÓN HISTÓRICA', MAR + 4, yPos + 5);
+
+                        doc.addImage(chartImgData, 'PNG', MAR + 2, yPos + 7, CONTENT_W - 4, chartH);
+                        yPos += chartH + 12;
+
+                        /* ── TABLA DE DATOS HISTÓRICOS ── */
+                        if (yPos + 20 + chartData.labels.length * 7 < PH - 20) {
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(8.5);
+                            doc.setTextColor(...DARK);
+                            doc.text('Datos históricos', MAR, yPos);
+                            yPos += 5;
+
+                            // Cabecera tabla
+                            doc.setFillColor(...DARK);
+                            doc.rect(MAR, yPos, 80, 6, 'F');
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(7);
+                            doc.setTextColor(...WHITE);
+                            doc.text('Período', MAR + 4, yPos + 4);
+                            doc.text(`Valor (${chartData.unit || ind.unidad})`, MAR + 40, yPos + 4);
+                            yPos += 6;
+
+                            chartData.labels.forEach((lbl, idx) => {
+                                const rowY = yPos + idx * 7;
+                                doc.setFillColor(idx % 2 === 0 ? 247 : 255, idx % 2 === 0 ? 246 : 255, idx % 2 === 0 ? 242 : 255);
+                                doc.rect(MAR, rowY, 80, 6.5, 'F');
+                                doc.setFont('helvetica', 'normal');
+                                doc.setFontSize(7);
+                                doc.setTextColor(...DARK);
+                                doc.text(String(lbl), MAR + 4, rowY + 4.5);
+                                doc.text(String(chartData.values[idx].toLocaleString('es-MX')), MAR + 40, rowY + 4.5);
+                            });
+                            yPos += chartData.labels.length * 7 + 5;
+                        }
+                    }
+
+                    // Descripción si existe
+                    if (ind.descripcion) {
+                        if (yPos > PH - 40) { doc.addPage(); yPos = 20; }
+                        doc.setFillColor(247, 246, 242);
+                        const descLines = doc.splitTextToSize(ind.descripcion, CONTENT_W - 10);
+                        const descH = descLines.length * 5 + 10;
+                        doc.roundedRect(MAR, yPos, CONTENT_W, descH, 3, 3, 'F');
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7);
+                        doc.setTextColor(...MID);
+                        doc.text('DESCRIPCIÓN', MAR + 4, yPos + 5);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(...DARK);
+                        doc.text(descLines, MAR + 4, yPos + 10);
+                    }
+
+                } else {
+                    // Sin datos
+                    doc.setFillColor(247, 246, 242);
+                    doc.roundedRect(MAR, yPos, CONTENT_W, 20, 3, 3, 'F');
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(9);
+                    doc.setTextColor(...MID);
+                    doc.text('Sin datos históricos registrados para este indicador.', PW / 2, yPos + 12, { align: 'center' });
+                }
+
+                // Pie de página
+                doc.setFillColor(...DARK);
+                doc.rect(0, PH - 10, PW, 10, 'F');
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(6.5);
+                doc.setTextColor(...WHITE);
+                doc.text('Observatorio Territorial de Huaquechula · Sistema de Indicadores Estratégicos', MAR, PH - 4);
+                doc.text(`Página ${i + 2}`, PW - MAR, PH - 4, { align: 'right' });
+            }
+
+            // Limpiar chart temporal
+            if (window._reportChart) { window._reportChart.destroy(); window._reportChart = null; }
+
+            overlay.style.display = 'none';
+
+            // Nombre del archivo
+            const safeName = meta.categoria.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]/g, '').replace(/ /g, '_');
+            doc.save(`Reporte_${safeName}_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+    </script>
 </body>
 </html>
+

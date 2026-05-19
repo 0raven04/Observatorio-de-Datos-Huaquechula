@@ -1,0 +1,311 @@
+# Plan de APIs Públicas — Observatorio de Datos Huaquechula
+
+> Inspirado en el modelo INEGI: datos abiertos, estructurados, versionados y documentados para investigadores, desarrolladores y la app móvil.
+
+---
+
+## Contexto: ¿Qué tienes hoy?
+
+| Capa | Estado actual |
+|---|---|
+| API Móvil JWT | ✅ Funcional (visitas, indicadores, encuestas) |
+| API Indicadores | ✅ `chart-data`, `jsonstat`, `compare-municipalities` |
+| API Reseñas | ✅ Pública con rate-limiting básico |
+| API Estadísticas Visitantes | ✅ Recién creada |
+| **API Pública Open Data** | ❌ No existe |
+| **Documentación / Swagger** | ❌ No existe |
+| **API Keys / Throttling** | ❌ No existe |
+
+---
+
+## Estrategia General
+
+```
+┌─────────────────────────────────────────────────┐
+│              Observatorio de Huaquechula         │
+│                                                 │
+│  /api/v1/public/  ← Open Data (API Key libre)   │
+│  /api/mobile/     ← App móvil (JWT)             │
+│  /api/admin/      ← Gestión interna (JWT Admin) │
+│  /api/docs/       ← Swagger / ReDoc             │
+└─────────────────────────────────────────────────┘
+```
+
+### Autenticación por capa
+
+| Capa | Método | Para quién |
+|---|---|---|
+| Public Open Data | **API Key** (query param `?key=xxx`) | Investigadores, devs, ciudadanos |
+| App móvil | **JWT** (ya implementado) | Encuestadores, admins |
+| Admin API | **JWT + rol admin** | Gestión interna |
+| Sin auth | Endpoints de lectura de indicadores, reseñas | Público general |
+
+---
+
+## GRUPO 1 — API Pública de Indicadores Territoriales
+> Equivalente al Banco de Indicadores de INEGI
+
+### Endpoints recomendados
+
+```
+GET  /api/v1/public/ejes/
+GET  /api/v1/public/ejes/<id>/
+GET  /api/v1/public/categorias/
+GET  /api/v1/public/categorias/<id>/
+GET  /api/v1/public/indicadores/
+GET  /api/v1/public/indicadores/<id>/
+GET  /api/v1/public/indicadores/<id>/serie/        ← Serie histórica completa
+GET  /api/v1/public/indicadores/<id>/ultima/       ← Solo último valor
+GET  /api/v1/public/indicadores/<id>/jsonstat/     ← Formato JSON-stat 2.0 estándar
+GET  /api/v1/public/indicadores/?eje=1&categoria=2 ← Filtros
+GET  /api/v1/public/indicadores/?formato=csv       ← Descarga CSV
+```
+
+### Respuesta ejemplo (serie histórica)
+```json
+{
+  "indicador": {
+    "id": 5,
+    "nombre": "Acceso a servicios de salud",
+    "unidad": "Porcentaje",
+    "categoria": "Bienestar Social",
+    "eje": "Bienestar",
+    "fuente": "INEGI",
+    "ultima_actualizacion": "2024-01-15"
+  },
+  "serie": [
+    { "periodo": "2020", "valor": 78.3 },
+    { "periodo": "2022", "valor": 81.5 },
+    { "periodo": "2024", "valor": 84.1 }
+  ]
+}
+```
+
+**Por qué hacerlo:** Es la joya del observatorio. Investigadores de UNAM, BUAP y gobierno estatal pueden consumir estos datos directamente sin entrar a la web.
+
+---
+
+## GRUPO 2 — API Pública de Turismo y Visitantes
+> Datos del cuestionario de visitas, anonimizados y agregados
+
+### Endpoints recomendados
+
+```
+GET  /api/v1/public/turismo/resumen/               ← KPIs globales
+GET  /api/v1/public/turismo/visitantes-por-mes/    ← Serie mensual
+GET  /api/v1/public/turismo/procedencias/          ← Top ciudades origen
+GET  /api/v1/public/turismo/perfil-demografico/    ← Distribución edad/género
+GET  /api/v1/public/turismo/motivos/               ← Motivos de visita
+GET  /api/v1/public/turismo/transporte/            ← Medios de transporte
+GET  /api/v1/public/turismo/estancia/              ← Promedio de días
+GET  /api/v1/public/turismo/?año=2024&mes=11       ← Filtros por período
+```
+
+> [!IMPORTANT]
+> **Los registros individuales NUNCA se exponen.** Solo datos **agregados y anonimizados**. Esto es obligatorio por privacidad (LFPDPPP).
+
+**Por qué hacerlo:** Turismo del estado de Puebla, H. Ayuntamiento, estudiantes de turismo y hoteleros necesitan estos datos para tomar decisiones.
+
+---
+
+## GRUPO 3 — API Pública de Territorio y Puntos de Interés
+> Datos geoespaciales del municipio
+
+### Endpoints recomendados
+
+```
+GET  /api/v1/public/puntos-interes/
+GET  /api/v1/public/puntos-interes/<id>/
+GET  /api/v1/public/puntos-interes/?tipo=restaurante&activo=true
+GET  /api/v1/public/puntos-interes/?formato=geojson    ← GeoJSON estándar
+GET  /api/v1/public/sitios-turisticos/
+GET  /api/v1/public/sitios-turisticos/<id>/
+GET  /api/v1/public/rutas/
+GET  /api/v1/public/rutas/<id>/
+GET  /api/v1/public/ofrendas/                          ← Especial Día de Muertos
+```
+
+### Ejemplo GeoJSON
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-98.54, 18.77] },
+      "properties": {
+        "id": 12,
+        "nombre": "Convento de San Martín Obispo",
+        "tipo": "Patrimonio Cultural",
+        "descripcion": "...",
+        "calificacion_promedio": 4.8
+      }
+    }
+  ]
+}
+```
+
+**Por qué hacerlo:** Apps de turismo, Google Maps, INAH, y desarrolladores independientes pueden integrar estos datos. Es el tipo de dato más valioso geoespacialmente.
+
+---
+
+## GRUPO 4 — API Pública de Reseñas y Satisfacción
+
+```
+GET  /api/v1/public/resenas/
+GET  /api/v1/public/resenas/estadisticas/      ← Promedio, distribución estrellas
+POST /api/v1/public/resenas/                   ← Ya existe, mover aquí
+```
+
+---
+
+## GRUPO 5 — API Pública de Encuestas Agregadas
+> Resultados de EncuestaResidente y EncuestaComercio (sin datos personales)
+
+```
+GET  /api/v1/public/encuestas/residente/resumen/
+GET  /api/v1/public/encuestas/comercio/resumen/
+```
+
+---
+
+## Mejoras a la API Móvil Existente
+
+Estos son bugs/gaps encontrados en la auditoría:
+
+| Mejora | Prioridad |
+|---|---|
+| Implementar `PATCH` en `VisitaDetailView` | 🔴 Alta |
+| Corregir `id_encuestador` → `clave_encuestador` (bug activo) | 🔴 Alta |
+| Añadir paginación (`?page=1&page_size=20`) | 🟡 Media |
+| Añadir filtros por fecha (`?fecha_desde=&fecha_hasta=`) | 🟡 Media |
+| Añadir `DELETE` protegido solo para admins | 🟡 Media |
+| Endpoint de sincronización offline (`/api/mobile/sync/`) | 🟢 Baja |
+
+---
+
+## Infraestructura Recomendada
+
+### 1. Versionado de API
+```python
+# Todas las rutas con prefijo /api/v1/
+path('api/v1/', include('myapp.public_api_urls')),
+```
+Cuando se actualice la API, se crea `/api/v2/` sin romper clientes existentes.
+
+### 2. API Keys (para Open Data)
+```python
+# Modelo simple
+class APIKey(models.Model):
+    key = models.CharField(max_length=64, unique=True)
+    nombre = models.CharField(max_length=100)   # "BUAP - Investigación"
+    email = models.EmailField()
+    activa = models.BooleanField(default=True)
+    creada = models.DateTimeField(auto_now_add=True)
+    usos_hoy = models.PositiveIntegerField(default=0)
+    limite_diario = models.PositiveIntegerField(default=1000)
+```
+
+Registro de API Key: formulario público en `/developer/` (como INEGI).
+
+### 3. Throttling (Rate Limiting)
+```python
+# settings.py
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '2000/day',
+        'public_api': '500/hour',
+    }
+}
+```
+
+### 4. Documentación Automática (Swagger / ReDoc)
+```
+# Instalar: drf-spectacular
+GET /api/docs/          ← Swagger UI (interactivo)
+GET /api/redoc/         ← ReDoc (legible)
+GET /api/schema/        ← OpenAPI 3.0 JSON/YAML descargable
+```
+
+Esto es lo que hace INEGI en su portal de desarrolladores: documentación interactiva donde puedes probar los endpoints directamente en el navegador.
+
+### 5. CORS
+```python
+# settings.py — permitir consumo desde cualquier dominio
+CORS_ALLOW_ALL_ORIGINS = True  # Solo para endpoints /api/v1/public/
+```
+
+### 6. Formato de Respuesta Estándar
+```json
+{
+  "status": "ok",
+  "version": "1.0",
+  "fuente": "Observatorio Territorial de Huaquechula",
+  "licencia": "CC BY 4.0",
+  "total": 47,
+  "pagina": 1,
+  "pagina_size": 20,
+  "siguiente": "/api/v1/public/indicadores/?page=2",
+  "datos": [ ... ]
+}
+```
+
+---
+
+## Portal de Desarrolladores (Recomendado)
+
+Una página `/developer/` que incluya:
+- Documentación de todos los endpoints
+- Formulario para solicitar API Key
+- Ejemplos de código (Python, JavaScript, R)
+- Términos de uso y licencia de datos (CC BY 4.0)
+- Límites de uso
+
+---
+
+## Plan de Implementación por Fases
+
+### 🟠 Fase 1 — Fundamentos (1-2 semanas)
+1. Corregir bugs de API móvil (`clave_encuestador`, `PATCH`)
+2. Instalar `drf-spectacular` y generar Swagger
+3. Implementar throttling en DRF
+4. Crear `public_api_urls.py` y `public_api_views.py`
+
+### 🟡 Fase 2 — Open Data Core (2-3 semanas)
+5. **Grupo 1:** API de Indicadores Territoriales con filtros + CSV
+6. **Grupo 2:** API de Turismo (datos agregados anonimizados)
+7. Implementar modelo `APIKey` + portal de registro
+8. CORS habilitado para endpoints públicos
+
+### 🟢 Fase 3 — Territorio y Valor Añadido (2-3 semanas)
+9. **Grupo 3:** API de Puntos de Interés en GeoJSON
+10. **Grupo 4-5:** Reseñas y encuestas agregadas
+11. Portal de desarrolladores (`/developer/`)
+12. Ejemplos de código y SDK básico
+
+---
+
+## Tecnologías Adicionales Necesarias
+
+| Paquete | Para qué | Ya instalado |
+|---|---|---|
+| `drf-spectacular` | Swagger / OpenAPI automático | ❌ |
+| `django-cors-headers` | CORS para open data | ❓ |
+| `django-filter` | Filtros en querysets (`?eje=1`) | ❓ |
+| `djangorestframework` | Ya en uso | ✅ |
+| `simplejwt` | JWT móvil | ✅ |
+
+---
+
+## Resumen: ¿Qué hacer primero?
+
+> [!IMPORTANT]
+> **Prioridad absoluta antes de abrir la API:** Corregir el bug de `clave_encuestador` en la API móvil — actualmente lanza un `FieldError` en producción.
+
+> [!TIP]
+> El mayor valor público está en la **API de Indicadores** (Grupo 1) y la **API GeoJSON** (Grupo 3). Son las que más usos externos van a tener y las que posicionan al observatorio como referencia de datos abiertos en Puebla.

@@ -1,123 +1,436 @@
 {% extends 'myapp/base.html' %}
 {% load static %}
 
-{% block title %}Huaquechula{% endblock %}
+{% block title %}Huaquechula — Observatorio Turístico{% endblock %}
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'myapp/CSS/style1.css' %}">
     <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}">
     <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}">
-    <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* Override base.html margin for home page header */
-        main.container { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
-        .header { margin-top: 0; }
+        :root {
+            --nar: #D35400; --nar-l: #E8681A;
+            --arena: #EDEBE3; --arena-d: #D4CEB8;
+            --gris: #4A4A4A; --gris-m: #6B6B6B;
+        }
+        main.container { margin-top:0!important; max-width:100%!important; padding:0!important; }
+        body { font-family:'Inter',sans-serif; background:var(--arena); }
+        .header { margin-top:0; }
+
+        /* ── Layout ── */
+        .dash { padding:3rem max(2rem,calc((100vw - 1300px)/2)); }
+        .sec-title {
+            font-size:1.55rem; font-weight:800; color:var(--gris);
+            text-align:center; margin:0 0 2rem; letter-spacing:-.02em;
+        }
+        .sec-title span { color:var(--nar); }
+        .sec-divider { margin:3rem 0 2rem; border:none; border-top:2px solid var(--arena-d); }
+
+        /* ── KPI Cards ── */
+        .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+        .kpi-card {
+            border-radius:18px; padding:1.75rem 1.5rem;
+            display:flex; flex-direction:column; gap:.4rem;
+            position:relative; overflow:hidden;
+            box-shadow:0 4px 24px rgba(0,0,0,.1); transition:transform .2s,box-shadow .2s;
+        }
+        .kpi-card:hover { transform:translateY(-4px); box-shadow:0 10px 36px rgba(0,0,0,.16); }
+        .kpi-card.c-orange { background:linear-gradient(135deg,var(--nar-l),var(--nar)); color:#fff; }
+        .kpi-card.c-dark   { background:linear-gradient(135deg,var(--gris),#2d2d2d); color:#fff; }
+        .kpi-card.c-light  { background:#fff; color:var(--gris); border:2px solid var(--arena-d); }
+        .kpi-lbl  { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; opacity:.8; }
+        .kpi-val  { font-size:2.4rem; font-weight:800; line-height:1.1; }
+        .kpi-sub  { font-size:.8rem; opacity:.7; }
+        .kpi-ico  { position:absolute; right:1.2rem; top:1.2rem; font-size:2.2rem; opacity:.18; }
+        .stars    { color:#F1C40F; font-size:1.5rem; letter-spacing:1px; line-height:1.2; }
+
+        /* ── Chart Cards ── */
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+        .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; }
+        .cc {
+            background:#fff; border-radius:16px; padding:1.4rem;
+            box-shadow:0 2px 14px rgba(0,0,0,.07); transition:box-shadow .2s;
+        }
+        .cc:hover { box-shadow:0 8px 32px rgba(0,0,0,.12); }
+        .cc-title {
+            font-size:.78rem; font-weight:700; color:var(--gris);
+            text-transform:uppercase; letter-spacing:.07em;
+            margin-bottom:1rem; padding-bottom:.6rem;
+            border-bottom:2px solid var(--arena); display:flex; align-items:center; gap:6px;
+        }
+        .cc-title i { color:var(--nar); font-size:.9rem; }
+
+        /* ── Proc bars ── */
+        .pb-item { margin-bottom:.9rem; }
+        .pb-row   { display:flex; justify-content:space-between; font-size:.78rem; font-weight:600; color:var(--gris); margin-bottom:3px; }
+        .pb-track { background:var(--arena); border-radius:99px; height:9px; overflow:hidden; }
+        .pb-fill  { background:linear-gradient(90deg,var(--nar-l),var(--nar)); height:100%; border-radius:99px; width:0; transition:width 1.1s ease; }
+
+        /* ── Grupo de visita icons ── */
+        .grupo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.85rem; margin-top:.5rem; }
+        .grupo-item { text-align:center; padding:.9rem .5rem; border-radius:12px; background:var(--arena); transition:background .2s; }
+        .grupo-item:hover { background:var(--arena-d); }
+        .grupo-item i { font-size:1.5rem; color:var(--nar); display:block; margin-bottom:.4rem; }
+        .grupo-item .g-name { font-size:.72rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:.04em; }
+        .grupo-item .g-cnt  { font-size:1.25rem; font-weight:800; color:var(--nar); line-height:1; }
+
+        /* ── Actividades rank ── */
+        .act-item { display:flex; align-items:center; gap:.85rem; padding:.7rem .8rem; border-radius:10px; margin-bottom:.5rem; background:var(--arena); transition:background .2s; }
+        .act-item:hover { background:var(--arena-d); }
+        .act-rank { font-size:1.1rem; font-weight:800; color:var(--nar); min-width:22px; }
+        .act-icon { font-size:1.15rem; color:var(--gris); }
+        .act-name { font-size:.85rem; font-weight:600; color:var(--gris); flex:1; }
+        .act-bar  { height:6px; border-radius:99px; background:linear-gradient(90deg,var(--nar-l),var(--nar)); transition:width 1s ease; }
+
+        /* ── Reseñas ── */
+        .resena-card {
+            border:1px solid var(--arena-d); border-radius:12px;
+            padding:.95rem 1.1rem; margin-bottom:.75rem; background:var(--arena);
+        }
+        .resena-text { font-size:.87rem; color:var(--gris); font-style:italic; margin-bottom:.4rem; }
+        .resena-meta { display:flex; justify-content:space-between; align-items:center; }
+        .resena-autor{ font-size:.75rem; font-weight:700; color:var(--gris-m); }
+        .resena-stars{ color:#F1C40F; font-size:.8rem; }
+        .no-data { color:var(--gris-m); font-size:.85rem; text-align:center; padding:1.5rem; font-style:italic; }
+
+        /* ── Mini KPIs ── */
+        .mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .mini-kpi  { background:var(--arena); border-radius:12px; padding:1rem 1.1rem; }
+        .mini-val  { font-size:1.6rem; font-weight:800; color:var(--nar); }
+        .mini-lbl  { font-size:.75rem; color:var(--gris-m); font-weight:500; }
+
+        /* ── Afluencia por zonas ── */
+        .zona-item { display:flex; align-items:center; gap:.7rem; margin-bottom:.75rem; }
+        .zona-flag { font-size:1.3rem; min-width:28px; text-align:center; }
+        .zona-info { flex:1; }
+        .zona-name { font-size:.8rem; font-weight:700; color:var(--gris); }
+        .zona-bar  { height:7px; border-radius:99px; background:linear-gradient(90deg,var(--nar-l),var(--nar)); margin-top:3px; width:0; transition:width 1s ease; }
+        .zona-cnt  { font-size:.8rem; font-weight:700; color:var(--nar); min-width:32px; text-align:right; }
+
+        @media(max-width:900px){
+            .kpi-grid,.grid-2,.grid-3 { grid-template-columns:1fr; }
+        }
+        @media(max-width:600px){ .kpi-grid { grid-template-columns:1fr; } }
     </style>
 {% endblock %}
 
 {% block content %}
-    <header class="header" id="Inicio">
-        <div class="overlay">
-            <h1 class="subtitle">Observatorio Turistico de </h1>
-            <h1 class="title">Huaquechula</h1>
-        </div>
-        <div class="shape">
-            <svg viewBox="0 0 1500 200">
-                <path
-                    d="m 0,240 h 1500.4828 v -71.92164 c 0,0 -286.2763,-81.79324 -743.19024,-81.79324 C 300.37862,86.28512 0,168.07836 0,168.07836 Z" />
-            </svg>
-        </div>
-        <div class="mouse-icon">
-            <div class="wheel"></div>
-        </div>
-    </header>
-
-    <div class="container my-5">
-        <!-- Indicadores destacados -->
-        <section id="indicadores" class="mb-5">
-            <h2 class="fw-bold text-center mb-4" style="color: var(--color-gris-oscuro);">Indicadores Clave</h2>
-            <div class="row g-4 text-center">
-                <div class="col-md-4">
-                    <div class="card border-0"
-                        style="background: linear-gradient(135deg, var(--color-naranja-claro), var(--color-naranja));">
-                        <div class="card-body text-white py-4">
-                            <i class="fas fa-users fa-2x mb-3"></i>
-                            <h5 class="card-title">Visitantes Anuales</h5>
-                            <p class="fs-3 mb-0">25,000+</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0"
-                        style="background: linear-gradient(135deg, var(--color-gris-oscuro), #6A6A6A);">
-                        <div class="card-body text-white py-4">
-                            <i class="fas fa-hotel fa-2x mb-3"></i>
-                            <h5 class="card-title">Hospedajes</h5>
-                            <p class="fs-3 mb-0">45+</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <a href="{% url 'estadistica' %}" style="text-decoration: none;">
-                        <div class="card border-0" style="background: linear-gradient(135deg, var(--color-arena-oscuro), #E0D8B8);">
-                            <div class="card-body py-4">
-                                <i class="fas fa-utensils fa-2x mb-3" style="color: var(--color-gris-oscuro);"></i>
-                                <h5 class="card-title" style="color: var(--color-gris-oscuro);">Conocer</h5>
-                                <p class="fs-3 mb-0" style="color: var(--color-gris-oscuro);">Más</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gráficas -->
-        <section id="graficos" class="mb-5">
-            <h2 class="fw-bold text-center mb-4" style="color: var(--color-gris-oscuro);">Estadísticas Turísticas</h2>
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h5 class="card-title text-center mb-3">Visitantes por Mes</h5>
-                            <div class="canvas-container">
-                                <canvas id="chart1"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card border-0">
-                        <div class="card-body">
-                            <h5 class="card-title text-center mb-3">Tendencia Anual</h5>
-                            <div class="canvas-container">
-                                <canvas id="chart2"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Descargas -->
-        <section id="descargas">
-            <h2 class="fw-bold text-center mb-4" style="color: var(--color-gris-oscuro);">Recursos y Descargas</h2>
-            <div class="d-flex justify-content-center">
-                <div class="list-group w-75">
-                    <div class="list-group-item">
-                        <a href="#"><i class="fas fa-file-pdf me-2"></i> Reporte Anual de Turismo 2024 (PDF)</a>
-                    </div>
-                    <div class="list-group-item">
-                        <a href="#"><i class="fas fa-chart-bar me-2"></i> Datos Estadísticos Completos (CSV)</a>
-                    </div>
-                    <div class="list-group-item">
-                        <a href="#"><i class="fas fa-map-marked-alt me-2"></i> Guía Turística de Huaquechula (PDF)</a>
-                    </div>
-                </div>
-            </div>
-        </section>
+<header class="header" id="Inicio">
+    <div class="overlay">
+        <h1 class="subtitle">Observatorio Turístico de</h1>
+        <h1 class="title">Huaquechula</h1>
     </div>
+    <div class="shape">
+        <svg viewBox="0 0 1500 200">
+            <path d="m 0,240 h 1500.4828 v -71.92164 c 0,0 -286.2763,-81.79324 -743.19024,-81.79324 C 300.37862,86.28512 0,168.07836 0,168.07836 Z"/>
+        </svg>
+    </div>
+    <div class="mouse-icon"><div class="wheel"></div></div>
+</header>
+
+<div class="dash">
+
+    <!-- ═══ 1. KPIs Principales ═══ -->
+    <h2 class="sec-title">KPIs <span>Principales</span></h2>
+    <div class="kpi-grid" style="margin-bottom:3rem;">
+        <div class="kpi-card c-orange">
+            <i class="fas fa-landmark kpi-ico"></i>
+            <span class="kpi-lbl">Afluencia durante la Tradición</span>
+            <span class="kpi-val" id="kpi-tradicion">—</span>
+            <span class="kpi-sub">Visitantes Oct–Nov (Día de Muertos)</span>
+        </div>
+        <div class="kpi-card c-dark">
+            <i class="fas fa-calendar-alt kpi-ico"></i>
+            <span class="kpi-lbl">Visitantes Anuales</span>
+            <span class="kpi-val" id="kpi-anuales">—</span>
+            <span class="kpi-sub" id="kpi-anuales-sub">año en curso</span>
+        </div>
+        <div class="kpi-card c-light">
+            <i class="fas fa-star kpi-ico" style="color:var(--nar);opacity:.12;"></i>
+            <span class="kpi-lbl" style="color:var(--gris-m);">Índice de Satisfacción</span>
+            <div class="stars" id="kpi-stars">—</div>
+            <span class="kpi-sub" id="kpi-sat-sub" style="color:var(--gris-m);">Promedio de puntuación</span>
+        </div>
+    </div>
+
+    <!-- ═══ 2. Origen y Conectividad ═══ -->
+    <hr class="sec-divider">
+    <h2 class="sec-title">Origen y <span>Conectividad</span></h2>
+    <div class="grid-2" style="margin-bottom:3rem;">
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-map-marker-alt"></i>Afluencia por Zonas</div>
+            <div id="zonas-list"></div>
+        </div>
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-city"></i>Visitas por Ciudad</div>
+            <div id="proc-bars"></div>
+        </div>
+    </div>
+
+    <!-- ═══ 3. Perfil Demográfico ═══ -->
+    <hr class="sec-divider">
+    <h2 class="sec-title">Perfil <span>Demográfico</span> del Visitante</h2>
+    <div class="grid-2" style="margin-bottom:3rem;">
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-venus-mars"></i>Perfil del Visitante</div>
+            <div style="position:relative;height:260px;"><canvas id="chart-piramide"></canvas></div>
+        </div>
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-users"></i>Grupo de Visita</div>
+            <div class="grupo-grid" id="grupo-grid"></div>
+        </div>
+    </div>
+
+    <!-- ═══ 4. Comportamiento en la Tradición ═══ -->
+    <hr class="sec-divider">
+    <h2 class="sec-title">Comportamiento <span>en la Tradición</span></h2>
+    <div class="grid-2" style="margin-bottom:3rem;">
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-star"></i>Actividades Populares</div>
+            <div id="act-list"></div>
+        </div>
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-comment-dots"></i>Reseñas de Visitantes</div>
+            <div id="resenas-list"></div>
+        </div>
+    </div>
+
+    <!-- ═══ 5. Indicadores Clave ═══ -->
+    <hr class="sec-divider">
+    <h2 class="sec-title">Indicadores <span>Clave</span></h2>
+    <div class="grid-3" style="margin-bottom:3rem;">
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-chart-pie"></i>Motivo de Visita</div>
+            <div style="position:relative;height:220px;"><canvas id="chart-motivo"></canvas></div>
+        </div>
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-bus"></i>Medio de Transporte</div>
+            <div style="position:relative;height:220px;"><canvas id="chart-transporte"></canvas></div>
+        </div>
+        <div class="cc">
+            <div class="cc-title"><i class="fas fa-chart-bar"></i>Visitantes por Mes</div>
+            <div style="position:relative;height:220px;"><canvas id="chart-meses"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Fila extra de KPIs mini -->
+    <div class="cc" style="margin-bottom:3rem;">
+        <div class="cc-title"><i class="fas fa-info-circle"></i>Datos Adicionales</div>
+        <div class="mini-grid">
+            <div class="mini-kpi"><div class="mini-val" id="mini-estancia">—</div><div class="mini-lbl">Días promedio de estancia</div></div>
+            <div class="mini-kpi"><div class="mini-val" id="mini-previas">—</div><div class="mini-lbl">Visitas previas promedio</div></div>
+            <div class="mini-kpi"><div class="mini-val" id="mini-ext">—</div><div class="mini-lbl">% visitantes extranjeros</div></div>
+            <div class="mini-kpi"><div class="mini-val" id="mini-total">—</div><div class="mini-lbl">Total encuestas registradas</div></div>
+        </div>
+    </div>
+
+</div><!-- /dash -->
 {% endblock %}
+
 {% block extra_js %}
-    <script src="{% static 'myapp/JAV/java.js' %}"></script>
+<script src="{% static 'myapp/JAV/java.js' %}"></script>
+<script>
+(async function () {
+    const N = '#D35400', NL = '#E8681A', GR = '#4A4A4A';
+    const MOTIVO_ICONS = { turismo:'fa-camera', negocios:'fa-briefcase', visita_familiar:'fa-home', estudios:'fa-graduation-cap', otros:'fa-ellipsis-h' };
+    const MOTIVO_LABELS = { turismo:'Turismo', negocios:'Negocios', visita_familiar:'Familiar', estudios:'Estudios', otros:'Otros' };
+
+    let d, resenas;
+    try {
+        [d, resenas] = await Promise.all([
+            fetch('/api/visitor-stats/').then(r => r.json()),
+            fetch('/api/resenas/?limit=4').then(r => r.json()).catch(() => ({ resenas: [] }))
+        ]);
+    } catch(e) { console.error('Error cargando stats', e); return; }
+
+    /* ── 1. KPIs principales ── */
+    document.getElementById('kpi-tradicion').textContent = (d.visitantes_tradicion || 0).toLocaleString('es-MX');
+    document.getElementById('kpi-anuales').textContent   = (d.visitantes_anuales  || 0).toLocaleString('es-MX');
+
+    const sat = d.satisfaccion_promedio || 0;
+    const starsEl = document.getElementById('kpi-stars');
+    if (sat > 0) {
+        const full = Math.floor(sat), half = sat - full >= 0.25 && sat - full < 0.75;
+        let html = '';
+        for (let i = 1; i <= 5; i++) html += i <= full ? '★' : (i === full + 1 && half ? '⭑' : '☆');
+        starsEl.textContent = html;
+        document.getElementById('kpi-sat-sub').textContent = `${sat} / 5 — ${d.total_resenas} reseñas`;
+    } else {
+        starsEl.innerHTML = '<span style="font-size:.85rem;color:#aaa;font-style:italic;">Sin reseñas aún</span>';
+    }
+
+    /* ── 2a. Afluencia por zonas ── */
+    const zonaEl = document.getElementById('zonas-list');
+    const procs = d.top_procedencias;
+    const maxZ = Math.max(...procs.values, 1);
+    if (procs.labels.length) {
+        procs.labels.forEach((lbl, i) => {
+            const pct = Math.round(procs.values[i] / maxZ * 100);
+            const flagMap = { 'mexico':'🇲🇽','estados unidos':'🇺🇸','usa':'🇺🇸','canada':'🇨🇦','españa':'🇪🇸' };
+            const flag = flagMap[lbl.toLowerCase()] || '📍';
+            zonaEl.innerHTML += `
+            <div class="zona-item">
+                <span class="zona-flag">${flag}</span>
+                <div class="zona-info">
+                    <div class="zona-name">${lbl}</div>
+                    <div class="zona-bar" style="width:${pct}%"></div>
+                </div>
+                <span class="zona-cnt">${procs.values[i]}</span>
+            </div>`;
+        });
+    } else {
+        zonaEl.innerHTML = '<p class="no-data">Sin datos de procedencia aún</p>';
+    }
+
+    /* ── 2b. Visitas por ciudad (barras) ── */
+    const procEl = document.getElementById('proc-bars');
+    if (procs.labels.length) {
+        procs.labels.forEach((lbl, i) => {
+            const pct = Math.round(procs.values[i] / maxZ * 100);
+            procEl.innerHTML += `
+            <div class="pb-item">
+                <div class="pb-row"><span>${lbl}</span><span>${procs.values[i]}</span></div>
+                <div class="pb-track"><div class="pb-fill" style="width:${pct}%"></div></div>
+            </div>`;
+        });
+    } else {
+        procEl.innerHTML = '<p class="no-data">Sin datos aún</p>';
+    }
+
+    /* ── 3a. Pirámide género/edad ── */
+    const gpr = d.genero_por_rango;
+    new Chart(document.getElementById('chart-piramide'), {
+        type: 'bar',
+        data: {
+            labels: gpr.rangos,
+            datasets: [
+                { label:'Mujeres', data: gpr.mujeres.map(v => -v), backgroundColor:'rgba(211,84,0,.75)', borderRadius:4, borderSkipped:false },
+                { label:'Hombres', data: gpr.hombres, backgroundColor:'rgba(74,74,74,.75)', borderRadius:4, borderSkipped:false },
+            ]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false, indexAxis:'y',
+            plugins:{ legend:{ display:true, position:'top', labels:{ font:{size:11}, usePointStyle:true }}},
+            scales:{
+                x:{ grid:{color:'#f0f0f0'}, ticks:{ callback:v => Math.abs(v) }},
+                y:{ grid:{display:false} }
+            }
+        }
+    });
+
+    /* ── 3b. Grupo de visita (iconos) ── */
+    const grupoEl = document.getElementById('grupo-grid');
+    // Build counts per motivo
+    const mCnts = {};
+    d.motivo_visita.labels.forEach((lbl, i) => {
+        // match label to key
+        const key = Object.keys(MOTIVO_LABELS).find(k => MOTIVO_LABELS[k] === lbl) || lbl.toLowerCase();
+        mCnts[key] = d.motivo_visita.values[i];
+    });
+    Object.entries(MOTIVO_ICONS).forEach(([key, icon]) => {
+        grupoEl.innerHTML += `
+        <div class="grupo-item">
+            <i class="fas ${icon}"></i>
+            <div class="g-cnt">${(mCnts[key] || 0)}</div>
+            <div class="g-name">${MOTIVO_LABELS[key]}</div>
+        </div>`;
+    });
+
+    /* ── 4a. Actividades populares (rank) ── */
+    const actEl = document.getElementById('act-list');
+    const motMax = Math.max(...d.motivo_visita.values, 1);
+    if (d.motivo_visita.labels.length) {
+        d.motivo_visita.labels.forEach((lbl, i) => {
+            const key = Object.keys(MOTIVO_LABELS).find(k => MOTIVO_LABELS[k] === lbl) || 'otros';
+            const pct = Math.round(d.motivo_visita.values[i] / motMax * 100);
+            actEl.innerHTML += `
+            <div class="act-item">
+                <span class="act-rank">#${i+1}</span>
+                <i class="fas ${MOTIVO_ICONS[key] || 'fa-tag'} act-icon"></i>
+                <span class="act-name">${lbl}</span>
+                <div style="width:80px;">
+                    <div class="act-bar" style="width:${pct}%"></div>
+                    <span style="font-size:.7rem;color:var(--gris-m);">${d.motivo_visita.values[i]} visitas</span>
+                </div>
+            </div>`;
+        });
+    } else {
+        actEl.innerHTML = '<p class="no-data">Sin actividades registradas</p>';
+    }
+
+    /* ── 4b. Reseñas ── */
+    const resEl = document.getElementById('resenas-list');
+    const resArr = Array.isArray(resenas) ? resenas : (resenas.resenas || []);
+    if (resArr.length) {
+        resArr.slice(0, 4).forEach(r => {
+            const stars = '★'.repeat(r.calificacion || 0) + '☆'.repeat(5 - (r.calificacion || 0));
+            resEl.innerHTML += `
+            <div class="resena-card">
+                <div class="resena-text">"${r.comentario || r.texto || 'Sin comentario'}"</div>
+                <div class="resena-meta">
+                    <span class="resena-autor">— ${r.autor || r.nombre_visitante || 'Visitante Anónimo'}</span>
+                    <span class="resena-stars">${stars}</span>
+                </div>
+            </div>`;
+        });
+    } else {
+        resEl.innerHTML = '<p class="no-data">No hay reseñas aprobadas aún. ¡Sé el primero en opinar!</p>';
+    }
+
+    /* ── 5. Charts indicadores clave ── */
+    const chartOpts = { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:true, position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:10 }}}};
+
+    // Motivo dona
+    new Chart(document.getElementById('chart-motivo'), {
+        type:'doughnut',
+        data:{ labels:d.motivo_visita.labels, datasets:[{
+            data:d.motivo_visita.values,
+            backgroundColor:['#D35400','#E8681A','#4A4A4A','#6B6B6B','#BDBDBD'],
+            borderWidth:2, borderColor:'#fff', hoverOffset:8
+        }]},
+        options:{ ...chartOpts, cutout:'58%' }
+    });
+
+    // Transporte dona
+    new Chart(document.getElementById('chart-transporte'), {
+        type:'doughnut',
+        data:{ labels:d.transporte.labels, datasets:[{
+            data:d.transporte.values,
+            backgroundColor:['#D35400','#E8681A','#4A4A4A','#8C8C8C','#C5C5C5'],
+            borderWidth:2, borderColor:'#fff', hoverOffset:8
+        }]},
+        options:{ ...chartOpts, cutout:'58%' }
+    });
+
+    // Visitantes por mes barras
+    new Chart(document.getElementById('chart-meses'), {
+        type:'bar',
+        data:{
+            labels: d.visitantes_por_mes.labels,
+            datasets:[{ data:d.visitantes_por_mes.values,
+                backgroundColor: d.visitantes_por_mes.labels.map((_,i,a) =>
+                    i===a.length-1 ? N : `rgba(211,84,0,${.3+.6*(i/a.length)})`),
+                borderRadius:5, borderSkipped:false
+            }]
+        },
+        options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false} },
+            scales:{
+                x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:45 }},
+                y:{ grid:{color:'#f0f0f0'}, beginAtZero:true }
+            }
+        }
+    });
+
+    /* ── Mini KPIs ── */
+    document.getElementById('mini-estancia').textContent = d.estancia_promedio + ' días';
+    document.getElementById('mini-previas').textContent  = d.visitas_previas_promedio;
+    document.getElementById('mini-ext').textContent      = d.pct_extranjeros + '%';
+    document.getElementById('mini-total').textContent    = d.total_registros.toLocaleString('es-MX');
+
+})();
+</script>
 {% endblock %}

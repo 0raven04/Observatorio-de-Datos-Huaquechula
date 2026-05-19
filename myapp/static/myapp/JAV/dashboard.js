@@ -162,7 +162,25 @@
                 navItems.forEach(n => n.classList.remove('active'));
                 this.classList.add('active');
 
-                const filter = this.getAttribute('data-filter');
+                // Toggle sub-nav if it's a group
+                const group = this.closest('.sidebar-nav-group');
+                if (group) {
+                    const wasActive = group.classList.contains('active');
+                    document.querySelectorAll('.sidebar-nav-group').forEach(g => g.classList.remove('active'));
+                    // Close all category sub-menus when switching eje
+                    document.querySelectorAll('.sidebar-sub-nav-item').forEach(b => b.classList.remove('cat-active'));
+                    document.querySelectorAll('.sidebar-indicator-nav').forEach(n => n.classList.remove('ind-active'));
+                    if (!wasActive) {
+                        group.classList.add('active');
+                    }
+                } else {
+                    // "Todas las dimensiones" — close all groups
+                    document.querySelectorAll('.sidebar-nav-group').forEach(g => g.classList.remove('active'));
+                    document.querySelectorAll('.sidebar-sub-nav-item').forEach(b => b.classList.remove('cat-active'));
+                    document.querySelectorAll('.sidebar-indicator-nav').forEach(n => n.classList.remove('ind-active'));
+                }
+
+                const filter = group ? group.getAttribute('data-filter') : this.getAttribute('data-filter');
                 axisSections.forEach(section => {
                     if (filter === 'all' || section.getAttribute('data-eje') === filter) {
                         section.style.display = '';
@@ -171,6 +189,71 @@
                         section.style.display = 'none';
                     }
                 });
+            });
+        });
+
+        // ── Category toggle (2nd level → 3rd level) ──
+        document.querySelectorAll('.sidebar-sub-nav-item[data-cat-id]').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation(); // no activar el eje padre
+                const catId = this.getAttribute('data-cat-id');
+                const indNav = document.getElementById('ind-nav-' + catId);
+                const wasActive = this.classList.contains('cat-active');
+
+                // Cerrar todos los submenús de indicadores en el mismo grupo
+                const parentSubNav = this.closest('.sidebar-sub-nav');
+                if (parentSubNav) {
+                    parentSubNav.querySelectorAll('.sidebar-sub-nav-item').forEach(b => b.classList.remove('cat-active'));
+                    parentSubNav.querySelectorAll('.sidebar-indicator-nav').forEach(n => n.classList.remove('ind-active'));
+                }
+
+                if (!wasActive && indNav) {
+                    this.classList.add('cat-active');
+                    indNav.classList.add('ind-active');
+
+                    // Scroll suave al bloque de la categoría en el contenido
+                    const catBlock = document.getElementById('cat-' + catId);
+                    if (catBlock) {
+                        catBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        });
+
+        // ── Indicator click (3rd level → scroll + highlight) ──
+        document.querySelectorAll('.sidebar-indicator-item[data-indicator-id]').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const indId = this.getAttribute('data-indicator-id');
+                const card = document.getElementById('indicator-' + indId);
+                if (!card) return;
+
+                // Asegurarse de que la sección del eje esté visible
+                const section = card.closest('.axis-section');
+                if (section && section.style.display === 'none') {
+                    axisSections.forEach(s => s.style.display = '');
+                }
+
+                // Pre-forzar animate-in para evitar conflicto con IntersectionObserver
+                card.classList.add('animate-in');
+
+                // Scroll suave a la tarjeta
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Esperar a que el scroll termine (~600ms) antes de animar
+                setTimeout(() => {
+                    // Limpiar animación previa si existiera
+                    card.classList.remove('highlighted');
+                    void card.offsetWidth; // reflow para reiniciar
+
+                    // Usar animationend para limpiar la clase exactamente al terminar
+                    function onHighlightEnd() {
+                        card.classList.remove('highlighted');
+                        card.removeEventListener('animationend', onHighlightEnd);
+                    }
+                    card.addEventListener('animationend', onHighlightEnd);
+                    card.classList.add('highlighted');
+                }, 600);
             });
         });
     }

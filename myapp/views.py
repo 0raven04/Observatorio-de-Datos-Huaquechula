@@ -2047,10 +2047,13 @@ def crear_categoria(request):
     if not nombre or not slug:
         return JsonResponse({'status': 'error', 'message': 'Datos incompletos'})
 
-    nueva = Categoria_Sitio.objects.create(
-        nombre=nombre.title(),
-        codigo_slug=slug.lower()
-    )
+    try:
+        nueva = Categoria_Sitio.objects.create(
+            nombre=nombre.title(),
+            codigo_slug=slug.lower()
+        )
+    except IntegrityError:
+        return JsonResponse({'status': 'error', 'message': 'Esa categoría o código slug ya existe.'})
 
     return JsonResponse({
         'status': 'success',
@@ -3138,6 +3141,141 @@ def category_detail_view(request, category_id):
         'categoria': categoria,
         'indicadores': indicadores,
         'eje': categoria.eje,
+    })
+
+
+# ============================================
+# API de Estadísticas de Visitantes (Inicio)
+# ============================================
+
+@require_http_methods(["GET"])
+def api_visitor_stats(request):
+    """
+    Agrega datos de RegistroVisita para las gráficas de la página de inicio.
+    Devuelve:
+      - total_visitantes, pct_extranjeros
+      - visitantes_por_mes  (últimos 12 meses)
+      - top_procedencias    (top 5 ciudades)
+      - motivo_visita       (distribución)
+      - transporte          (distribución)
+      - genero_por_rango    (pirámide)
+      - estancia_promedio
+      - visitas_previas_promedio
+    """
+    from django.db.models import Sum, Count, Avg, Q
+    from django.db.models.functions import TruncMonth
+    from collections import defaultdict
+    import calendar
+
+    registros = RegistroVisita.objects.all()
+    total = registros.count()
+
+    if total == 0:
+        return JsonResponse({
+            'total_visitantes': 0,
+            'pct_extranjeros': 0,
+            'visitantes_por_mes': {'labels': [], 'values': []},
+            'top_procedencias': {'labels': [], 'values': []},
+            'motivo_visita': {'labels': [], 'values': []},
+            'transporte': {'labels': [], 'values': []},
+            'genero_por_rango': {'rangos': [], 'mujeres': [], 'hombres': []},
+            'estancia_promedio': 0,
+            'visitas_previas_promedio': 0,
+        })
+
+    # Total personas (sumando campos de edad/género)
+    total_personas_agg = registros.aggregate(
+        tot_m=Sum('mujeres_0_15') + Sum('mujeres_16_30') + Sum('mujeres_31_45') +
+              Sum('mujeres_46_60') + Sum('mujeres_61_75') + Sum('mujeres_76_mas') +
+              Sum('hombres_0_15') + Sum('hombres_16_30') + Sum('hombres_31_45') +
+              Sum('hombres_46_60') + Sum('hombres_61_75') + Sum('hombres_76_mas'),
+    )
+    total_personas = total_personas_agg['tot_m'] or 0
+
+    # Extranjeros
+    ext_count = registros.filter(es_extranjero=True).count()
+    pct_ext = round(ext_count / total * 100, 1) if total else 0
+
+    # Visitantes por mes (últimos 12 meses)
+    from datetime import date
+    from dateutil.relativedelta import relativedelta
+    hoy = date.today()
+    meses_labels, meses_values = [], []
+    MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    for i in range(11, -1, -1):
+        d = hoy - relativedelta(months=i)
+        qs = registros.filter(fecha__year=d.year, fecha__month=d.month)
+        total_mes = 0
+        for r in qs:
+            total_mes += r.total_personas
+        meses_labels.append(f"{MESES_ES[d.month - 1]} {d.year}")
+        meses_values.append(total_mes)
+
+    # Top procedencias
+    proc_counts = defaultdict(int)
+    for r in registros:
+        proc_counts[r.procedencia.strip().title()] += r.total_personas
+    top_proc = sorted(proc_counts.items(), key=lambda x: x[1], reverse=True)[:6]
+    top_labels = [p[0] for p in top_proc]
+    top_values = [p[1] for p in top_proc]
+
+    # Motivo de visita
+    motivos_raw = registros.values('motivo_visita').annotate(cnt=Count('id_registro')).order_by('-cnt')
+    MOTIVO_MAP = {'turismo': 'Turismo', 'negocios': 'Negocios', 'visita_familiar': 'Visita Familiar',
+                  'estudios': 'Estudios', 'otros': 'Otros'}
+    motivo_labels = [MOTIVO_MAP.get(m['motivo_visita'], m['motivo_visita']) for m in motivos_raw]
+    motivo_values = [m['cnt'] for m in motivos_raw]
+
+    # Transporte
+    trans_raw = registros.values('tipo_transporte').annotate(cnt=Count('id_registro')).order_by('-cnt')
+    TRANS_MAP = {'automovil': 'Automóvil', 'autobus': 'Autobús', 'avion': 'Avión',
+                 'tren': 'Tren', 'otros': 'Otros'}
+    trans_labels = [TRANS_MAP.get(t['tipo_transporte'], t['tipo_transporte']) for t in trans_raw]
+    trans_values = [t['cnt'] for t in trans_raw]
+
+    # Pirámide por rango de edad
+    rangos = ['0-15', '16-30', '31-45', '46-60', '61-75', '76+']
+    campos_m = ['mujeres_0_15','mujeres_16_30','mujeres_31_45','mujeres_46_60','mujeres_61_75','mujeres_76_mas']
+    campos_h = ['hombres_0_15','hombres_16_30','hombres_31_45','hombres_46_60','hombres_61_75','hombres_76_mas']
+    mujeres_vals = [registros.aggregate(t=Sum(c))['t'] or 0 for c in campos_m]
+    hombres_vals = [registros.aggregate(t=Sum(c))['t'] or 0 for c in campos_h]
+
+    # Promedios
+    avg_estancia = round(registros.aggregate(a=Avg('estancia_dias'))['a'] or 0, 1)
+    avg_visitas = round(registros.aggregate(a=Avg('visitas_previas'))['a'] or 0, 1)
+
+    # Visitantes anuales (año en curso)
+    visitantes_anuales = 0
+    for r in registros.filter(fecha__year=hoy.year):
+        visitantes_anuales += r.total_personas
+
+    # Visitantes durante la tradición (Oct-Nov: Día de Muertos)
+    visitantes_tradicion = 0
+    for r in registros.filter(fecha__month__in=[10, 11]):
+        visitantes_tradicion += r.total_personas
+
+    # Satisfacción promedio de reseñas aprobadas
+    from .models import ResenaGlobal
+    resenas_qs = ResenaGlobal.objects.filter(estado='aprobada')
+    satisfaccion_agg = resenas_qs.aggregate(avg=Avg('calificacion'))
+    satisfaccion_promedio = round(satisfaccion_agg['avg'] or 0, 1)
+    total_resenas = resenas_qs.count()
+
+    return JsonResponse({
+        'total_visitantes': total_personas,
+        'total_registros': total,
+        'pct_extranjeros': pct_ext,
+        'visitantes_anuales': visitantes_anuales,
+        'visitantes_tradicion': visitantes_tradicion,
+        'satisfaccion_promedio': satisfaccion_promedio,
+        'total_resenas': total_resenas,
+        'visitantes_por_mes': {'labels': meses_labels, 'values': meses_values},
+        'top_procedencias': {'labels': top_labels, 'values': top_values},
+        'motivo_visita': {'labels': motivo_labels, 'values': motivo_values},
+        'transporte': {'labels': trans_labels, 'values': trans_values},
+        'genero_por_rango': {'rangos': rangos, 'mujeres': mujeres_vals, 'hombres': hombres_vals},
+        'estancia_promedio': avg_estancia,
+        'visitas_previas_promedio': avg_visitas,
     })
 
 

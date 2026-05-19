@@ -96,9 +96,7 @@
 
 /* Logo styling for better contrast */
 .navbar-brand img {
-    background: white;
     border-radius: 12px; /* Slightly rounded corners instead of full circle for a modern look */
-    padding: 6px;
     height: 65px !important;
     width: auto;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -426,7 +424,7 @@
 /* ── Indicator Cards Grid ────────────────────── */
 .indicators-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-md);
 }
 
@@ -436,7 +434,7 @@
     padding: var(--space-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(0,0,0,0.04);
-    transition: var(--transition-base);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
     cursor: pointer;
     position: relative;
     display: flex;
@@ -445,7 +443,6 @@
 
 .indicator-card:hover {
     box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
     border-color: var(--color-naranja-light);
 }
 
@@ -455,6 +452,11 @@
     align-items: center;
     margin-bottom: var(--space-sm);
     gap: var(--space-sm);
+}
+
+.indicator-badges {
+    display: flex;
+    gap: 4px;
 }
 
 .indicator-name {
@@ -483,6 +485,16 @@
 .indicator-source-badge.local {
     background: rgba(39,174,96,0.12);
     color: var(--eje-turismo);
+}
+
+.indicator-source-badge.residente {
+    background: rgba(142, 68, 173, 0.12);
+    color: var(--eje-tradicion);
+}
+
+.indicator-source-badge.institucional {
+    background: rgba(230, 126, 34, 0.12);
+    color: var(--color-naranja);
 }
 
 .indicator-value-row {

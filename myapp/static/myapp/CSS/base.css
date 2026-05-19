@@ -189,23 +189,7 @@ p {
     position: relative;
 }
 
-.navbar:not(.scrolled) .navbar-brand::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 120px;
-    height: 90px;
-    background-color: #ffffff;
-    border-radius: 20px;
-    z-index: -1;
-    transition: opacity 0.3s ease;
-}
-
-.navbar.scrolled .navbar-brand::before {
-    opacity: 0;
-}
+/* Removido el cuadro blanco grande detrás del logo */
 
 .navbar>.container,
 .navbar>.container-fluid {
@@ -229,6 +213,10 @@ p {
     position: relative;
     z-index: 1;
     transition: opacity 0.4s ease, transform 0.4s ease;
+    background: white;
+    padding: 6px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .navbar-nav {
