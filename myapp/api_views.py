@@ -125,9 +125,34 @@ class VisitasListCreateView(APIView):
         except (Usuario.DoesNotExist, Encuestador.DoesNotExist):
             return Response({'error': 'Encuestador no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
-        registros = RegistroVisita.objects.filter(id_encuestador=encuestador).order_by('-fecha')
-        serializer = RegistroVisitaSerializer(registros, many=True)
-        return Response(serializer.data)
+        # Filtros opcionales de fecha
+        fecha_desde = request.query_params.get('fecha_desde')
+        fecha_hasta = request.query_params.get('fecha_hasta')
+        registros = RegistroVisita.objects.filter(clave_encuestador=encuestador).order_by('-fecha')
+        if fecha_desde:
+            registros = registros.filter(fecha__date__gte=fecha_desde)
+        if fecha_hasta:
+            registros = registros.filter(fecha__date__lte=fecha_hasta)
+
+        # Paginación manual (?page=1&page_size=20)
+        try:
+            page = max(1, int(request.query_params.get('page', 1)))
+            page_size = min(100, max(1, int(request.query_params.get('page_size', 20))))
+        except (ValueError, TypeError):
+            page = 1
+            page_size = 20
+        start = (page - 1) * page_size
+        end = start + page_size
+        total = registros.count()
+        registros_paginados = registros[start:end]
+        serializer = RegistroVisitaSerializer(registros_paginados, many=True)
+        return Response({
+            'total': total,
+            'pagina': page,
+            'pagina_size': page_size,
+            'siguiente': page * page_size < total,
+            'datos': serializer.data,
+        })
 
     def post(self, request):
         try:
@@ -136,7 +161,7 @@ class VisitasListCreateView(APIView):
             return Response({'error': 'Encuestador no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
         data = request.data.copy()
-        data['id_encuestador'] = encuestador.clave_encuestador
+        data['clave_encuestador'] = encuestador.clave_encuestador
 
         serializer = RegistroVisitaSerializer(data=data)
         if serializer.is_valid():
@@ -167,6 +192,17 @@ class VisitaDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
+        registro = self._get_registro(pk)
+        if not registro:
+            return Response({'error': 'Registro no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = RegistroVisitaSerializer(registro, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
         registro = self._get_registro(pk)
         if not registro:
             return Response({'error': 'Registro no encontrado'}, status=status.HTTP_404_NOT_FOUND)

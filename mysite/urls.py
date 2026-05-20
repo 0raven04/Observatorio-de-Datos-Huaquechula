@@ -18,6 +18,7 @@ from myapp import views
 from myapp.views import backup_database
 from django.conf import settings
 from django.conf.urls.static import static
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
     # URL para la página de inicio de sesión
@@ -51,6 +52,14 @@ urlpatterns = [
 
     # API REST para la app móvil (JWT, CRUD visitas, indicadores)
     path('', include('myapp.api_urls')),
+
+    # API Pública Open Data (/api/v1/public/)
+    path('', include('myapp.public_api_urls')),
+
+    # ── Documentación OpenAPI / Swagger ──────────────────────────────────────
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 if settings.DEBUG:

@@ -1015,3 +1015,40 @@ class EncuestaComercio(models.Model):
     def __str__(self):
         return f"Encuesta Comercio {self.id} - {self.tipo_comercio} - {self.fecha.strftime('%Y-%m-%d')}"
 
+
+# =====================================================
+# API KEYS — Acceso a la API Pública Open Data
+# =====================================================
+import secrets
+
+class APIKey(models.Model):
+    """
+    Modelo para gestionar las llaves de acceso a la API pública.
+    Equivalente al sistema de API Keys del portal de desarrolladores de INEGI.
+    """
+    key = models.CharField(max_length=64, unique=True, db_index=True)
+    nombre = models.CharField(max_length=100, help_text="Nombre del proyecto / institución")
+    email = models.EmailField(help_text="Correo de contacto del solicitante")
+    activa = models.BooleanField(default=True)
+    creada = models.DateTimeField(auto_now_add=True)
+    usos_hoy = models.PositiveIntegerField(default=0)
+    limite_diario = models.PositiveIntegerField(default=1000)
+    ultimo_uso = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'APIKey'
+        verbose_name = 'API Key'
+        verbose_name_plural = 'API Keys'
+        ordering = ['-creada']
+
+    def __str__(self):
+        return f"{self.nombre} ({self.email})"
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = secrets.token_urlsafe(48)
+        super().save(*args, **kwargs)
+
+    @property
+    def ha_excedido_limite(self):
+        return self.usos_hoy >= self.limite_diario

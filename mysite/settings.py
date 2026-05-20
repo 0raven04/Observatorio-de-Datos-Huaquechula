@@ -55,6 +55,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    # Documentación OpenAPI / Swagger
+    'drf_spectacular',
+    # Utilidades de desarrollo
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -214,6 +218,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Throttling
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '2000/day',
+        'public_api': '500/hour',
+    },
+    # Documentación OpenAPI
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 from datetime import timedelta
@@ -230,3 +246,21 @@ CORS_ALLOWED_ORIGINS = [
     'http://10.0.2.2:8081',  # Emulador Android
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# CORS abierto para endpoints públicos /api/v1/public/
+CORS_URLS_REGEX = r'^/api/v1/public/.*$'
+
+# =====================================================
+# Swagger / OpenAPI (drf-spectacular)
+# =====================================================
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Observatorio Territorial de Huaquechula API',
+    'DESCRIPTION': (
+        'API pública del Observatorio de Datos de Huaquechula. '
+        'Datos abiertos bajo licencia CC BY 4.0.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'CONTACT': {'email': 'contacto@observatorio-huaquechula.mx'},
+    'LICENSE': {'name': 'CC BY 4.0', 'url': 'https://creativecommons.org/licenses/by/4.0/'},
+}
