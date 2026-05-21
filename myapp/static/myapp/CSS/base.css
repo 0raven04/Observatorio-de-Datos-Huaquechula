@@ -197,10 +197,10 @@ p {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 120px;
-    height: 90px;
-    background-color: #ffffff;
-    border-radius: 20px;
+    width: 0;
+    height: 0;
+    background-color: white;
+    border-radius: 10px;
     z-index: -1;
     transition: opacity 0.3s ease;
 }
@@ -226,15 +226,42 @@ p {
 }
 
 .navbar-brand img {
-    width: 80px;
+    width: auto;
     height: auto;
+    max-height: 55px;
     position: relative;
     z-index: 1;
     transition: opacity 0.4s ease, transform 0.4s ease;
     background: white;
-    padding: 6px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 0;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.navbar.scrolled .navbar-brand img {
+    max-height: 45px;
+    background: white;
+    padding: 0;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.navbar.scrolled .navbar-brand img {
+    max-height: 45px;
+    background: white;
+    padding: 0;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+body.page-home .navbar.scrolled .navbar-nav .nav-link,
+body.page-home .navbar.scrolled .navbar-nav .nav-link:visited,
+body.page-home .navbar.scrolled .navbar-nav .nav-link:focus,
+body.page-home .navbar.scrolled .navbar-nav .nav-link:hover,
+body.page-home .navbar.scrolled .navbar-nav .nav-link.active,
+body.page-home .navbar.scrolled .navbar-brand,
+body.page-home .navbar.scrolled .navbar-toggler-icon {
+    color: white !important;
 }
 
 .navbar-nav {
@@ -268,14 +295,23 @@ p {
 /* Efecto slide para navbar normal - SIN BORDE */
 .navbar:not(.scrolled) .navbar-nav .nav-link:hover {
     box-shadow: inset 0 0 0 50px var(--color-arena-oscuro);
-    color: var(--color-gris-oscuro) !important;
+    color: white !important;
     border-color: transparent;
     /* Asegurar que sea transparente */
 }
 
 /* Efecto slide para navbar scrolled - SIN BORDE */
+.navbar.scrolled .navbar-nav .nav-link,
+.navbar.scrolled .navbar-nav .nav-link:visited,
+.navbar.scrolled .navbar-nav .nav-link:focus,
+.navbar.scrolled .navbar-nav .nav-link:hover,
+.navbar.scrolled .navbar-nav .nav-link.active,
+.navbar.scrolled .navbar-brand,
+.navbar.scrolled .navbar-toggler-icon {
+    color: white !important;
+}
+
 .navbar.scrolled .navbar-nav .nav-link {
-    color: var(--color-gris-oscuro) !important;
     border: 2px solid transparent;
     /* Borde transparente */
     box-shadow: inset 0 0 0 0 var(--color-arena-oscuro);
@@ -288,12 +324,22 @@ p {
     /* Asegurar que sea transparente */
 }
 
+.navbar.scrolled .navbar-toggler-icon,
+.navbar.scrolled .navbar-brand {
+    color: white !important;
+}
+
+.navbar-scrolled .navbar-toggler-icon,
+.navbar.scrolled .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%23EDEBE3' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
 /* Estado activo - SIN BORDE */
 .navbar-nav .nav-link.active {
     box-shadow: inset 0 0 0 50px var(--color-arena-oscuro);
     border-color: transparent;
     /* Borde transparente */
-    color: var(--color-gris-oscuro) !important;
+    color: white !important;
 }
 
 .navbar-collapse {
@@ -303,13 +349,16 @@ p {
 }
 
 .navbar.scrolled {
-    background-color: var(--color-arena-claro) !important;
+    background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+    background-image: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+    background-color: #191818 !important;
     padding: 10px 0;
-    border-bottom: 2px solid var(--color-arena-oscuro);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .navbar.scrolled .navbar-brand img {
     max-height: 50px;
+    background: white;
 }
 
 .custom-toggler {

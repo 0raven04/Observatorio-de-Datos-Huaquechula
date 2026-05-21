@@ -127,83 +127,98 @@
 
 <!-- Modal Crear Usuario -->
 <div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <form id="formCrearUsuario" class="modal-content">
             {% csrf_token %}
                 <div class="modal-header custom-modal-header">
-                    <h5 class="modal-title" id="modalCrearUsuarioLabel"><i class="fas fa-user-plus me-2"></i>Crear Nuevo Usuario</h5>
+                    <h5 class="modal-title fw-bold" id="modalCrearUsuarioLabel"><i class="fas fa-user-plus me-2"></i>Crear Nuevo Usuario</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre de Usuario (Login)</label>
-                        <input type="text" class="form-control" name="nombre_usuario" required>
+                    <!-- Nombre de usuario + Contraseña en la misma fila -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nombre de Usuario (Login) *</label>
+                            <input type="text" class="form-control" name="nombre_usuario" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Contraseña *</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" name="password" required>
+                    <!-- Nombre(s) + Email en la misma fila -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nombre(s) *</label>
+                            <input type="text" class="form-control" name="nombre" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Correo Electrónico *</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nombre(s)</label>
-                        <input type="text" class="form-control" name="nombre" required>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label class="form-label">Apellido Paterno</label>
+                    <!-- Apellidos en la misma fila -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Apellido Paterno *</label>
                             <input type="text" class="form-control" name="ap" required>
                         </div>
-                        <div class="col-6">
-                            <label class="form-label">Apellido Materno</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Apellido Materno</label>
                             <input type="text" class="form-control" name="am">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Rol del Usuario</label>
-                        <select class="form-select" name="tipo" id="selectTipoCrear" required>
-                            <option value="">Seleccione un rol...</option>
-                            <option value="encuestador">Encuestador</option>
-                            <option value="propietario">Propietario</option>
-                            <option value="admin">Administrador</option>
-                        </select>
-                        <small class="text-muted">Nota: El rol no se podrá cambiar posteriormente.</small>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Rol del Usuario *</label>
+                            <select class="form-select" name="tipo" id="selectTipoCrear" required>
+                                <option value="">Seleccione un rol...</option>
+                                <option value="encuestador">Encuestador</option>
+                                <option value="propietario">Propietario</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                            <small class="text-muted">No se puede cambiar después.</small>
+                        </div>
                     </div>
 
                     <!-- Campos Extras para Propietarios -->
-                    <div id="extraFieldsCrear" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-naranja-claro); margin-bottom: 1rem;">
-                        <div class="mb-3">
-                            <label class="form-label text-dark fw-bold">¿Qué tipo de propiedad posee?</label>
-                            <select class="form-select" name="tipo_propiedad" id="selectTipoPropiedadCrear">
-                                <option value="">Seleccione una opción...</option>
-                                <option value="ofrenda">Ofrenda</option>
-                                <option value="comercio">Comercio</option>
-                            </select>
+                    <div id="extraFieldsCrear" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-arena-oscuro); margin-bottom: 1rem;">
+                        <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-store me-1"></i> Datos del Propietario</h6>
+                        <!-- Tipo propiedad + Tipo comercio en la misma fila -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">¿Tipo de propiedad?</label>
+                                <select class="form-select" name="tipo_propiedad" id="selectTipoPropiedadCrear">
+                                    <option value="">Seleccione...</option>
+                                    <option value="ofrenda">Ofrenda</option>
+                                    <option value="comercio">Comercio</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3" id="extraComercioCrear" style="display: none;">
+                                <label class="form-label fw-bold">¿Tipo de comercio?</label>
+                                <select class="form-select" name="tipo_comercio" id="selectTipoComercioCrear">
+                                    <option value="">Seleccione...</option>
+                                    <option value="estatico">Comercio Estático (Fijo)</option>
+                                    <option value="temporal">Puesto Temporal</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="mb-2" id="extraComercioCrear" style="display: none;">
-                            <label class="form-label text-dark fw-bold">¿Qué tipo de comercio es?</label>
-                            <select class="form-select" name="tipo_comercio" id="selectTipoComercioCrear">
-                                <option value="">Seleccione una opción...</option>
-                                <option value="estatico">Comercio Estático (Lugar Fijo)</option>
-                                <option value="temporal">Puesto Temporal (Por temporada)</option>
-                            </select>
-                        </div>
-                        <div class="mb-2 mt-3">
-                            <label class="form-label text-dark fw-bold">Puntos de Interés Asignados</label>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">Puntos de Interés Asignados</label>
                             <select class="form-select" name="puntos_asignados" id="selectPuntosCrear" multiple style="min-height: 100px;">
                                 {% for punto in puntos %}
                                     <option value="{{ punto.id_punto }}">{{ punto.nombre }} ({{ punto.get_categoria_display }})</option>
                                 {% endfor %}
                             </select>
-                            <small class="text-muted">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
+                            <small class="text-muted">Ctrl/Cmd para seleccionar varios.</small>
                         </div>
                     </div>
+
+                    <!-- Botón guardar dentro del body (estilo KML) -->
+                    <button type="submit" class="btn boton bt-body">
+                        <i class="fas fa-user-plus me-2"></i>Crear Usuario
+                    </button>
                 </div>
                 <div class="modal-footer custom-modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="background-color: var(--color-naranja); border-color: var(--color-naranja);">Crear Usuario</button>
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Cancelar</button>
                 </div>
             </form>
     </div>
@@ -211,81 +226,96 @@
 
 <!-- Modal Editar Usuario -->
 <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <form id="formEditarUsuario" class="modal-content">
             {% csrf_token %}
                 <input type="hidden" id="edit_id_usuario">
                 <div class="modal-header custom-modal-header">
-                    <h5 class="modal-title" id="modalEditarUsuarioLabel"><i class="fas fa-user-edit me-2"></i>Editar Usuario</h5>
+                    <h5 class="modal-title fw-bold" id="modalEditarUsuarioLabel"><i class="fas fa-user-edit me-2"></i>Editar Usuario</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre de Usuario (Login)</label>
-                        <input type="text" class="form-control bg-light" id="edit_nombre_usuario" readonly disabled>
-                        <small class="text-muted">El nombre de usuario no es editable.</small>
+                    <!-- Nombre de usuario (readonly) + Rol en la misma fila -->
+                    <div class="row">
+                        <div class="col-md-7 mb-3">
+                            <label class="form-label fw-bold">Nombre de Usuario (Login)</label>
+                            <input type="text" class="form-control bg-light" id="edit_nombre_usuario" readonly disabled>
+                            <small class="text-muted">No es editable.</small>
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label fw-bold">Rol del Usuario</label>
+                            <input type="text" class="form-control bg-light" id="edit_tipo" readonly disabled>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Rol del Usuario</label>
-                        <input type="text" class="form-control bg-light" id="edit_tipo" readonly disabled>
+                    <!-- Nombre(s) + Email en la misma fila -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nombre(s) *</label>
+                            <input type="text" class="form-control" name="nombre" id="edit_nombre" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Correo Electrónico *</label>
+                            <input type="email" class="form-control" name="email" id="edit_email" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nombre(s)</label>
-                        <input type="text" class="form-control" name="nombre" id="edit_nombre" required>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label class="form-label">Apellido Paterno</label>
+                    <!-- Apellidos en la misma fila -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Apellido Paterno *</label>
                             <input type="text" class="form-control" name="ap" id="edit_ap" required>
                         </div>
-                        <div class="col-6">
-                            <label class="form-label">Apellido Materno</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Apellido Materno</label>
                             <input type="text" class="form-control" name="am" id="edit_am">
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" name="email" id="edit_email" required>
-                    </div>
 
                     <!-- Campos Extras para Propietarios (Solo visibles si es propietario) -->
-                    <div id="extraFieldsEditar" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-naranja-claro); margin-bottom: 1rem;">
-                        <div class="mb-3">
-                            <label class="form-label text-dark fw-bold">¿Qué tipo de propiedad posee?</label>
-                            <select class="form-select" name="tipo_propiedad" id="selectTipoPropiedadEditar">
-                                <option value="">Seleccione una opción...</option>
-                                <option value="ofrenda">Ofrenda</option>
-                                <option value="comercio">Comercio</option>
-                            </select>
+                    <div id="extraFieldsEditar" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-arena-oscuro); margin-bottom: 1rem;">
+                        <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-store me-1"></i> Datos del Propietario</h6>
+                        <!-- Tipo propiedad + Tipo comercio en la misma fila -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">¿Tipo de propiedad?</label>
+                                <select class="form-select" name="tipo_propiedad" id="selectTipoPropiedadEditar">
+                                    <option value="">Seleccione...</option>
+                                    <option value="ofrenda">Ofrenda</option>
+                                    <option value="comercio">Comercio</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3" id="extraComercioEditar" style="display: none;">
+                                <label class="form-label fw-bold">¿Tipo de comercio?</label>
+                                <select class="form-select" name="tipo_comercio" id="selectTipoComercioEditar">
+                                    <option value="">Seleccione...</option>
+                                    <option value="estatico">Comercio Estático (Fijo)</option>
+                                    <option value="temporal">Puesto Temporal</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="mb-2" id="extraComercioEditar" style="display: none;">
-                            <label class="form-label text-dark fw-bold">¿Qué tipo de comercio es?</label>
-                            <select class="form-select" name="tipo_comercio" id="selectTipoComercioEditar">
-                                <option value="">Seleccione una opción...</option>
-                                <option value="estatico">Comercio Estático (Lugar Fijo)</option>
-                                <option value="temporal">Puesto Temporal (Por temporada)</option>
-                            </select>
-                        </div>
-                        <div class="mb-2 mt-3">
-                            <label class="form-label text-dark fw-bold">Puntos de Interés Asignados</label>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">Puntos de Interés Asignados</label>
                             <select class="form-select" name="puntos_asignados" id="selectPuntosEditar" multiple style="min-height: 100px;">
                                 {% for punto in puntos %}
                                     <option value="{{ punto.id_punto }}">{{ punto.nombre }} ({{ punto.get_categoria_display }})</option>
                                 {% endfor %}
                             </select>
-                            <small class="text-muted">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
+                            <small class="text-muted">Ctrl/Cmd para seleccionar varios.</small>
                         </div>
                     </div>
 
                     <hr>
                     <div class="mb-3">
-                        <label class="form-label">Nueva Contraseña (Opcional)</label>
+                        <label class="form-label fw-bold">Nueva Contraseña (Opcional)</label>
                         <input type="password" class="form-control" name="password" placeholder="Dejar en blanco para no cambiar">
                     </div>
+
+                    <!-- Botón guardar dentro del body (estilo KML) -->
+                    <button type="submit" class="btn boton bt-body">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="background-color: var(--color-naranja); border-color: var(--color-naranja);">Guardar Cambios</button>
+                <div class="modal-footer custom-modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Cancelar</button>
                 </div>
         </form>
     </div>

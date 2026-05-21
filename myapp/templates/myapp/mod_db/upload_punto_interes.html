@@ -31,7 +31,7 @@
   /* Estilos del Modal */
   .conditional-section-punto { animation: fadeIn 0.4s ease-in-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-  #modalEdicionPunto .modal-content { max-height: 90vh; height: 90vh; padding: 0; }
+  #modalEdicionPunto .modal-content { max-height: 90vh; height: 90vh; padding: 0; border: none; }
   #modalEdicionPunto .modal-body { overflow-y: auto; flex-grow: 1; padding: 1.25rem; }
   #formPunto { display: flex; flex-direction: column; height: 100%; }
 </style>
@@ -51,32 +51,30 @@
             <input type="hidden" id="edit_id_punto" name="id_punto">
             
             <div class="row">
-                <div class="col-md-8 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Nombre del Lugar *</label>
                     <input type="text" class="form-control" id="edit_nombre" name="nombre_punto" required>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label class="form-label fw-bold">Categoría *</label>
-                    <select class="form-select border-primary" id="edit_categoria" name="categoria" required onchange="cambiarCategoriaPunto(this.value)">
+                    <select class="form-select" id="edit_categoria" name="categoria" required onchange="cambiarCategoriaPunto(this.value)">
                         <option value="ofrenda">Ofrenda</option>
                         <option value="sitio_turistico">Sitio Turístico</option>
                         <option value="servicio">Servicio</option>
                     </select>
                 </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Imagen de Portada (URL)</label>
+                    <input type="url" class="form-control" id="edit_imagen_portada" name="imagen_portada">
+                </div>
             </div>
             
-
             <div class="mb-3">
                 <label class="form-label fw-bold">Descripción</label>
-                <textarea class="form-control" id="edit_descripcion" name="descripcion" rows="3"></textarea>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label fw-bold">Imagen de Portada (URL)</label>
-                <input type="url" class="form-control" id="edit_imagen_portada" name="imagen_portada">
+                <textarea class="form-control" id="edit_descripcion" name="descripcion" rows="2"></textarea>
             </div>
 
-            <h6 class="border-bottom pb-2 mt-4 text-secondary"><i class="far fa-calendar-alt me-1"></i> Fechas y Horarios</h6>
+            <h6 class="border-bottom pb-2 mt-3 text-secondary"><i class="far fa-calendar-alt me-1"></i> Fechas y Horarios</h6>
             <div class="row">
                 <div class="col-md-3 mb-3">
                     <label class="form-label small fw-bold">Fecha Inicio</label>
@@ -98,7 +96,7 @@
 
             <div class="mb-3">
                 <label class="form-label small fw-bold">Días de Operación</label>
-                <div class="d-flex flex-wrap gap-2 bg-white p-2 border rounded">
+                <div class="d-flex flex-wrap gap-3 bg-white p-2 border rounded">
                     <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input chk-dia" name="dias_semana" value="lunes"> <label>Lun</label></div>
                     <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input chk-dia" name="dias_semana" value="martes"> <label>Mar</label></div>
                     <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input chk-dia" name="dias_semana" value="miercoles"> <label>Mié</label></div>
@@ -112,25 +110,19 @@
             <!-- Galería Multimedia por URL -->
             <div class="mb-3">
                 <label class="form-label small fw-bold"><i class="fas fa-images me-1"></i> Galería Multimedia</label>
-
-                <!-- Fotos existentes en BD -->
                 <div id="galeriaExistente" class="preview-container mb-2"></div>
-
-                <!-- Agregar nueva URL -->
                 <div class="input-group mb-2">
-                    <input type="url" id="inputNuevaUrlGaleria" class="form-control"
-                        placeholder="https://... URL de imagen o video">
+                    <input type="url" id="inputNuevaUrlGaleria" class="form-control" placeholder="https://... URL de imagen o video">
                     <button type="button" class="btn btn-outline-primary" onclick="agregarUrlGaleria()">
                         <i class="fas fa-plus"></i> Agregar
                     </button>
                 </div>
-                <!-- URLs nuevas pendientes (se envían al servidor) -->
                 <div id="listaUrlsNuevas"></div>
-                <small class="text-muted">Soporta imágenes (jpg, png, webp…) y videos (mp4, webm…)</small>
             </div>
 
             <div id="campos_ofrenda_punto" class="conditional-section-punto" style="display:none;">
                 <hr>
+                <h6 class="text-muted border-bottom pb-2 mb-3">Detalles de Ofrenda</h6>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Nombre del Anfitrión</label>
                     <input type="text" class="form-control" id="edit_anfitrion" name="anfitrion" placeholder="Familia o persona responsable">
@@ -139,6 +131,7 @@
 
             <div id="campos_servicio_punto" class="conditional-section-punto" style="display:none;">
                 <hr>
+                <h6 class="text-muted border-bottom pb-2 mb-3">Detalles del Servicio</h6>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Tipo Servicio</label>
@@ -167,30 +160,37 @@
 
             <div id="campos_sitio_punto" class="conditional-section-punto" style="display:none;">
                 <hr>
-                
-                <div class="mb-3">
-                  <label class="fw-bold form-label">Categoría del Sitio *</label>
-                  <div class="input-group">
-                    <select class="form-select" id="select_categoria_bd" name="id_categoria_bd">
-                      <option value="">-- Selecciona una categoría --</option>
-                      {% for cat in categorias %}
-                        <option value="{{ cat.id_categoria }}">{{ cat.nombre }}</option>
-                      {% endfor %}
-                    </select>
-                    <button class="btn btn-outline-secondary" type="button" onclick="abrirModalCategoria()">
-                      <i class="fas fa-plus"></i> Crear nueva
-                    </button>
-                  </div>
-                </div>
-                <div class="mb-3">
-                    <label class="fw-bold form-label">Reglas de Acceso / Restricciones</label>
-                    <textarea class="form-control" id="edit_reglas_acceso" name="reglas_acceso" rows="2" placeholder="Ej: No mascotas..."></textarea>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="fw-bold form-label">Categoría del Sitio *</label>
+                      <div class="input-group">
+                        <select class="form-select" id="select_categoria_bd" name="id_categoria_bd">
+                          <option value="">-- Selecciona una categoría --</option>
+                          {% for cat in categorias %}
+                            <option value="{{ cat.id_categoria }}">{{ cat.nombre }}</option>
+                          {% endfor %}
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" onclick="abrirModalCategoria()">
+                          <i class="fas fa-plus"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold form-label">Reglas de Acceso</label>
+                        <textarea class="form-control" id="edit_reglas_acceso" name="reglas_acceso" rows="2" placeholder="Ej: No mascotas..."></textarea>
+                    </div>
                 </div>
             </div>
 
-        </div> <div class="modal-footer custom-modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Guardar Cambios</button>
+            <!-- Botón guardar dentro del body igual que en upload_kml.html -->
+            <button type="submit" class="btn boton bt-body">
+              <i class="fas fa-save me-2"></i>Guardar Cambios
+            </button>
+
+        </div>
+        
+        <div class="modal-footer custom-modal-footer">
+          <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Cancelar</button>
         </div>
       </form>
     </div>

@@ -65,6 +65,7 @@ article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
     letter-spacing: 8px;
     word-spacing: 10px;
     opacity: 0.8;
+    color: white;
 }
 
 .header .overlay .title {

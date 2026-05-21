@@ -67,7 +67,7 @@
     <header>
         <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top" aria-label="Navegación principal">
             <div class="container-fluid d-flex justify-content-between align-items-center">
-                <!-- Botón para abrir sidebar izquierdo -->
+                <!-- SOLO el hamburger del sidebar — sin navbar-toggler redundante -->
                 <button class="sidebar-hamburger" id="sidebarHamburger" type="button" aria-controls="sidebar" aria-expanded="false">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -145,10 +145,8 @@
                     </ul>
                 </div>
 
-                <!-- Botón para menú móvil (ahora abre el sidebar izquierdo) -->
-                <button class="navbar-toggler custom-toggler ms-2 d-md-none" type="button" id="mobileMenuToggle">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <!-- Espaciador derecho para centrar el logo (solo móvil) -->
+                <div class="d-md-none" style="width: 44px;"></div>
             </div>
         </nav>
     </header>
@@ -233,6 +231,22 @@
 
         <div class="sidebar-divider"></div>
 
+        <!-- Botón de Configuración dentro del sidebar -->
+        <div class="sidebar-buttons d-flex flex-column align-items-center" style="padding: 10px 20px;">
+            <button
+                id="sidebarSettingsBtn"
+                class="btn boton bt-body mb-2 w-75"
+                style="display: flex; align-items: center; justify-content: center; gap: 8px;"
+                onclick="document.getElementById('settingsPanel')?.classList.toggle('active'); document.getElementById('settingsBtn')?.click();"
+                title="Abrir configuración de accesibilidad"
+            >
+                <i class="fas fa-sliders-h"></i>
+                <span>Configuración</span>
+            </button>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
         <div class="sidebar-buttons d-flex flex-column align-items-center">
             {% if request.user.tipo == 'admin' %}
             <a
@@ -276,7 +290,7 @@
     </aside>
 
     <main class="main-content flex-grow-1" id="mainContent" role="main">
-        <div class="container">
+        <div class="container-fluid px-3 px-md-4">
             {% block content %}
             {% endblock %}
         </div>

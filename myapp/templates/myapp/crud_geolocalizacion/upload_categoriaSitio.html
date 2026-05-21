@@ -1,37 +1,39 @@
 <div class="modal fade" id="categoriaModal" tabindex="-1" aria-labelledby="tituloCategoria" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered"> <div class="modal-content">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
       
       <form id="categoriaForm" method="POST" action="{% url 'crear_categoria' %}" class="needs-validation" novalidate>
         {% csrf_token %}
 
-        <div class="modal-header custom-modal-header position-relative">
-          <h5 class="modal-title w-100 text-center" id="tituloCategoria">
-            <i class="fas fa-tags me-2"></i>Nueva Categoría
+        <div class="modal-header custom-modal-header">
+          <h5 class="modal-title fw-bold text-white" id="tituloCategoria">
+            <i class="fas fa-tags me-2"></i>Nueva Categoría de Sitio
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
             
-            <div class="mb-3">
-                <label for="cat_nombre" class="form-label fw-bold">Nombre de la Categoría</label>
-                <input type="text" class="form-control" 
-                       id="cat_nombre" name="nombre" 
-                       placeholder="Ej: Turismo Religioso" 
-                       required autocomplete="off"
-                       onkeyup="generarSlugAuto()">
-                <div class="form-text text-muted">El nombre visible para los usuarios.</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="cat_slug" class="form-label fw-bold small text-uppercase">Código Slug (URL)</label>
-                <div class="input-group" style="height: 38px;">
-                    <span class="input-group-text bg-light" style="height: 100%; display: flex; align-items: center;"><i class="fas fa-link"></i></span>
-                    <input type="text" class="form-control bg-light text-muted" 
-                           id="cat_slug" name="codigo_slug" 
-                           placeholder="turismo-religioso" 
-                           style="height: 100%;"
-                           readonly required>
+            <!-- Nombre y Slug en la misma fila aprovechando el espacio -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="cat_nombre" class="form-label fw-bold">Nombre de la Categoría *</label>
+                    <input type="text" class="form-control" 
+                           id="cat_nombre" name="nombre" 
+                           placeholder="Ej: Turismo Religioso" 
+                           required autocomplete="off"
+                           onkeyup="generarSlugAuto()">
+                    <div class="form-text text-muted">Nombre visible para los usuarios.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="cat_slug" class="form-label fw-bold small text-uppercase">Código Slug (URL)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-link"></i></span>
+                        <input type="text" class="form-control bg-light text-muted" 
+                               id="cat_slug" name="codigo_slug" 
+                               placeholder="turismo-religioso" 
+                               readonly required>
+                    </div>
                 </div>
             </div>
 

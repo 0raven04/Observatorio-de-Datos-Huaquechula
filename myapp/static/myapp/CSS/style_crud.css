@@ -90,14 +90,25 @@ body {
 }
 
 /* Asegura que el contenido del modal use tu paleta de colores */
-.modal-content {
+.modal .modal-content {
     background-color:white;
     color: var(--color-gris-oscuro);
     border: 1px solid var(--color-beige);
     border-radius: 10px;
+    position: relative;
+    z-index: 11160;
 }
 
 .modal {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 11150 !important;
+}
+
+.modal.show {
     z-index: 11150 !important;
 }
 
@@ -106,7 +117,7 @@ body {
 }
 
 .modal .modal-dialog {
-    margin: calc(80px + 1rem) auto 1rem;
+    margin: calc(100px + 1rem) auto 1rem !important;
     transition: margin 0.25s ease;
 }
 
@@ -352,10 +363,23 @@ body {
 /* Para que el modal de categoría sea más estrecho */
 #categoriaModal .modal-dialog {
     max-width: 500px;
+    margin-top: calc(100px + 1rem) !important;
 }
 
 /* Forzar que el modal de categoría quede por encima de otros modales abiertos */
 #categoriaModal.modal {
     z-index: 20050 !important;
+}
+
+/* Ajuste específico de offset para los modales del CRUD y evitar que queden ocultos bajo el navbar fijo */
+#archivoModal .modal-dialog,
+#categoriaModal .modal-dialog {
+    margin-top: calc(100px + 1rem) !important;
+}
+
+#archivoModal .modal-content,
+#categoriaModal .modal-content {
+    position: relative;
+    z-index: 11160;
 }
 

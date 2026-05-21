@@ -305,7 +305,7 @@ if (!window._mapaYaInicializado) {
     // -- DOM refs (se asignan tras DOMContentLoaded) --
     var panelResenas, fabResenas, btnCerrarPanel, btnDejarResena;
     var modalOverlay, btnCerrarModal, btnEnviar;
-    var inputNick, inputComentario, charCountEl, starPickLabel;
+    var inputComentario, charCountEl, starPickLabel;
     var errorEl, stars;
     var prFeed, prLoading;
     var prScoreNum, prEstrellasProm, prTotal;
@@ -326,7 +326,6 @@ if (!window._mapaYaInicializado) {
     function abrirModal() {
         resetModal();
         if (modalOverlay) modalOverlay.classList.add('modal-visible');
-        if (inputNick) inputNick.focus();
         // Re-render reCAPTCHA si ya fue completado antes
         if (window.grecaptcha) {
             try { grecaptcha.reset(); } catch (e) {}
@@ -341,7 +340,6 @@ if (!window._mapaYaInicializado) {
         calificacionSeleccionada = 0;
         if (stars) stars.forEach(function (s) { s.classList.remove('selected', 'hover'); });
         if (starPickLabel) { starPickLabel.textContent = 'Selecciona una calificación'; starPickLabel.classList.remove('filled'); }
-        if (inputNick) inputNick.value = '';
         if (inputComentario) inputComentario.value = '';
         if (charCountEl) charCountEl.textContent = '0';
         if (errorEl) errorEl.style.display = 'none';
@@ -481,10 +479,8 @@ if (!window._mapaYaInicializado) {
 
     // -- Enviar nueva reseña --
     function enviarResena() {
-        var nick = (inputNick ? inputNick.value.trim() : '');
         var comentario = (inputComentario ? inputComentario.value.trim() : '');
 
-        if (!nick) { mostrarError('Ingresa tu apodo.'); return; }
         if (!calificacionSeleccionada) { mostrarError('Selecciona una calificación.'); return; }
 
         var recaptchaToken = '';
@@ -504,7 +500,7 @@ if (!window._mapaYaInicializado) {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                nombre_visitante: nick,
+                nombre_visitante: '',
                 calificacion: calificacionSeleccionada,
                 comentario: comentario,
                 recaptcha_token: recaptchaToken
@@ -543,7 +539,6 @@ if (!window._mapaYaInicializado) {
         modalOverlay   = document.getElementById('modal-resena-overlay');
         btnCerrarModal = document.getElementById('btn-cerrar-modal');
         btnEnviar      = document.getElementById('btn-enviar-resena');
-        inputNick      = document.getElementById('resena-nickname');
         inputComentario= document.getElementById('resena-comentario');
         charCountEl    = document.getElementById('char-count');
         starPickLabel  = document.getElementById('star-pick-label');

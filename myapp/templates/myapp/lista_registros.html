@@ -16,17 +16,17 @@
             <button
               type="button"
               id="btnNuevoRegistro"
-              class="btn btn-action btn-dark me-2"
+              class="btn boton bt-body me-1"
               data-url="{% url 'lista_registros' %}"
               data-bs-toggle="modal"
               data-bs-target="#miModal"
             >
-              Nuevo Registro
+              <i class="fas fa-plus me-1"></i>Nuevo Registro
             </button>
 
             <!-- Botón para eliminar selección múltiple -->
-            <button type="button" class="btn btn-action btn-danger" id="botonEliminar">
-              Borrar Selección
+            <button type="button" class="btn boton bt-body me-1" id="botonEliminar">
+              <i class="fas fa-trash-alt me-1"></i>Borrar Selección
             </button>
           </div>
         </div>
@@ -257,7 +257,7 @@
               <button type="button" class="btn btn-warning px-4" data-bs-dismiss="modal">
                 <i class="fas fa-times me-2"></i>Cancelar
               </button>
-              <button type="submit" class="btn btn-primary px-4">
+              <button type="submit" class="btn boton px-4">
                 <i class="fas fa-save me-2"></i>Guardar Registro
               </button>
             </div>

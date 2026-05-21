@@ -19,17 +19,39 @@
 
     <style>
         nav.navbar,
-        .custom-navbar,
-        .navbar.scrolled,
-        .custom-navbar.scrolled {
+        .custom-navbar {
             background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
             background-image: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
             background-color: #191818 !important;
+            box-shadow: none !important;
+        }
+
+        body.page-home nav.navbar,
+        body.page-home .custom-navbar {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .navbar.scrolled,
+        .custom-navbar.scrolled,
+        body.page-home nav.navbar.scrolled,
+        body.page-home .custom-navbar.scrolled {
+            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+            background-image: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+            background-color: #191818 !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
         }
 
         .navbar-brand,
         .navbar-nav .nav-link,
+        .navbar-nav .nav-link:visited,
+        .navbar-nav .nav-link:focus,
+        .navbar-nav .nav-link:hover,
         .navbar-dark .navbar-nav .nav-link,
+        .navbar-dark .navbar-nav .nav-link:visited,
+        .navbar-dark .navbar-nav .nav-link:focus,
+        .navbar-dark .navbar-nav .nav-link:hover,
         .navbar-dark .navbar-toggler-icon {
             color: #EDEBE3 !important;
         }
@@ -39,7 +61,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100{% block body_class %}{% endblock %}">
     <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <!-- Logo -->

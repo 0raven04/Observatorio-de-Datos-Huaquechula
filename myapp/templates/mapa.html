@@ -407,13 +407,6 @@
         </div>
 
         <div class="modal-resena-body">
-            <!-- Apodo -->
-            <div class="modal-campo">
-                <label for="resena-nickname"><i class="fas fa-user"></i> Tu apodo</label>
-                <input type="text" id="resena-nickname" placeholder="Ej: María T., Viajero_2024"
-                       maxlength="100" autocomplete="nickname">
-            </div>
-
             <!-- Estrellas interactivas -->
             <div class="modal-campo">
                 <label><i class="fas fa-star"></i> Calificación</label>
@@ -1185,7 +1178,7 @@
     /* ---- Referencias DOM ---- */
     var panelR, fabR, btnCerrarP, btnDejar;
     var modalOv, btnCerrarM, btnEnviar;
-    var inputNick, inputCom, charEl, labelStar;
+    var inputCom, charEl, labelStar;
     var errEl, starsEl;
     var feed, prNum, prEst, prTot;
     var bars = {};
@@ -1202,7 +1195,6 @@
     function abrirModal() {
         resetModal();
         if (modalOv) modalOv.classList.add('modal-visible');
-        if (inputNick) inputNick.focus();
         if (window.grecaptcha) { try { grecaptcha.reset(); } catch(e){} }
     }
     function cerrarModal() { if (modalOv) modalOv.classList.remove('modal-visible'); }
@@ -1210,7 +1202,6 @@
         cal = 0;
         if (starsEl) starsEl.forEach(function(s){ s.classList.remove('selected','hover'); });
         if (labelStar) { labelStar.textContent='Selecciona una calificación'; labelStar.classList.remove('filled'); }
-        if (inputNick) inputNick.value='';
         if (inputCom)  inputCom.value='';
         if (charEl)    charEl.textContent='0';
         if (errEl)     errEl.style.display='none';
@@ -1293,9 +1284,7 @@
         .catch(function(){});
     }
     function enviar() {
-        var nick=(inputNick?inputNick.value.trim():'');
         var com=(inputCom?inputCom.value.trim():'');
-        if(!nick){ mostrarErr('Ingresa tu apodo.'); return; }
         if(!cal){ mostrarErr('Selecciona una calificación.'); return; }
         var token='';
         if(window.grecaptcha){ try{ token=grecaptcha.getResponse(); }catch(e){} }
@@ -1305,7 +1294,7 @@
         fetch('/api/resenas/', {
             method:'POST',
             headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf(),'X-Requested-With':'XMLHttpRequest'},
-            body:JSON.stringify({nombre_visitante:nick, calificacion:cal, comentario:com, recaptcha_token:token})
+            body:JSON.stringify({nombre_visitante:'', calificacion:cal, comentario:com, recaptcha_token:token})
         })
         .then(function(r){ return r.json().then(function(d){ return {s:r.status, d:d}; }); })
         .then(function(res){
@@ -1332,7 +1321,6 @@
         modalOv    = document.getElementById('modal-resena-overlay');
         btnCerrarM = document.getElementById('btn-cerrar-modal');
         btnEnviar  = document.getElementById('btn-enviar-resena');
-        inputNick  = document.getElementById('resena-nickname');
         inputCom   = document.getElementById('resena-comentario');
         charEl     = document.getElementById('char-count');
         labelStar  = document.getElementById('star-pick-label');

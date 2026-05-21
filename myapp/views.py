@@ -2333,7 +2333,7 @@ def _verificar_recaptcha(token):
 def api_resenas_globales(request):
     """
     GET  /api/resenas/  → Lista de reseñas aprobadas + estadísticas
-    POST /api/resenas/  → Crear nueva reseña (nickname + calificacion + comentario)
+    POST /api/resenas/  → Crear nueva reseña (calificacion + comentario, apodo opcional)
     """
     if request.method == 'GET':
         resenas_qs = ResenaGlobal.objects.filter(estado='aprobada')
@@ -2377,9 +2377,8 @@ def api_resenas_globales(request):
     calificacion     = datos.get('calificacion')
     recaptcha_token  = datos.get('recaptcha_token', '')
 
-    # Validaciones
     if not nombre_visitante:
-        return JsonResponse({'error': 'El apodo es obligatorio.'}, status=400)
+        nombre_visitante = 'Visitante'
     if len(nombre_visitante) > 50:
         return JsonResponse({'error': 'El apodo es demasiado largo (máx. 50 car.).'}, status=400)
     try:
