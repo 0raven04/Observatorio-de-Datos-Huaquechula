@@ -2334,18 +2334,13 @@ def redirigir_por_tipo_usuario(request):
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
           
         if usuario.tipo == 'encuestador':  
-            # Redirigir al formulario de registro para encuestadores  
-            return redirect('formulario')  
-        
+            return redirect('encuestador_dashboard')  
         elif usuario.tipo == 'admin':  
-            # Redirigir al CRUD para administradores  
             return redirect('lista_registros')  
         elif usuario.tipo == 'propietario':  
-            # Redirigir a una página específica para propietarios  
-            return redirect('mis_propiedades')  # o donde corresponda  
+            return redirect('mis_propiedades')  
         else:  
-            # Tipo de usuario no reconocido  
-            return redirect('login')  
+            return redirect('vista_inicio')  
               
     except Usuario.DoesNotExist:  
         return redirect('login')
@@ -2922,18 +2917,13 @@ def redirigir_por_tipo_usuario(request):
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
           
         if usuario.tipo == 'encuestador':  
-            # Redirigir al formulario de registro para encuestadores  
-            return redirect('formulario')  # o la URL específica del formulario  
-        
+            return redirect('encuestador_dashboard')  
         elif usuario.tipo == 'admin':  
-            # Redirigir al CRUD para administradores  
             return redirect('lista_registros')  
         elif usuario.tipo == 'propietario':  
-            # Redirigir a una página específica para propietarios  
-            return redirect('mis_propiedades')  # o donde corresponda  
+            return redirect('mis_propiedades')  
         else:  
-            # Tipo de usuario no reconocido  
-            return redirect('login')  
+            return redirect('vista_inicio')  
               
     except Usuario.DoesNotExist:  
         return redirect('login')
@@ -3450,14 +3440,75 @@ def compare_municipalities_view(request):
 
 @login_required
 def encuestador_dashboard(request):
-    try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
-        if usuario.tipo not in ['encuestador', 'admin']:  
-            return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")  
+    from django.db.models.functions import TruncDate
+    try:
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)
+        if usuario.tipo not in ['encuestador', 'admin']:
+            return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")
     except Usuario.DoesNotExist:
         return HttpResponse('Usuario no encontrado.', status=404)
-        
-    return render(request, 'myapp/encuestador_dashboard.html')
+
+    # Obtener encuestador actual (si aplica)
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    # ── Totales globales ──
+    total_registros = RegistroVisita.objects.count()
+    total_residentes = EncuestaResidente.objects.count()
+    total_comercio = EncuestaComercio.objects.count()
+    total_encuestas = total_residentes + total_comercio
+
+    # ── Propias (solo para encuestadores, no admin) ──
+    mis_registros = 0
+    mis_residentes = 0
+    mis_comercio = 0
+    if encuestador:
+        mis_registros = RegistroVisita.objects.filter(clave_encuestador=encuestador).count()
+        mis_residentes = EncuestaResidente.objects.filter(encuestador=encuestador).count()
+        mis_comercio = EncuestaComercio.objects.filter(encuestador=encuestador).count()
+
+    # ── Actividad reciente (últimos 7 días) ──
+    hace_7_dias = timezone.now() - timedelta(days=7)
+    registros_recientes = RegistroVisita.objects.filter(fecha__gte=hace_7_dias).count()
+    encuestas_recientes = (
+        EncuestaResidente.objects.filter(fecha__gte=hace_7_dias).count() +
+        EncuestaComercio.objects.filter(fecha__gte=hace_7_dias).count()
+    )
+
+    # ── Distribución por motivo de visita ──
+    motivos = (
+        RegistroVisita.objects
+        .values('motivo_visita')
+        .annotate(total=Count('id_registro'))
+        .order_by('-total')
+    )
+
+    # ── Últimos 5 registros ──
+    ultimos_registros = RegistroVisita.objects.order_by('-fecha')[:5]
+
+    context = {
+        'usuario': usuario,
+        'encuestador': encuestador,
+        # Totales
+        'total_registros': total_registros,
+        'total_encuestas': total_encuestas,
+        'total_residentes': total_residentes,
+        'total_comercio': total_comercio,
+        # Propias
+        'mis_registros': mis_registros,
+        'mis_residentes': mis_residentes,
+        'mis_comercio': mis_comercio,
+        # Recientes
+        'registros_recientes': registros_recientes,
+        'encuestas_recientes': encuestas_recientes,
+        # Análisis
+        'motivos': motivos,
+        'ultimos_registros': ultimos_registros,
+    }
+    return render(request, 'myapp/encuestador_dashboard.html', context)
 
 @login_required
 def nueva_encuesta_residente(request):

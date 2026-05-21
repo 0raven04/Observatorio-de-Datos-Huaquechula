@@ -1,62 +1,387 @@
-{% extends 'myapp/base.html' %}
+{% extends "base_usuarios.html" %}
 {% load static %}
 
 {% block title %}Portal del Encuestador{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root {
+        --enc-bg: #f8f9fa; /* inherit or light bg */
+        --enc-card: #ffffff;
+        --enc-border: rgba(0,0,0,0.1);
+        --enc-accent: #4A4A4A;
+        --enc-green: #28a745;
+        --enc-amber: #ffc107;
+        --enc-blue: #007bff;
+        --enc-rose: #dc3545;
+        --enc-text: #333333;
+        --enc-muted: #6c757d;
+    }
+
+    body { color: var(--enc-text) !important; }
+
+    main.container {
+        max-width: 1200px !important;
+        padding: 24px 18px 48px !important;
+    }
+
+    /* ── Page header ── */
+    .enc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 28px;
+        padding: 20px 24px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--enc-border);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .enc-header-info h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #4A4A4A;
+    }
+    .enc-header-info p {
+        margin: 4px 0 0;
+        font-size: 0.9rem;
+        color: var(--enc-muted);
+    }
+    .enc-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: rgba(74,74,74,0.1);
+        border: 1px solid rgba(74,74,74,0.2);
+        color: #4A4A4A;
+    }
+
+    /* ── Sección label ── */
+    .section-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--enc-muted);
+        margin: 24px 0 12px;
+    }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 14px;
+        margin-bottom: 8px;
+    }
+    .kpi-card {
+        background: var(--enc-card);
+        border: 1px solid var(--enc-border);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
+    .kpi-icon {
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--enc-text);
+    }
+    .kpi-label {
+        font-size: 0.78rem;
+        color: var(--enc-muted);
+        font-weight: 500;
+    }
+    .kpi-trend {
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    /* ── Two-column layout ── */
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Panel card ── */
+    .panel {
+        background: var(--enc-card);
+        border: 1px solid var(--enc-border);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .panel-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--enc-text);
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* ── Motivos bar ── */
+    .motivo-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .motivo-name {
+        font-size: 0.82rem;
+        color: var(--enc-muted);
+        width: 130px;
+        flex-shrink: 0;
+        text-transform: capitalize;
+    }
+    .motivo-bar-wrap {
+        flex: 1;
+        background: #e9ecef;
+        border-radius: 999px;
+        height: 8px;
+        overflow: hidden;
+    }
+    .motivo-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--enc-accent);
+        transition: width 0.6s ease;
+    }
+    .motivo-count {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--enc-text);
+        min-width: 28px;
+        text-align: right;
+    }
+
+    /* ── Activity table ── */
+    .act-table { width: 100%; border-collapse: collapse; }
+    .act-table th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--enc-muted);
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--enc-border);
+        text-align: left;
+    }
+    .act-table td {
+        font-size: 0.83rem;
+        color: var(--enc-text);
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--enc-border);
+    }
+    .act-table tr:last-child td { border-bottom: none; }
+    .act-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    /* ── Quick actions ── */
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid var(--enc-border);
+        color: var(--enc-text);
+        text-decoration: none;
+        margin-bottom: 10px;
+        transition: background .2s, border-color .2s;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+    .action-btn:hover {
+        background: #e2e6ea;
+        border-color: #dae0e5;
+        color: var(--enc-text);
+    }
+    .action-btn .ab-icon {
+        width: 36px; height: 36px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <div class="text-center mb-5">
-        <h1 style="color: var(--color-gris-oscuro); font-weight: 800;">Portal del Encuestador</h1>
-        <p class="text-muted text-center">Seleccione el tipo de levantamiento que desea realizar en campo.</p>
+
+<!-- ── Header ── -->
+<div class="enc-header d-flex justify-content-between align-items-center">
+    <div class="enc-header-info">
+        <h1><i class="fas fa-chart-line" style="color:var(--enc-accent);"></i>Portal del Encuestador</h1>
+        <p>Bienvenido, <strong>{{ request.user.username }}</strong> — resumen de actividad y estadísticas</p>
+    </div>
+    <div class="enc-header-actions">
+        <div class="enc-badge">
+            <i class="fas fa-user-check"></i>
+            {% if usuario.tipo == 'admin' %}Administrador{% else %}Encuestador{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ── Totales globales ── -->
+<p class="section-label"><i class="fas fa-globe me-1"></i>Actividad Global del Observatorio</p>
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(0,123,255,0.1); color:#007bff;"><i class="fas fa-file-alt"></i></div>
+        <div class="kpi-value">{{ total_registros }}</div>
+        <div class="kpi-label">Registros de visita</div>
+        <div class="kpi-trend" style="color:#28a745;"><i class="fas fa-arrow-up"></i>{{ registros_recientes }} esta semana</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(74,74,74,0.1); color:#4A4A4A;"><i class="fas fa-clipboard-list"></i></div>
+        <div class="kpi-value">{{ total_encuestas }}</div>
+        <div class="kpi-label">Encuestas totales</div>
+        <div class="kpi-trend" style="color:#28a745;"><i class="fas fa-arrow-up"></i>{{ encuestas_recientes }} esta semana</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(40,167,69,0.1); color:#28a745;"><i class="fas fa-house-user"></i></div>
+        <div class="kpi-value">{{ total_residentes }}</div>
+        <div class="kpi-label">Encuestas a residentes</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;"><i class="fas fa-store"></i></div>
+        <div class="kpi-value">{{ total_comercio }}</div>
+        <div class="kpi-label">Encuestas a comercios</div>
+    </div>
+</div>
+
+{% if encuestador %}
+<!-- ── Mis cifras personales ── -->
+<p class="section-label"><i class="fas fa-user me-1"></i>Mis Contribuciones</p>
+<div class="kpi-grid">
+    <div class="kpi-card" style="border-color:rgba(74,74,74,0.3);">
+        <div class="kpi-icon" style="background:rgba(74,74,74,0.1); color:#4A4A4A;"><i class="fas fa-pen-alt"></i></div>
+        <div class="kpi-value" style="color:#4A4A4A;">{{ mis_registros }}</div>
+        <div class="kpi-label">Registros de visita registrados por mí</div>
+    </div>
+    <div class="kpi-card" style="border-color:rgba(40,167,69,0.3);">
+        <div class="kpi-icon" style="background:rgba(40,167,69,0.1); color:#28a745;"><i class="fas fa-house-user"></i></div>
+        <div class="kpi-value" style="color:#28a745;">{{ mis_residentes }}</div>
+        <div class="kpi-label">Encuestas a residentes hechas por mí</div>
+    </div>
+    <div class="kpi-card" style="border-color:rgba(255,193,7,0.3);">
+        <div class="kpi-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;"><i class="fas fa-store"></i></div>
+        <div class="kpi-value" style="color:#ffc107;">{{ mis_comercio }}</div>
+        <div class="kpi-label">Encuestas a comercios hechas por mí</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ── Análisis + Actividad ── -->
+<p class="section-label"><i class="fas fa-chart-bar me-1"></i>Análisis</p>
+<div class="two-col">
+
+    <!-- Distribución por motivo de visita -->
+    <div class="panel">
+        <div class="panel-title"><i class="fas fa-map-marked-alt" style="color:var(--enc-accent);"></i>Motivos de Visita</div>
+        {% if motivos %}
+            {% with max_motivo=motivos.0.total %}
+            {% for m in motivos %}
+            <div class="motivo-row">
+                <span class="motivo-name">{{ m.motivo_visita|default:"Sin datos" }}</span>
+                <div class="motivo-bar-wrap">
+                    <div class="motivo-bar-fill" style="width:{% widthratio m.total max_motivo 100 %}%;"></div>
+                </div>
+                <span class="motivo-count">{{ m.total }}</span>
+            </div>
+            {% endfor %}
+            {% endwith %}
+        {% else %}
+            <p style="color:var(--enc-muted); font-size:0.85rem;">Sin datos disponibles aún.</p>
+        {% endif %}
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
+    <!-- Acciones rápidas -->
+    <div class="panel">
+        <div class="panel-title"><i class="fas fa-bolt" style="color:#ffc107;"></i>Acciones Rápidas</div>
+        <a href="{% url 'formulario' %}" class="action-btn">
+            <div class="ab-icon" style="background:rgba(0,123,255,0.1); color:#007bff;"><i class="fas fa-plus"></i></div>
+            <span>Nueva Encuesta de Visita</span>
+        </a>
+        <a href="{% url 'nueva_encuesta_residente' %}" class="action-btn">
+            <div class="ab-icon" style="background:rgba(40,167,69,0.1); color:#28a745;"><i class="fas fa-house-user"></i></div>
+            <span>Nueva Encuesta Residente</span>
+        </a>
+        <a href="{% url 'nueva_encuesta_comercio' %}" class="action-btn">
+            <div class="ab-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;"><i class="fas fa-store"></i></div>
+            <span>Nueva Encuesta Comercio</span>
+        </a>
+    </div>
+</div>
+
+<!-- ── Últimos registros ── -->
+<p class="section-label"><i class="fas fa-history me-1"></i>Actividad Reciente</p>
+<div class="panel">
+    <div class="panel-title"><i class="fas fa-clock" style="color:#007bff;"></i>Últimos 5 registros de visita</div>
+    {% if ultimos_registros %}
+    <table class="act-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Procedencia</th>
+                <th>Motivo</th>
+                <th>Transporte</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in ultimos_registros %}
+            <tr>
+                <td>#{{ r.id_registro }}</td>
+                <td>{{ r.fecha|date:"d M Y, H:i" }}</td>
+                <td>{{ r.procedencia }}</td>
+                <td>
+                    <span class="act-badge" style="background:rgba(74,74,74,0.1); color:#4A4A4A;">
+                        {{ r.get_motivo_visita_display }}
+                    </span>
+                </td>
+                <td>{{ r.get_tipo_transporte_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:var(--enc-muted); font-size:0.85rem;">No hay registros aún.</p>
     {% endif %}
+</div>
 
-    <div class="row g-4 justify-content-center">
-        <!-- Tarjeta Turista -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 text-center" style="border-radius: 12px; transition: transform 0.3s ease;">
-                <div class="card-body p-4">
-                    <i class="fas fa-map-marked-alt fa-3x mb-3" style="color: var(--color-naranja);"></i>
-                    <h4 class="card-title fw-bold">Turista / Visitante</h4>
-                    <p class="card-text text-muted mb-4">Registro de visitantes, procedencia, motivo de viaje y transporte.</p>
-                    <a href="{% url 'lista_registros' %}" class="btn btn-outline-primary w-100" style="border-radius: 8px; border-color: var(--color-naranja); color: var(--color-naranja);">Ir a Registros de Visita</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta Residente -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 text-center" style="border-radius: 12px; background: linear-gradient(145deg, #ffffff, var(--color-arena-claro)); transition: transform 0.3s ease;">
-                <div class="card-body p-4">
-                    <i class="fas fa-home fa-3x mb-3" style="color: #27ae60;"></i>
-                    <h4 class="card-title fw-bold">Residente Local</h4>
-                    <p class="card-text text-muted mb-4">Percepción de seguridad, medio ambiente y tensión sobre tradiciones.</p>
-                    <a href="{% url 'nueva_encuesta_residente' %}" class="btn w-100 text-white" style="background-color: #27ae60; border-radius: 8px;">Levantar Encuesta</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta Comercio -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 text-center" style="border-radius: 12px; background: linear-gradient(145deg, #ffffff, #fff3e0); transition: transform 0.3s ease;">
-                <div class="card-body p-4">
-                    <i class="fas fa-store fa-3x mb-3" style="color: var(--color-naranja);"></i>
-                    <h4 class="card-title fw-bold">Comercio / Artesano</h4>
-                    <p class="card-text text-muted mb-4">Participación comunitaria, capacitación y gestión turística.</p>
-                    <a href="{% url 'nueva_encuesta_comercio' %}" class="btn w-100 text-white" style="background-color: var(--color-naranja); border-radius: 8px;">Levantar Encuesta</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <style>
-        .card:hover { transform: translateY(-5px); }
-    </style>
 {% endblock %}
