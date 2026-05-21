@@ -1,0 +1,212 @@
+# Plan — Portal de Desarrolladores
+## Observatorio de Datos Huaquechula · `/developer/`
+
+Inspirado en el portal de INEGI: documentación interactiva, formulario de registro de API Key y ejemplos de código listos para usar.
+
+---
+
+## Contexto
+
+El backend ya está completamente listo:
+- ✅ 30+ endpoints públicos bajo `/api/v1/public/`
+- ✅ Modelo `APIKey` con límite diario y validación
+- ✅ Swagger en `/api/docs/` y ReDoc en `/api/redoc/`
+- ✅ Throttling configurado
+
+El Portal de Desarrolladores es la **capa de presentación** de todo eso.
+
+---
+
+## Arquitectura de la página `/developer/`
+
+```
+/developer/                  ← Página principal (landing)
+/developer/solicitar-key/    ← Formulario de registro (POST → crea APIKey)
+/developer/mi-key/           ← Ver mi key activa (requiere que el usuario indique su email)
+```
+
+---
+
+## Propuesta Visual (diseño integrado con `base.html`)
+
+La página hereda `base.html` y tiene **4 secciones**:
+
+```
+┌─────────────────────────────────────────────────┐
+│  HERO: "API Pública del Observatorio"           │
+│  Subtítulo + botón "Obtener API Key"            │
+├─────────────────────────────────────────────────┤
+│  TARJETAS de los 5 Grupos de Endpoints          │
+│  (Indicadores / Turismo / Territorio /          │
+│   Reseñas / Encuestas)                          │
+├─────────────────────────────────────────────────┤
+│  REFERENCIA DE ENDPOINTS                        │
+│  Tabla con método, ruta, descripción, parámetros│
+├─────────────────────────────────────────────────┤
+│  EJEMPLOS DE CÓDIGO                             │
+│  Tabs: Python · JavaScript · R · cURL           │
+├─────────────────────────────────────────────────┤
+│  LÍMITES DE USO + LICENCIA CC BY 4.0            │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+## Archivos a crear / modificar
+
+### Nuevos archivos
+
+#### [NEW] `myapp/templates/myapp/developer_portal.html`
+- Hereda `base.html`
+- Sección HERO con gradiente oscuro (paleta del observatorio)
+- 5 tarjetas de grupos de endpoints con iconos FontAwesome
+- Tabla de referencia de endpoints (todos los 30+)
+- Tabs con ejemplos de código (Python, JS, R, cURL)
+- Enlace a `/api/docs/` (Swagger) y `/api/redoc/`
+- Sección de términos: límite 500/hora, licencia CC BY 4.0
+
+#### [NEW] `myapp/templates/myapp/developer_solicitar_key.html`
+- Formulario con campos: nombre (proyecto/institución), email, descripción del uso
+- Muestra la key generada después de enviar (solo una vez)
+- Validación de email con retroalimentación visual
+
+#### [NEW] `myapp/static/myapp/CSS/developer.css`
+- Estilos exclusivos del portal (hero, cards, code tabs, syntax highlight)
+- Coherente con la paleta y tipografía de `base.css`
+
+### Archivos a modificar
+
+#### [MODIFY] `myapp/views.py`
+Añadir 2 vistas:
+- `developer_portal(request)` → renderiza la página principal
+- `solicitar_api_key(request)` → procesa el formulario (GET muestra form, POST crea APIKey y muestra la key)
+
+#### [MODIFY] `myapp/urls.py`
+Añadir 2 rutas:
+```python
+path('developer/', views.developer_portal, name='developer_portal'),
+path('developer/solicitar-key/', views.solicitar_api_key, name='solicitar_api_key'),
+```
+
+#### [MODIFY] `myapp/templates/myapp/base.html`
+Añadir enlace "Desarrolladores" en el navbar (desktop + mobile offcanvas).
+
+#### [MODIFY] `myapp/admin.py`
+Registrar el modelo `APIKey` en el admin de Django con:
+- `list_display`: key, nombre, email, activa, usos_hoy, limite_diario, creada
+- `list_filter`: activa
+- `search_fields`: nombre, email
+- Acción personalizada: "Resetear usos del día"
+
+---
+
+## Funcionalidad del formulario de API Key
+
+**Flujo:**
+1. Usuario llena: nombre del proyecto, email, descripción del uso
+2. POST → vista crea `APIKey` con `secrets.token_urlsafe(48)`
+3. Respuesta muestra la key **una sola vez** (con botón de copiar al portapapeles)
+4. Mensaje de advertencia: "Guarda tu key. No se mostrará de nuevo."
+
+> [!IMPORTANT]
+> No hay autenticación requerida para solicitar una key. Cualquier persona puede pedir una. La aprobación manual se puede hacer desde el admin (`activa=True/False`).
+
+---
+
+## Reset diario del contador `usos_hoy`
+
+El campo `usos_hoy` en `APIKey` debe resetearse cada día a medianoche.
+
+**Implementación:** Django Management Command ejecutado por cron en Docker.
+
+#### [NEW] `myapp/management/commands/reset_api_key_usos.py`
+```python
+class Command(BaseCommand):
+    help = 'Resetea usos_hoy de todas las APIKey a 0'
+    def handle(self, *args, **options):
+        APIKey.objects.update(usos_hoy=0)
+```
+
+#### [MODIFY] `Dockerfile` o `entrypoint.sh`
+Añadir cron job o llamar al comando en el entrypoint con un scheduler simple.
+
+---
+
+## Ejemplos de código a incluir
+
+### Python
+```python
+import requests
+r = requests.get('https://observatorio.huaquechula.gob.mx/api/v1/public/indicadores/',
+                 params={'key': 'TU_API_KEY'})
+print(r.json())
+```
+
+### JavaScript (fetch)
+```javascript
+fetch('/api/v1/public/turismo/resumen/?key=TU_API_KEY')
+  .then(r => r.json())
+  .then(data => console.log(data));
+```
+
+### R
+```r
+library(httr); library(jsonlite)
+res <- GET("https://observatorio.huaquechula.gob.mx/api/v1/public/indicadores/",
+           query = list(key = "TU_API_KEY"))
+data <- fromJSON(content(res, "text"))
+```
+
+### cURL
+```bash
+curl "https://observatorio.huaquechula.gob.mx/api/v1/public/ejes/?key=TU_API_KEY"
+```
+
+---
+
+## Tabla de Endpoints (referencia en el portal)
+
+| Grupo | Método | Ruta | Descripción |
+|---|---|---|---|
+| Indicadores | GET | `/api/v1/public/ejes/` | Lista de ejes temáticos |
+| Indicadores | GET | `/api/v1/public/indicadores/` | Indicadores con filtros `?eje=&categoria=` |
+| Indicadores | GET | `/api/v1/public/indicadores/<id>/serie/` | Serie histórica completa |
+| Indicadores | GET | `/api/v1/public/indicadores/<id>/jsonstat/` | Formato JSON-stat 2.0 |
+| Indicadores | GET | `/api/v1/public/indicadores/?formato=csv` | Descarga CSV |
+| Turismo | GET | `/api/v1/public/turismo/resumen/` | KPIs globales de visitantes |
+| Turismo | GET | `/api/v1/public/turismo/visitantes-por-mes/` | Serie mensual |
+| Turismo | GET | `/api/v1/public/turismo/perfil-demografico/` | Distribución edad/género |
+| Turismo | GET | `/api/v1/public/turismo/procedencias/` | Top ciudades de origen |
+| Territorio | GET | `/api/v1/public/puntos-interes/` | Puntos de interés |
+| Territorio | GET | `/api/v1/public/puntos-interes/?formato=geojson` | GeoJSON estándar |
+| Territorio | GET | `/api/v1/public/sitios-turisticos/` | Sitios turísticos |
+| Territorio | GET | `/api/v1/public/rutas/` | Rutas activas |
+| Territorio | GET | `/api/v1/public/ofrendas/` | Ofrendas (Día de Muertos) |
+| Reseñas | GET | `/api/v1/public/resenas/` | Lista de reseñas aprobadas |
+| Reseñas | POST | `/api/v1/public/resenas/` | Publicar reseña |
+| Reseñas | GET | `/api/v1/public/resenas/estadisticas/` | Promedio y distribución |
+| Encuestas | GET | `/api/v1/public/encuestas/residente/resumen/` | Encuestas de residentes |
+| Encuestas | GET | `/api/v1/public/encuestas/comercio/resumen/` | Encuestas de comercios |
+
+---
+
+## Plan de Verificación
+
+1. `GET /developer/` → página carga con navbar activo
+2. `POST /developer/solicitar-key/` con datos válidos → key generada y visible
+3. Usar la key en `/api/v1/public/ejes/?key=<key>` → responde con `status: ok`
+4. Usar una key inválida → responde con 403
+5. Admin Django → `/admin/myapp/apikey/` → CRUD funcional
+6. Comando `python manage.py reset_api_key_usos` → `usos_hoy` = 0 en todas las keys
+
+---
+
+## Tiempo estimado
+
+| Tarea | Tiempo |
+|---|---|
+| Template HTML + CSS | ~2-3h |
+| Vistas Django + formulario | ~1h |
+| Admin APIKey | ~30min |
+| Management command reset | ~20min |
+| **Total** | **~4-5h** |

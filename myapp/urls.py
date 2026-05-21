@@ -50,10 +50,11 @@ urlpatterns = [
 
     path('subir-documento/', views.subir_documento, name='subir_documento'),
     path('editar-documento/<int:id>/', views.editar_documento, name='editar_documento'),
-    path('descargar/<int:documento_id>/', views.descargar_documento, name='descargar_documento'),
-    path('eliminar/<int:documento_id>/', views.eliminar_documento, name='eliminar_documento'),
+    path('descargar/<int:id>/', views.descargar_documento, name='descargar_documento'),
+    path('eliminar/<int:id>/', views.eliminar_documento, name='eliminar_documento'),
     path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),
     path('repositorio/', views.repositorio, name='repositorio'),
+    path('repositorio-galeria-prueba/', views.repositorio, name='repositorio_galeria_prueba'),
     path('estadistica/', views.graficos_indicadores, name='estadistica'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('dashboard/categoria/<int:category_id>/', views.category_detail_view, name='category_detail'),

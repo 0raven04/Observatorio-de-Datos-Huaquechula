@@ -763,10 +763,14 @@ def panel_documentos(request):
     page_obj = paginator.get_page(page_number)
     
     admins = User.objects.filter(tipo='admin')
+    categorias = Categoria.objects.all()
+    tipos_choices = Documento._meta.get_field('tipo').choices
     
     context = {
         'documentos': page_obj,
         'administradores': admins,
+        'categorias': categorias,
+        'tipos_choices': tipos_choices,
         'sort_by': sort_by.replace('-', ''),
         'order': order,
         'categoria_filtro': categoria_id,
@@ -780,37 +784,55 @@ def panel_documentos(request):
 
 @login_required
 def subir_documento(request):
-    User = get_user_model()
-
     if request.method == 'POST':
         try:
             titulo = request.POST.get('titulo', '').strip()
-            url = request.POST.get('url', '').strip()
             descripcion = request.POST.get('descripcion', '').strip()
             clasificacion = request.POST.get('clasificacion')
-            tipo = request.POST.get('tipo', 'reporte') 
+            tipo = request.POST.get('tipo', 'reporte')
             
-            # Validaciones
-            if not titulo or not url or not clasificacion:
-                messages.error(request, 'Título, URL y Clasificación son obligatorios')
+            # Categoria handling
+            categoria_id = request.POST.get('categoria')
+            categoria = None
+            if categoria_id:
+                try:
+                    categoria = Categoria.objects.get(id=categoria_id)
+                except Categoria.DoesNotExist:
+                    pass
+            
+            archivo = request.FILES.get('archivo')
+            url = request.POST.get('url', '').strip()
+            
+            if not titulo or not clasificacion:
+                messages.error(request, 'Título y Clasificación son obligatorios')
                 return redirect('panel_documentos')
             
-            if not url.startswith(('http://', 'https://')):
-                messages.error(request, 'La URL debe comenzar con http:// o https://')
+            if not archivo and not url:
+                messages.error(request, 'Debes subir un archivo físico o proporcionar una URL')
                 return redirect('panel_documentos')
             
             # Crear instancia
             documento = Documento(
                 titulo=titulo,
-                url=url,
                 descripcion=descripcion,
                 clasificacion=clasificacion,
-                tipo=tipo,  # NUEVO: Asignamos el tipo
+                tipo=tipo,
+                categoria=categoria,
+                es_publico=(clasificacion == 'publico'),
                 clave_admin=request.user
             )
             
-            documento.save()
+            if archivo:
+                documento.archivo = archivo
+                documento.save()  # Guarda y calcula tamaño y tipo
+                documento.url = documento.archivo.url
+            else:
+                if not url.startswith(('http://', 'https://')):
+                    messages.error(request, 'La URL debe comenzar con http:// o https://')
+                    return redirect('panel_documentos')
+                documento.url = url
             
+            documento.save()
             messages.success(request, f'Documento "{titulo}" creado exitosamente')
             
         except Exception as e:
@@ -823,18 +845,52 @@ def subir_documento(request):
 
 @login_required
 def editar_documento(request, id):
-    documento = get_object_or_404(Documento, id_documento=id)
+    documento = get_object_or_404(Documento, id=id)
 
     if request.method == 'POST':
         try:
             documento.titulo = request.POST.get('titulo', '').strip()
-            documento.url = request.POST.get('url', '').strip()
             documento.descripcion = request.POST.get('descripcion', '').strip()
             documento.clasificacion = request.POST.get('clasificacion')
             documento.tipo = request.POST.get('tipo')
+            documento.es_publico = (documento.clasificacion == 'publico')
+            
+            categoria_id = request.POST.get('categoria')
+            if categoria_id:
+                try:
+                    documento.categoria = Categoria.objects.get(id=categoria_id)
+                except Categoria.DoesNotExist:
+                    documento.categoria = None
+            else:
+                documento.categoria = None
 
-            if not documento.url.startswith(('http://', 'https://')):
-                return JsonResponse({'success': False, 'error': 'URL inválida'})
+            archivo = request.FILES.get('archivo')
+            url = request.POST.get('url', '').strip()
+            
+            if archivo:
+                # Eliminar archivo físico anterior si existe
+                if documento.archivo:
+                    try:
+                        if os.path.isfile(documento.archivo.path):
+                            os.remove(documento.archivo.path)
+                    except Exception as e:
+                        print(f"Error al eliminar archivo anterior: {e}")
+                documento.archivo = archivo
+                documento.save()  # Triggers save() hook
+                documento.url = documento.archivo.url
+            elif url:
+                if not url.startswith(('http://', 'https://')):
+                    return JsonResponse({'success': False, 'error': 'La URL debe comenzar con http:// o https://'})
+                documento.url = url
+                # Si cambian a URL y tenían archivo físico, opcionalmente lo removemos
+                if documento.archivo:
+                    try:
+                        if os.path.isfile(documento.archivo.path):
+                            os.remove(documento.archivo.path)
+                    except Exception as e:
+                        print(f"Error al remover archivo: {e}")
+                    documento.archivo = None
+                    documento.tamaño = 0
 
             documento.clave_admin = request.user
             documento.save()
@@ -844,60 +900,85 @@ def editar_documento(request, id):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
-
+    categorias = Categoria.objects.all()
     return render(request, 'myapp/editar_documento.html', {
         'documento': documento,
-        'tipos_choices': Documento.TIPO_CHOICES, # NUEVO
-        'clasificacion_choices': Documento.CLASIFICACION_CHOICES
+        'categorias': categorias,
+        'tipos_choices': Documento._meta.get_field('tipo').choices,
+        'clasificacion_choices': Documento._meta.get_field('clasificacion').choices
     })
     
-    
 @login_required
+@require_http_methods(["POST"])
 def eliminar_documento(request, id):
     """Vista para eliminar documento (AJAX)"""
-    if request.method == 'POST':
-        try:
-            documento = get_object_or_404(Documento, id_documento=id)
-            titulo = documento.titulo
-            documento.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Documento "{titulo}" eliminado correctamente'
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            })
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
-
-
+    try:
+        documento = get_object_or_404(Documento, id=id)
+        titulo = documento.titulo
+        
+        # Eliminar archivo físico del disco si existe
+        if documento.archivo:
+            try:
+                if os.path.isfile(documento.archivo.path):
+                    os.remove(documento.archivo.path)
+            except Exception as e:
+                print(f"Error al eliminar archivo físico: {e}")
+                
+        documento.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'mensaje': f'Documento "{titulo}" eliminado correctamente',
+            'message': f'Documento "{titulo}" eliminado correctamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
 
 def descargar_documento(request, id):
-    """Vista para descargar un documento"""
-    documento = get_object_or_404(Documento, id_documento=id)
+    """Vista para descargar un documento (físico o URL externa)"""
+    documento = get_object_or_404(Documento, id=id)
     
     # Verificar permisos
     if documento.clasificacion == 'publico':
-        # Todos pueden descargar documentos públicos
         pass
     elif documento.clasificacion == 'privado' and not request.user.is_authenticated:
         messages.error(request, 'Debes iniciar sesión para descargar este documento')
         return redirect('login') + f'?next={request.path}'
-    elif documento.clasificacion == 'confidencial' and not (request.user.is_admin or request.user.is_superuser):
+    elif documento.clasificacion == 'confidencial' and not (request.user.is_authenticated and (request.user.is_superuser or (hasattr(request.user, 'tipo') and request.user.tipo == 'admin'))):
         messages.error(request, 'No tienes permiso para descargar este documento')
         return redirect('repositorio')
     
-    try:
-        # Intentar redirigir a la URL del documento
+    # Incrementar descargas
+    documento.descargas += 1
+    documento.save(update_fields=['descargas'])
+    
+    # Servir archivo local si existe
+    if documento.archivo:
+        try:
+            if os.path.exists(documento.archivo.path):
+                response = FileResponse(
+                    open(documento.archivo.path, 'rb'),
+                    as_attachment=True,
+                    filename=os.path.basename(documento.archivo.name)
+                )
+                return response
+            else:
+                messages.error(request, 'El archivo físico no se encuentra en el servidor')
+                return redirect('repositorio')
+        except Exception as e:
+            messages.error(request, f'Error al descargar el archivo: {str(e)}')
+            return redirect('repositorio')
+            
+    # Redirigir a URL externa si no hay archivo local
+    if documento.url:
         return redirect(documento.url)
         
-    except Exception as e:
-        messages.error(request, f'Error al acceder al documento: {str(e)}')
-        return redirect('repositorio')
+    messages.error(request, 'El documento no tiene un recurso asociado.')
+    return redirect('repositorio')
 
 # ==============================================
 # VISTAS ADICIONALES SIMPLIFICADAS
@@ -906,31 +987,20 @@ def descargar_documento(request, id):
 @login_required
 def ver_documento_detalle(request, id):
     """Vista para ver detalles completos de un documento"""
-    documento = get_object_or_404(Documento, id_documento=id)
+    documento = get_object_or_404(Documento, id=id)
     
-    # Verificar permisos de acceso usando el método del modelo
-    # Si tienes el método puede_acceder_usuario en tu modelo
-    if hasattr(documento, 'puede_acceder_usuario'):
-        if not documento.puede_acceder_usuario(request.user):
-            if request.user.is_authenticated:
-                messages.error(request, 'No tienes permiso para acceder a este documento')
-                return redirect('repositorio')
-            else:
-                messages.warning(request, 'Debes iniciar sesión para acceder a este documento')
-                return redirect('login') + f'?next={request.path}'
-    else:
-        # Lógica básica de permisos si no existe el método
-        if documento.clasificacion == 'privado' and not request.user.is_authenticated:
-            messages.warning(request, 'Debes iniciar sesión para acceder a este documento')
-            return redirect('login') + f'?next={request.path}'
-        elif documento.clasificacion == 'confidencial' and not (request.user.is_admin or request.user.is_superuser):
-            messages.error(request, 'No tienes permiso para acceder a este documento')
-            return redirect('repositorio')
+    # Verificar permisos de acceso
+    if documento.clasificacion == 'privado' and not request.user.is_authenticated:
+        messages.warning(request, 'Debes iniciar sesión para acceder a este documento')
+        return redirect('login') + f'?next={request.path}'
+    elif documento.clasificacion == 'confidencial' and not (request.user.is_superuser or (hasattr(request.user, 'tipo') and request.user.tipo == 'admin')):
+        messages.error(request, 'No tienes permiso para acceder a este documento')
+        return redirect('repositorio')
     
     context = {
         'documento': documento,
-        'puede_editar': request.user.is_admin or request.user.is_superuser,
-        'puede_eliminar': request.user.is_admin or request.user.is_superuser,
+        'puede_editar': request.user.is_superuser or (hasattr(request.user, 'tipo') and request.user.tipo == 'admin'),
+        'puede_eliminar': request.user.is_superuser or (hasattr(request.user, 'tipo') and request.user.tipo == 'admin'),
     }
     
     return render(request, 'myapp/detalle_documento.html', context)
@@ -1006,16 +1076,17 @@ def exportar_documentos_csv(request):
     import csv
     from django.http import HttpResponse
     
-    # Solo usuarios staff pueden exportar todos los documentos
-    if request.user.is_admin or request.user.is_superuser:
-        documentos = Documento.objects.all().order_by('id_documento')
+    # Solo usuarios staff/admin pueden exportar todos los documentos
+    is_admin = request.user.is_superuser or (hasattr(request.user, 'tipo') and request.user.tipo == 'admin')
+    if is_admin:
+        documentos = Documento.objects.all().order_by('id')
         filename = "todos_documentos.csv"
     else:
         # Usuarios normales solo exportan documentos accesibles
         documentos = Documento.objects.filter(
             Q(clasificacion='publico') | 
             Q(clasificacion='privado')
-        ).order_by('id_documento')
+        ).order_by('id')
         filename = "mis_documentos.csv"
     
     response = HttpResponse(content_type='text/csv')
@@ -1025,13 +1096,20 @@ def exportar_documentos_csv(request):
     writer.writerow(['ID', 'Título', 'Clasificación', 'URL', 'Fecha Carga', 'Administrador'])
     
     for doc in documentos:
-        admin_nombre = doc.clave_admin.get_full_name() if doc.clave_admin else ''
+        # Se obtiene el nombre del admin de forma segura
+        admin_nombre = ""
+        if doc.clave_admin:
+            if hasattr(doc.clave_admin, 'get_full_name'):
+                admin_nombre = doc.clave_admin.get_full_name()
+            else:
+                admin_nombre = getattr(doc.clave_admin, 'nombre', str(doc.clave_admin))
+                
         writer.writerow([
-            doc.id_documento,
+            doc.id,
             doc.titulo,
-            doc.get_clasificacion_display() if hasattr(doc, 'get_clasificacion_display') else doc.clasificacion,
+            doc.get_clasificacion_display(),
             doc.url,
-            doc.fecha_carga.strftime('%Y-%m-%d'),
+            doc.fecha_subida.strftime('%Y-%m-%d') if doc.fecha_subida else '',
             admin_nombre
         ])
     
@@ -2282,18 +2360,13 @@ def redirigir_por_tipo_usuario(request):
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
           
         if usuario.tipo == 'encuestador':  
-            # Redirigir al formulario de registro para encuestadores  
-            return redirect('formulario')  
-        
+            return redirect('encuestador_dashboard')  
         elif usuario.tipo == 'admin':  
-            # Redirigir al CRUD para administradores  
             return redirect('lista_registros')  
         elif usuario.tipo == 'propietario':  
-            # Redirigir a una página específica para propietarios  
-            return redirect('mis_propiedades')  # o donde corresponda  
+            return redirect('mis_propiedades')  
         else:  
-            # Tipo de usuario no reconocido  
-            return redirect('login')  
+            return redirect('vista_inicio')  
               
     except Usuario.DoesNotExist:  
         return redirect('login')
@@ -2894,18 +2967,13 @@ def redirigir_por_tipo_usuario(request):
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
           
         if usuario.tipo == 'encuestador':  
-            # Redirigir al formulario de registro para encuestadores  
-            return redirect('formulario')  # o la URL específica del formulario  
-        
+            return redirect('encuestador_dashboard')  
         elif usuario.tipo == 'admin':  
-            # Redirigir al CRUD para administradores  
             return redirect('lista_registros')  
         elif usuario.tipo == 'propietario':  
-            # Redirigir a una página específica para propietarios  
-            return redirect('mis_propiedades')  # o donde corresponda  
+            return redirect('mis_propiedades')  
         else:  
-            # Tipo de usuario no reconocido  
-            return redirect('login')  
+            return redirect('vista_inicio')  
               
     except Usuario.DoesNotExist:  
         return redirect('login')
@@ -2921,148 +2989,57 @@ from django.views.decorators.http import require_http_methods
 
 
 def repositorio(request):
-    """Vista principal del repositorio"""
-    categoria_id = request.GET.get('categoria', None)
+    """Vista principal del repositorio - ahora usa repositorio_galeria_prueba.html con carrusel dinámico"""
+    import os
+    from django.conf import settings
+    
+    tipo_filtro = request.GET.get('tipo', '')
     busqueda = request.GET.get('q', '')
     
-    # Filtrar documentos
+    # Filtrar documentos que son públicos
     documentos = Documento.objects.filter(es_publico=True)
     
-    if categoria_id:
-        documentos = documentos.filter(categoria_id=categoria_id)
-    
+    if tipo_filtro:
+        documentos = documentos.filter(tipo=tipo_filtro)
+        
     if busqueda:
         documentos = documentos.filter(
             Q(titulo__icontains=busqueda) | 
             Q(descripcion__icontains=busqueda)
         )
-    
-    categorias = Categoria.objects.all()
-    
-    context = {
-        'documentos': documentos,
-        'categorias': categorias,
-        'categoria_actual': categoria_id,
-        'busqueda': busqueda,
+        
+    # Calcular estadísticas de tipos
+    stats_tipos = {
+        'videos': Documento.objects.filter(es_publico=True, tipo='video').count(),
+        'historicos': Documento.objects.filter(es_publico=True, tipo='historico').count(),
+        'reportes': Documento.objects.filter(es_publico=True, tipo='reporte').count(),
     }
-    return render(request, 'myapp/repositorio.html', context)
-
-@require_http_methods(["POST"])
-def subir_documento_archivo(request):
-    """Vista para subir documentos"""
-    try:
-        # Validar que venga el archivo
-        if 'archivo' not in request.FILES:
-            return JsonResponse({'error': 'No se recibió ningún archivo'}, status=400)
-        
-        archivo = request.FILES['archivo']
-        titulo = request.POST.get('titulo', '')
-        categoria_id = request.POST.get('categoria', '')
-        descripcion = request.POST.get('descripcion', '')
-        es_publico = request.POST.get('es_publico', 'on') == 'on'
-        
-        # Validaciones
-        if not titulo:
-            return JsonResponse({'error': 'El título es obligatorio'}, status=400)
-        
-        if not categoria_id:
-            return JsonResponse({'error': 'Debes seleccionar una categoría'}, status=400)
-        
-        # Validar tipo de archivo
-        extension = archivo.name.split('.')[-1].lower()
-        if extension not in settings.ALLOWED_EXTENSIONS:
-            return JsonResponse({
-                'error': f'Tipo de archivo no permitido. Extensiones permitidas: {", ".join(settings.ALLOWED_EXTENSIONS)}'
-            }, status=400)
-        
-        # Validar tamaño
-        if archivo.size > settings.MAX_FILE_SIZE:
-            max_size_mb = settings.MAX_FILE_SIZE / (1024 * 1024)
-            return JsonResponse({
-                'error': f'El archivo es demasiado grande. Tamaño máximo: {max_size_mb}MB'
-            }, status=400)
-        
-        # Obtener categoría
+    
+    # Paginación
+    paginator = Paginator(documentos, 9)  # 9 documentos por página para la cuadrícula premium
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Cargar imágenes de la carpeta carrucel local en media
+    carrucel_dir = os.path.join(settings.MEDIA_ROOT, 'carrucel')
+    imagenes_carrucel = []
+    if os.path.exists(carrucel_dir):
         try:
-            categoria = Categoria.objects.get(id=categoria_id)
-        except Categoria.DoesNotExist:
-            return JsonResponse({'error': 'Categoría no válida'}, status=400)
-        
-        # Crear documento
-        documento = Documento(
-            titulo=titulo,
-            descripcion=descripcion,
-            archivo=archivo,
-            categoria=categoria,
-            es_publico=es_publico
-        )
-        documento.save()
-        
-        return JsonResponse({
-            'mensaje': 'Documento subido correctamente',
-            'documento_id': documento.id,
-            'titulo': documento.titulo,
-            'url': documento.archivo.url
-        })
-        
-    except Exception as e:
-        return JsonResponse({'error': f'Error al subir el documento: {str(e)}'}, status=500)
-
-@require_http_methods(["GET"])
-def descargar_documento(request, documento_id):
-    """Vista para descargar documentos"""
-    try:
-        documento = get_object_or_404(Documento, id=documento_id)
-        
-        # Incrementar contador de descargas
-        documento.descargas += 1
-        documento.save(update_fields=['descargas'])
-        
-        # Verificar que el archivo existe
-        if not os.path.exists(documento.archivo.path):
-            return JsonResponse({'error': 'Archivo no encontrado en el servidor'}, status=404)
-        
-        # Servir el archivo
-        response = FileResponse(
-            open(documento.archivo.path, 'rb'),
-            as_attachment=True,
-            filename=os.path.basename(documento.archivo.name)
-        )
-        return response
-        
-    except Documento.DoesNotExist:
-        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': f'Error al descargar: {str(e)}'}, status=500)
-
-@require_http_methods(["POST"])
-def eliminar_documento(request, documento_id):
-    """Vista para eliminar documentos"""
-    try:
-        documento = get_object_or_404(Documento, id=documento_id)
-        
-        # Guardar información antes de eliminar
-        titulo = documento.titulo
-        
-        # Eliminar archivo físico
-        if documento.archivo:
-            try:
-                if os.path.isfile(documento.archivo.path):
-                    os.remove(documento.archivo.path)
-            except Exception as e:
-                print(f"Error al eliminar archivo físico: {e}")
-        
-        # Eliminar registro de la base de datos
-        documento.delete()
-        
-        return JsonResponse({
-            'mensaje': f'Documento "{titulo}" eliminado correctamente'
-        })
-        
-    except Documento.DoesNotExist:
-        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': f'Error al eliminar: {str(e)}'}, status=500)
+            for file in sorted(os.listdir(carrucel_dir)):
+                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+                    imagenes_carrucel.append(f"{settings.MEDIA_URL}carrucel/{file}")
+        except Exception:
+            pass
+            
+    context = {
+        'documentos': page_obj,
+        'stats_tipos': stats_tipos,
+        'tipos_choices': Documento._meta.get_field('tipo').choices,
+        'tipo_filtro': tipo_filtro,
+        'busqueda': busqueda,
+        'imagenes_carrucel': imagenes_carrucel,
+    }
+    return render(request, 'myapp/repositorio_galeria_prueba.html', context)
 
 def obtener_documentos_categoria(request, categoria_id):
     """API para obtener documentos de una categoría específica"""
@@ -3075,19 +3052,28 @@ def obtener_documentos_categoria(request, categoria_id):
                 es_publico=True
             )
         
-        documentos_data = [{
-            'id': doc.id,
-            'titulo': doc.titulo,
-            'descripcion': doc.descripcion,
-            'url': doc.archivo.url,
-            'tipo': doc.tipo_archivo,
-            'tamaño': doc.tamaño_formateado(),
-            'fecha': doc.fecha_subida.strftime('%d/%m/%Y'),
-            'icono': doc.icono_archivo(),
-            'es_video': doc.es_video(),
-            'es_imagen': doc.es_imagen(),
-            'es_pdf': doc.es_pdf(),
-        } for doc in documentos]
+        documentos_data = []
+        for doc in documentos:
+            doc_url = doc.archivo.url if doc.archivo else (doc.url or "")
+            icono = "fas fa-file-alt"
+            if doc.tipo == 'video':
+                icono = "fas fa-play-circle"
+            elif doc.tipo == 'historico':
+                icono = "fas fa-book-open"
+            
+            documentos_data.append({
+                'id': doc.id,
+                'titulo': doc.titulo,
+                'descripcion': doc.descripcion or "",
+                'url': doc_url,
+                'tipo': doc.tipo_archivo or doc.tipo or "pdf",
+                'tamaño': doc.tamaño_formateado() if hasattr(doc, 'tamaño_formateado') else f"{round(doc.tamaño/1024, 1)} KB",
+                'fecha': doc.fecha_subida.strftime('%d/%m/%Y') if doc.fecha_subida else '',
+                'icono': icono,
+                'es_video': doc.tipo == 'video',
+                'es_imagen': (doc.tipo_archivo or '').lower() in ['jpg', 'jpeg', 'png', 'gif'],
+                'es_pdf': (doc.tipo_archivo or '').lower() == 'pdf' or doc.tipo == 'reporte',
+            })
         
         return JsonResponse({'documentos': documentos_data})
         
@@ -3504,14 +3490,75 @@ def compare_municipalities_view(request):
 
 @login_required
 def encuestador_dashboard(request):
-    try:  
-        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
-        if usuario.tipo not in ['encuestador', 'admin']:  
-            return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")  
+    from django.db.models.functions import TruncDate
+    try:
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)
+        if usuario.tipo not in ['encuestador', 'admin']:
+            return HttpResponseForbidden("No tienes permiso para acceder al portal de encuestadores.")
     except Usuario.DoesNotExist:
         return HttpResponse('Usuario no encontrado.', status=404)
-        
-    return render(request, 'myapp/encuestador_dashboard.html')
+
+    # Obtener encuestador actual (si aplica)
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    # ── Totales globales ──
+    total_registros = RegistroVisita.objects.count()
+    total_residentes = EncuestaResidente.objects.count()
+    total_comercio = EncuestaComercio.objects.count()
+    total_encuestas = total_residentes + total_comercio
+
+    # ── Propias (solo para encuestadores, no admin) ──
+    mis_registros = 0
+    mis_residentes = 0
+    mis_comercio = 0
+    if encuestador:
+        mis_registros = RegistroVisita.objects.filter(clave_encuestador=encuestador).count()
+        mis_residentes = EncuestaResidente.objects.filter(encuestador=encuestador).count()
+        mis_comercio = EncuestaComercio.objects.filter(encuestador=encuestador).count()
+
+    # ── Actividad reciente (últimos 7 días) ──
+    hace_7_dias = timezone.now() - timedelta(days=7)
+    registros_recientes = RegistroVisita.objects.filter(fecha__gte=hace_7_dias).count()
+    encuestas_recientes = (
+        EncuestaResidente.objects.filter(fecha__gte=hace_7_dias).count() +
+        EncuestaComercio.objects.filter(fecha__gte=hace_7_dias).count()
+    )
+
+    # ── Distribución por motivo de visita ──
+    motivos = (
+        RegistroVisita.objects
+        .values('motivo_visita')
+        .annotate(total=Count('id_registro'))
+        .order_by('-total')
+    )
+
+    # ── Últimos 5 registros ──
+    ultimos_registros = RegistroVisita.objects.order_by('-fecha')[:5]
+
+    context = {
+        'usuario': usuario,
+        'encuestador': encuestador,
+        # Totales
+        'total_registros': total_registros,
+        'total_encuestas': total_encuestas,
+        'total_residentes': total_residentes,
+        'total_comercio': total_comercio,
+        # Propias
+        'mis_registros': mis_registros,
+        'mis_residentes': mis_residentes,
+        'mis_comercio': mis_comercio,
+        # Recientes
+        'registros_recientes': registros_recientes,
+        'encuestas_recientes': encuestas_recientes,
+        # Análisis
+        'motivos': motivos,
+        'ultimos_registros': ultimos_registros,
+    }
+    return render(request, 'myapp/encuestador_dashboard.html', context)
 
 @login_required
 def nueva_encuesta_residente(request):

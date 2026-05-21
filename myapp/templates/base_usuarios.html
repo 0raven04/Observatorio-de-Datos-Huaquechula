@@ -80,7 +80,7 @@
                 <div class="collapse navbar-collapse d-none d-md-flex justify-content-center" id="navbarSupportedContent">
                     <ul class="navbar-nav d-flex justify-content-around w-75 align-items-center">
 
-                        {% if request.user.tipo != 'propietario' %}
+                        {% if request.user.tipo == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'lista_puntos_interes' %}active{% endif %}"
                                 href="{% url 'lista_puntos_interes' %}">
@@ -103,9 +103,17 @@
                             </a>
                         </li>
                         {% endif %}
+                        {% if request.user.tipo == 'encuestador' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'encuestador_dashboard' %}active{% endif %}"
+                                href="{% url 'encuestador_dashboard' %}">
+                                <i class="fas fa-chart-line me-1"></i> Mi Tablero
+                            </a>
+                        </li>
+                        {% endif %}
 
                         <!-- Dropdown "Gestión" -->
-                        {% if request.user.tipo != 'propietario' %}
+                        {% if request.user.tipo == 'admin' %}
                         <li class="nav-item has-submenu">
                             <a class="nav-link submenu-toggle" href="#">
                                 <i class="fas fa-cog me-1"></i> Gestión <span class="submenu-arrow">▼</span>
@@ -184,7 +192,7 @@
                 Navegación
             </div>
             <ul class="list-unstyled">
-                {% if request.user.tipo != 'propietario' %}
+                {% if request.user.tipo == 'admin' %}
                 <li class="sidebar-item text-center">
                     <a class="nav-link {% if 'lista_puntos_interes' in request.resolver_match.url_name %}active{% endif %}"
                         href="{% url 'lista_puntos_interes' %}">
@@ -200,7 +208,15 @@
                     </a>
                 </li>
                 {% endif %}
-                {% if request.user.tipo != 'propietario' %}
+                {% if request.user.tipo == 'encuestador' %}
+                <li class="sidebar-item text-center">
+                    <a class="nav-link {% if 'encuestador_dashboard' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'encuestador_dashboard' %}">
+                        <i class="fas fa-chart-line me-2"></i>Mi Tablero
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user.tipo == 'admin' %}
                 <li class="sidebar-item text-center">
                     <a class="nav-link {% if 'lista_archivos' in request.resolver_match.url_name %}active{% endif %}"
                         href="{% url 'lista_archivos' %}">
@@ -290,7 +306,7 @@
     </aside>
 
     <main class="main-content flex-grow-1" id="mainContent" role="main">
-        <div class="container-fluid px-3 px-md-4">
+        <div class="container">
             {% block content %}
             {% endblock %}
         </div>

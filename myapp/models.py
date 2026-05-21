@@ -882,13 +882,28 @@ class Documento(models.Model):
         ordering = ['-fecha_subida']
         verbose_name_plural = "Documentos"
     
+    @property
+    def id_documento(self):
+        return self.id
+
+    @property
+    def nombre_clasificacion(self):
+        return self.get_clasificacion_display()
+
     def __str__(self):
         return self.titulo
     
     def save(self, *args, **kwargs):
         if self.archivo:
-            self.tipo_archivo = self.archivo.name.split('.')[-1].lower()
+            self.tipo_archivo = self.archivo.name.split('.')[-1].lower()[:10]
             self.tamaño = self.archivo.size
+        elif self.url:
+            ext = self.url.split('.')[-1].split('?')[0].lower()[:10]
+            if len(ext) <= 4 and ext.isalnum():
+                self.tipo_archivo = ext
+            else:
+                self.tipo_archivo = 'link'
+        self.es_publico = (self.clasificacion == 'publico')
         super().save(*args, **kwargs)
     
     def tamaño_formateado(self):

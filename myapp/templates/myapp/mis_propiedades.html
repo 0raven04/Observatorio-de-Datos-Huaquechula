@@ -4,99 +4,92 @@
 {% block title %}Mis Propiedades{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem;">
-  
-  <div class="row mb-4 align-items-center">
-    <div class="col-md-12 mb-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <h3 class="fw-bold" style="color: var(--color-gris-oscuro);"><i class="fas fa-store me-2"></i> Mis Propiedades</h3>
-      </div>
-      <p class="text-muted">Aquí puedes gestionar la información pública de los negocios u ofrendas que tienes asignados.</p>
-    </div>
-  </div>
 
-  <div class="row">
-    {% for punto in puntos %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
-            {% if punto.imagen_portada %}
-                <img src="{{ punto.imagen_portada }}" class="card-img-top" alt="{{ punto.nombre }}" style="height: 200px; object-fit: cover;">
-            {% else %}
-                <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height: 200px;">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-12 mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="fw-bold" style="color: var(--color-gris-oscuro);"><i class="fas fa-store me-2"></i> Mis Propiedades</h3>
+            </div>
+            <p class="text-muted">Aquí puedes gestionar la información pública de los negocios u ofrendas que tienes
+                asignados.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for punto in puntos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
+                {% if punto.imagen_portada %}
+                <img src="{{ punto.imagen_portada }}" class="card-img-top" alt="{{ punto.nombre }}"
+                    style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted"
+                    style="height: 200px;">
                     <i class="fas fa-image fa-3x"></i>
                 </div>
-            {% endif %}
-            
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title fw-bold text-dark mb-0">{{ punto.nombre }}</h5>
-                    {% if punto.categoria == 'ofrenda' %}
+                {% endif %}
+
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold text-dark mb-0">{{ punto.nombre }}</h5>
+                        {% if punto.categoria == 'ofrenda' %}
                         <span class="badge bg-warning text-dark"><i class="fas fa-fire me-1"></i>Ofrenda</span>
-                    {% elif punto.categoria == 'servicio' %}
+                        {% elif punto.categoria == 'servicio' %}
                         <span class="badge bg-success"><i class="fas fa-info-circle me-1"></i>Servicio</span>
-                    {% else %}
-                        <span class="badge bg-secondary">{{ punto.get_categoria_display }}</span>
-                    {% endif %}
-                </div>
-                
-                <p class="card-text text-muted small mb-3">
-                    {{ punto.descripcion|truncatechars:100|default:"Sin descripción" }}
-                </p>
-                
-                <ul class="list-unstyled small mb-0">
-                    <li class="mb-1"><i class="far fa-clock text-primary me-2"></i> 
-                        {% if punto.hora_apertura and punto.hora_cierre %}
-                            {{ punto.hora_apertura|time:"H:i" }} - {{ punto.hora_cierre|time:"H:i" }}
                         {% else %}
-                            Horario no especificado
+                        <span class="badge bg-secondary">{{ punto.get_categoria_display }}</span>
                         {% endif %}
-                    </li>
-                    <li class="mb-1"><i class="far fa-calendar-alt text-primary me-2"></i>
-                        {{ punto.dias_semana|default:"Días no especificados" }}
-                    </li>
-                    {% if punto.estado == 'activo' %}
-                        <li class="text-success fw-bold"><i class="fas fa-check-circle me-2"></i>Punto Visible (Activo)</li>
-                    {% else %}
-                        <li class="text-danger fw-bold"><i class="fas fa-eye-slash me-2"></i>Punto Oculto (Inactivo)</li>
-                    {% endif %}
-                </ul>
-            </div>
-            
-            <div class="card-footer bg-white border-top-0 pb-3 pt-0">
-                <button onclick="abrirModalEdicionPropiedad(
-                    {{ punto.id_punto }},
-                    '{{ punto.nombre|escapejs }}',
-                    '{{ punto.descripcion|escapejs|default:"" }}',
-                    '{{ punto.imagen_portada|escapejs|default:"" }}',
-                    '{{ punto.hora_apertura|time:"H:i"|default:"" }}',
-                    '{{ punto.hora_cierre|time:"H:i"|default:"" }}',
-                    '{{ punto.dias_semana|escapejs|default:"" }}',
-                    '{{ punto.categoria|escapejs }}',
-                    {% if punto.categoria == 'ofrenda' and punto.ofrenda %}'{{ punto.ofrenda.anfitrion|escapejs|default:"" }}'{% else %}''{% endif %},
-                    {% if punto.categoria == 'servicio' and punto.servicio %}'{{ punto.servicio.tipo_servicio|escapejs|default:"" }}'{% else %}''{% endif %},
-                    {% if punto.categoria == 'servicio' and punto.servicio %}'{{ punto.servicio.contacto|escapejs|default:"" }}'{% else %}''{% endif %},
-                    {% if punto.categoria == 'servicio' and punto.servicio %}'{{ punto.servicio.tipo_pago|escapejs|default:"" }}'{% else %}''{% endif %}
-                )" class="btn w-100 fw-bold text-white" style="background-color: var(--color-naranja); border-radius: 8px;">
-                    <i class="fas fa-edit me-2"></i> Editar Información
-                </button>
+                    </div>
+
+                    <p class="card-text text-muted small mb-3">
+                        {{ punto.descripcion|truncatechars:100|default:"Sin descripción" }}
+                    </p>
+
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-1"><i class="far fa-clock text-primary me-2"></i>
+                            {% if punto.hora_apertura and punto.hora_cierre %}
+                            {{ punto.hora_apertura|time:"H:i" }} - {{ punto.hora_cierre|time:"H:i" }}
+                            {% else %}
+                            Horario no especificado
+                            {% endif %}
+                        </li>
+                        <li class="mb-1"><i class="far fa-calendar-alt text-primary me-2"></i>
+                            {{ punto.dias_semana|default:"Días no especificados" }}
+                        </li>
+                        {% if punto.estado == 'activo' %}
+                        <li class="text-success fw-bold"><i class="fas fa-check-circle me-2"></i>Punto Visible (Activo)
+                        </li>
+                        {% else %}
+                        <li class="text-danger fw-bold"><i class="fas fa-eye-slash me-2"></i>Punto Oculto (Inactivo)
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="card-footer bg-white border-top-0 pb-3 pt-0">
+                    <!-- prettier-ignore -->
+                    <button onclick="abrirModalEdicionPropiedad({{ punto.id_punto }},'{{ punto.nombre|escapejs }}','{{ punto.descripcion|escapejs|default:"" }}','{{ punto.imagen_portada|escapejs|default:"" }}','{{ punto.hora_apertura|time:"H:i"|default:"" }}','{{ punto.hora_cierre|time:"H:i"|default:"" }}','{{ punto.dias_semana|escapejs|default:"" }}','{{ punto.categoria|escapejs }}',{% if punto.categoria == 'ofrenda' and punto.ofrenda %}'{{ punto.ofrenda.anfitrion|escapejs|default:"" }}'{% else %}''{% endif %},{% if punto.categoria == 'servicio' and punto.servicio %}'{{ punto.servicio.tipo_servicio|escapejs|default:"" }}'{% else %}''{% endif %},{% if punto.categoria == 'servicio' and punto.servicio %}'{{ punto.servicio.contacto|escapejs|default:"" }}'{% else %}''{% endif %},{% if punto.categoria == 'servicio' and punto.servicio %}'{{ punto.servicio.tipo_pago|escapejs|default:"" }}'{% else %}''{% endif %})" class="btn w-100 fw-bold text-white" style="background-color: var(--color-naranja); border-radius: 8px;">
+                        <i class="fas fa-edit me-2"></i> Editar Información
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    {% empty %}
-    <div class="col-12 text-center py-5">
-        <div class="text-muted">
-            <i class="fas fa-map-marker-slash fa-4x mb-3" style="color: var(--color-beige);"></i>
-            <h4 style="color: var(--color-gris-oscuro);">No tienes propiedades asignadas</h4>
-            <p>Contacta a un administrador para que asigne un negocio u ofrenda a tu cuenta.</p>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="text-muted">
+                <i class="fas fa-map-marker-slash fa-4x mb-3" style="color: var(--color-beige);"></i>
+                <h4 style="color: var(--color-gris-oscuro);">No tienes propiedades asignadas</h4>
+                <p>Contacta a un administrador para que asigne un negocio u ofrenda a tu cuenta.</p>
+            </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-  </div>
 </div>
 
 <!-- Modal de Edición de Propiedad -->
@@ -106,27 +99,32 @@
             {% csrf_token %}
             <div class="modal-header text-white" style="background-color: #4A4A4A;">
                 <h5 class="modal-title"><i class="fas fa-edit me-2"></i> Editar Propiedad</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <!-- Info Básica -->
-                <h6 class="border-bottom pb-2 mb-3 text-primary"><i class="fas fa-info-circle me-2"></i>Información General</h6>
+                <h6 class="border-bottom pb-2 mb-3 text-primary"><i class="fas fa-info-circle me-2"></i>Información
+                    General</h6>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Nombre del Lugar <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="nombre_punto" id="edit_nombre_punto" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Descripción corta</label>
-                    <textarea class="form-control" name="descripcion" id="edit_descripcion" rows="3" placeholder="Describe brevemente lo que ofreces..."></textarea>
+                    <textarea class="form-control" name="descripcion" id="edit_descripcion" rows="3"
+                        placeholder="Describe brevemente lo que ofreces..."></textarea>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">URL de Imagen de Portada</label>
-                    <input type="url" class="form-control" name="imagen_portada" id="edit_imagen_portada" placeholder="https://ejemplo.com/imagen.jpg">
+                    <input type="url" class="form-control" name="imagen_portada" id="edit_imagen_portada"
+                        placeholder="https://ejemplo.com/imagen.jpg">
                     <small class="text-muted">Enlace directo a una imagen (JPG/PNG).</small>
                 </div>
 
                 <!-- Horarios -->
-                <h6 class="border-bottom pb-2 mb-3 mt-4 text-primary"><i class="far fa-clock me-2"></i>Horarios y Fechas</h6>
+                <h6 class="border-bottom pb-2 mb-3 mt-4 text-primary"><i class="far fa-clock me-2"></i>Horarios y Fechas
+                </h6>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Hora de Apertura</label>
@@ -140,58 +138,81 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Días de Atención</label>
                     <div class="d-flex flex-wrap gap-2" id="containerDias">
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="lunes" id="dia_lunes"><label class="form-check-label" for="dia_lunes">Lunes</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="martes" id="dia_martes"><label class="form-check-label" for="dia_martes">Martes</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="miercoles" id="dia_miercoles"><label class="form-check-label" for="dia_miercoles">Miércoles</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="jueves" id="dia_jueves"><label class="form-check-label" for="dia_jueves">Jueves</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="viernes" id="dia_viernes"><label class="form-check-label" for="dia_viernes">Viernes</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="sabado" id="dia_sabado"><label class="form-check-label" for="dia_sabado">Sábado</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input dia-check" type="checkbox" name="dias_semana" value="domingo" id="dia_domingo"><label class="form-check-label" for="dia_domingo">Domingo</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="lunes" id="dia_lunes"><label
+                                class="form-check-label" for="dia_lunes">Lunes</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="martes" id="dia_martes"><label
+                                class="form-check-label" for="dia_martes">Martes</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="miercoles" id="dia_miercoles"><label
+                                class="form-check-label" for="dia_miercoles">Miércoles</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="jueves" id="dia_jueves"><label
+                                class="form-check-label" for="dia_jueves">Jueves</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="viernes" id="dia_viernes"><label
+                                class="form-check-label" for="dia_viernes">Viernes</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="sabado" id="dia_sabado"><label
+                                class="form-check-label" for="dia_sabado">Sábado</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input dia-check"
+                                type="checkbox" name="dias_semana" value="domingo" id="dia_domingo"><label
+                                class="form-check-label" for="dia_domingo">Domingo</label></div>
                     </div>
                 </div>
 
                 <!-- Campos Específicos -->
                 <div id="seccionOfrenda" style="display: none;">
-                    <h6 class="border-bottom pb-2 mb-3 mt-4 text-warning"><i class="fas fa-fire me-2"></i>Datos de Ofrenda</h6>
+                    <h6 class="border-bottom pb-2 mb-3 mt-4 text-warning"><i class="fas fa-fire me-2"></i>Datos de
+                        Ofrenda</h6>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Anfitrión de la Ofrenda <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Anfitrión de la Ofrenda <span
+                                class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="anfitrion" id="edit_anfitrion">
                     </div>
                 </div>
 
                 <div id="seccionServicio" style="display: none;">
-                    <h6 class="border-bottom pb-2 mb-3 mt-4 text-success"><i class="fas fa-store me-2"></i>Datos del Servicio/Comercio</h6>
+                    <h6 class="border-bottom pb-2 mb-3 mt-4 text-success"><i class="fas fa-store me-2"></i>Datos del
+                        Servicio/Comercio</h6>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Teléfono / Contacto</label>
-                        <input type="text" class="form-control" name="contacto" id="edit_contacto" placeholder="244 123 4567">
+                        <input type="text" class="form-control" name="contacto" id="edit_contacto"
+                            placeholder="244 123 4567">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Tipos de Pago Aceptados</label>
                         <div class="d-flex flex-wrap gap-3">
                             <div class="form-check">
-                                <input class="form-check-input pago-check" type="checkbox" name="tipo_pago" value="efectivo" id="pago_efectivo">
+                                <input class="form-check-input pago-check" type="checkbox" name="tipo_pago"
+                                    value="efectivo" id="pago_efectivo">
                                 <label class="form-check-label" for="pago_efectivo">Efectivo</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input pago-check" type="checkbox" name="tipo_pago" value="tarjeta" id="pago_tarjeta">
+                                <input class="form-check-input pago-check" type="checkbox" name="tipo_pago"
+                                    value="tarjeta" id="pago_tarjeta">
                                 <label class="form-check-label" for="pago_tarjeta">Tarjeta</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input pago-check" type="checkbox" name="tipo_pago" value="transferencia" id="pago_transferencia">
+                                <input class="form-check-input pago-check" type="checkbox" name="tipo_pago"
+                                    value="transferencia" id="pago_transferencia">
                                 <label class="form-check-label" for="pago_transferencia">Transferencia</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="alert alert-info mt-4 mb-0 border-0" style="background-color: #e9ecef;">
                     <i class="fas fa-info-circle me-2"></i>
-                    <small>La ubicación en el mapa está fijada. Para modificarla o para dar de baja la propiedad, contacta a un administrador.</small>
+                    <small>La ubicación en el mapa está fijada. Para modificarla o para dar de baja la propiedad,
+                        contacta a un administrador.</small>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn text-white fw-bold" style="background-color: var(--color-naranja);" id="btnGuardar">Guardar Cambios</button>
+                <button type="submit" class="btn text-white fw-bold" style="background-color: var(--color-naranja);"
+                    id="btnGuardar">Guardar Cambios</button>
             </div>
         </form>
     </div>
@@ -209,17 +230,17 @@
             modalPropiedad = new bootstrap.Modal(document.getElementById('modalEditarPropiedad'));
         }
         puntoIdActual = id;
-        
+
         // Reset form
         document.getElementById('formEditarPropiedad').reset();
-        
+
         // Fill basic data
         document.getElementById('edit_nombre_punto').value = nombre;
         document.getElementById('edit_descripcion').value = desc;
         document.getElementById('edit_imagen_portada').value = img;
         document.getElementById('edit_hora_apertura').value = open;
         document.getElementById('edit_hora_cierre').value = close;
-        
+
         // Check days
         if (dias) {
             const diasArr = dias.split(',');
@@ -227,18 +248,18 @@
                 chk.checked = diasArr.includes(chk.value);
             });
         }
-        
+
         // Handle categories
         document.getElementById('seccionOfrenda').style.display = (cat === 'ofrenda') ? 'block' : 'none';
         document.getElementById('seccionServicio').style.display = (cat === 'servicio') ? 'block' : 'none';
-        
+
         if (cat === 'ofrenda') {
             document.getElementById('edit_anfitrion').value = anfitrion;
             document.getElementById('edit_anfitrion').required = true;
         } else {
             document.getElementById('edit_anfitrion').required = false;
         }
-        
+
         if (cat === 'servicio') {
             document.getElementById('edit_contacto').value = contacto;
             if (pagos) {
@@ -248,20 +269,20 @@
                 });
             }
         }
-        
+
         modalPropiedad.show();
     }
 
-    document.getElementById('formEditarPropiedad').addEventListener('submit', function(e) {
+    document.getElementById('formEditarPropiedad').addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const btn = document.getElementById('btnGuardar');
         const btnOriginalText = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
         btn.disabled = true;
 
         const formData = new FormData(this);
-        
+
         fetch(`/mis-propiedades/editar/${puntoIdActual}/`, {
             method: 'POST',
             body: formData,
@@ -269,27 +290,27 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success and reload
-                const toast = document.createElement('div');
-                toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; background-color: #28a745; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
-                toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span>${data.message}</span></div>`;
-                document.body.appendChild(toast);
-                
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                alert('Error: ' + data.error);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success and reload
+                    const toast = document.createElement('div');
+                    toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; background-color: #28a745; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
+                    toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span>${data.message}</span></div>`;
+                    document.body.appendChild(toast);
+
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.innerHTML = btnOriginalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                alert('Error de conexión.');
                 btn.innerHTML = btnOriginalText;
                 btn.disabled = false;
-            }
-        })
-        .catch(error => {
-            alert('Error de conexión.');
-            btn.innerHTML = btnOriginalText;
-            btn.disabled = false;
-        });
+            });
     });
 </script>
 {% endblock %}
