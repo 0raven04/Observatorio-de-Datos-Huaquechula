@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, FileResponse
+from django.apps import apps
 from myapp.models import (
     ArchivoKMZ, GeometriaEspacial, Punto_Interes, Categoria_Sitio, Galeria_Multimedia,
     Servicio, Ofrenda, Documento, Administrador, Sitio_turistico, Usuario, Encuestador,
@@ -23,6 +24,8 @@ from datetime import datetime
 import os
 import sys
 from django.shortcuts import render
+import urllib.parse
+import urllib.error
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -2032,34 +2035,57 @@ def crear_servicio(request):
 
     
 def get_categorias_json(request):
-    categorias = Categoria_Sitio.objects.values('id', 'nombre')
+    categorias = Categoria_Sitio.objects.values('id_categoria', 'nombre', 'codigo_slug')
     return JsonResponse(list(categorias), safe=False)
 
 # --- VISTA PARA CREAR CATEGORÍA (MODAL) ---
 @login_required
+@require_POST
 def crear_categoria(request):
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error'})
-
     nombre = request.POST.get('nombre', '').strip()
     slug = request.POST.get('codigo_slug', '').strip()
 
     if not nombre or not slug:
         return JsonResponse({'status': 'error', 'message': 'Datos incompletos'})
 
-    try:
-        nueva = Categoria_Sitio.objects.create(
-            nombre=nombre.title(),
-            codigo_slug=slug.lower()
-        )
-    except IntegrityError:
-        return JsonResponse({'status': 'error', 'message': 'Esa categoría o código slug ya existe.'})
+    if Categoria_Sitio.objects.filter(nombre__iexact=nombre).exists():
+        return JsonResponse({'status': 'error', 'message': 'Ya existe una categoría con ese nombre.'})
+
+    if Categoria_Sitio.objects.filter(codigo_slug__iexact=slug).exists():
+        return JsonResponse({'status': 'error', 'message': 'Ya existe una categoría con ese slug.'})
+
+    nueva = Categoria_Sitio.objects.create(
+        nombre=nombre.title(),
+        codigo_slug=slug.lower()
+    )
 
     return JsonResponse({
         'status': 'success',
         'new_id': nueva.id_categoria,
-        'new_name': nueva.nombre
+        'new_name': nueva.nombre,
+        'new_slug': nueva.codigo_slug,
+        'message': 'Categoría creada correctamente.'
     })
+
+@login_required
+@require_POST
+def eliminar_categoria(request, categoria_id):
+    try:
+        categoria = get_object_or_404(Categoria_Sitio, id_categoria=categoria_id)
+
+        if Sitio_turistico.objects.filter(id_categoria=categoria).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No se puede eliminar esta categoría porque está asignada a uno o más sitios turísticos.'
+            }, status=400)
+
+        categoria.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Categoría eliminada correctamente.'
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Error al eliminar la categoría: {str(e)}'}, status=500)
     
     
     
@@ -2276,8 +2302,6 @@ def redirigir_por_tipo_usuario(request):
 # =====================================================
 # SISTEMA DE RESEÑAS GLOBALES DEL MUNICIPIO
 # =====================================================
-import urllib.parse
-import urllib.error
 
 def _obtener_ip(request):
     """Extrae la IP real del visitante considerando proxies."""
@@ -2342,8 +2366,7 @@ def api_resenas_globales(request):
             'distribucion': distribucion,
             'resenas': resenas_list,
         })
-
-    # POST — crear reseña
+    #post
     try:
         datos = json.loads(request.body)
     except (json.JSONDecodeError, Exception):
@@ -2357,8 +2380,8 @@ def api_resenas_globales(request):
     # Validaciones
     if not nombre_visitante:
         return JsonResponse({'error': 'El apodo es obligatorio.'}, status=400)
-    if len(nombre_visitante) > 100:
-        return JsonResponse({'error': 'El apodo es demasiado largo (máx. 100 car.).'}, status=400)
+    if len(nombre_visitante) > 50:
+        return JsonResponse({'error': 'El apodo es demasiado largo (máx. 50 car.).'}, status=400)
     try:
         calificacion = int(calificacion)
         if not (1 <= calificacion <= 5):
@@ -2370,30 +2393,58 @@ def api_resenas_globales(request):
     if not _verificar_recaptcha(recaptcha_token):
         return JsonResponse({'error': 'Verifica que no eres un robot.'}, status=400)
 
-
-
     ip = _obtener_ip(request)
     hace_24h = tz.now() - timedelta(hours=24)
     resenas_ip = ResenaGlobal.objects.filter(
         ip_visitante=ip, fecha_publicacion__gte=hace_24h
     ).count()
-    if resenas_ip >= 3:
-        return JsonResponse(
+
+    
+    if resenas_ip >= 1:
+       return JsonResponse(
             {'error': 'Límite alcanzado: máx. 3 reseñas por día desde la misma IP.'},
             status=429
         )
+    estado_calculado = 'aprobada'
+    texto_a_evaluar = f"{nombre_visitante} {comentario}".strip()
+    result = {'label': None, 'score': 0.0}
 
+    if texto_a_evaluar:
+        try:
+            app_conf = apps.get_app_config('myapp')
+            classify = getattr(app_conf, 'classify_review', None)
+            if callable(classify):
+                result = classify(texto_a_evaluar) or result
+                estado_calculado = result.get('estado', 'pendiente')
+            else:
+                # Fallback simple por palabras prohibidas
+                palabras_prohibidas = ['puto', 'mierda', 'pendejo', 'idiota']
+                if any(palabra in texto_a_evaluar.lower() for palabra in palabras_prohibidas):
+                    estado_calculado = 'pendiente'
+        except Exception as e:
+            print(f"Error en Machine Learning: {e}")
+            estado_calculado = 'pendiente'
+
+    # Guardamos la reseña
     resena = ResenaGlobal.objects.create(
         id_usuario=request.user if request.user.is_authenticated else None,
         nombre_visitante=nombre_visitante,
         calificacion=calificacion,
         comentario=comentario or None,
-        estado='aprobada',
+        estado=estado_calculado, 
+        modelo_label=result.get('label'),
+        modelo_score=result.get('score'),
         ip_visitante=ip,
     )
 
+    # Preparamos el mensaje de respuesta para el usuario
+    mensaje = '¡Gracias! Tu reseña ha sido publicada.'
+    if estado_calculado == 'pendiente':
+        mensaje = '¡Gracias! Tu reseña fue recibida y está pendiente de moderación.'
+
     return JsonResponse({
         'ok': True,
+        'mensaje': mensaje, # Enviamos el mensaje al Frontend
         'resena': {
             'id': resena.id_resena,
             'autor': resena.autor,

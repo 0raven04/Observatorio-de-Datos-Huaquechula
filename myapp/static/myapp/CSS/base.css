@@ -174,22 +174,40 @@ p {
     max-width: 1400px
 }
 
-.navbar {
+.navbar,
+.custom-navbar {
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 1000;
-    background: var(--color-gris-oscuro) !important;
-    transition: background 0.3s ease, padding 0.3s ease;
-    padding: 0.5rem 0;
-    margin-bottom: 50px;
-}
+        background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+        background-image: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+        transition: background 0.3s ease, padding 0.3s ease;
+        padding: 0.5rem 0;
+        margin-bottom: 50px;
+    }
 
 .navbar:not(.scrolled) .navbar-brand {
     position: relative;
 }
 
-/* Removido el cuadro blanco grande detrás del logo */
+.navbar:not(.scrolled) .navbar-brand::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 90px;
+    background-color: #ffffff;
+    border-radius: 20px;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+}
+
+.navbar.scrolled .navbar-brand::before {
+    opacity: 0;
+}
 
 .navbar>.container,
 .navbar>.container-fluid {

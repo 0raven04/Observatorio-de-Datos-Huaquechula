@@ -43,7 +43,7 @@ body {
     z-index: 1100;
     height: 80px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    background-color: black !important;
+    background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818e6 100%) !important;
     color: var(--color-arena-claro);
 }
 
@@ -60,7 +60,7 @@ body {
 /* 4. Sidebar principal - INICIALMENTE OCULTO */
 .sidebar {
     width: var(--sidebar-width);
-    background-color: black;
+    background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818e6 100%);
     color: var(--sidebar-text-color);
     position: fixed;
     top: 80px; /* Debajo de la navbar */
@@ -68,7 +68,7 @@ body {
     height: calc(100vh - 80px);
     overflow-y: auto;
     transition: left var(--transition-speed) ease;
-    z-index: 1000;
+    z-index: 1200;
     box-shadow: 3px 0 10px rgba(0,0,0,0.2);
     display: flex; /* Para que el user-info-sidebar de abajo se pegue al fondo */
     flex-direction: column;
@@ -169,6 +169,16 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+.sidebar-buttons .btn {
+    color: #121212 !important;
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(0,0,0,0.08);
+}
+
+.sidebar-buttons .btn:hover {
+    background: rgba(255,255,255,1);
 }
 
 /* Botones con colores personalizados */

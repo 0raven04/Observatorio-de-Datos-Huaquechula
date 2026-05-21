@@ -768,12 +768,16 @@ class ResenaGlobal(models.Model):
     # Apodo del visitante anónimo
     nombre_visitante = models.CharField(max_length=100, blank=True, null=True)
 
+    
+    
     calificacion = models.PositiveSmallIntegerField()          # 1-5
     comentario   = models.TextField(blank=True, null=True)
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(
         max_length=10, choices=ESTADO_CHOICES, default='aprobada'
     )
+    modelo_label = models.CharField(max_length=50, null=True, blank=True, verbose_name="Etiqueta de la IA")
+    modelo_score = models.FloatField(null=True, blank=True, verbose_name="Certeza de la IA")
     likes = models.PositiveIntegerField(default=0)
 
     # IP para rate limiting

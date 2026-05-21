@@ -79,6 +79,7 @@ urlpatterns = [
     path('actualizar-url/<int:archivo_id>/', views.actualizar_desde_url, name='actualizar_desde_url'),
     path('eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
     path('crear-categoria/', views.crear_categoria, name='crear_categoria'),
+    path('categorias/eliminar/<int:categoria_id>/', views.eliminar_categoria, name='eliminar_categoria'),
     # Verificación masiva
     path('verificar-urls/', views.verificar_urls, name='verificar_urls'),
     path('archivos/api/categorias/', views.get_categorias_json, name='get_categorias_json'),

@@ -10,22 +10,46 @@
     <!-- Anti-parpadeo: aplicar tema ANTES de pintar la página -->
     <script>(function(){var t=localStorage.getItem('observatorio_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 
-    <style>
-        /* Forzar actualización del submenú para evitar la caché del navegador */
-        .nav-item.has-submenu:hover .submenu,
-        .nav-item.has-submenu.active .submenu {
-            max-height: 500px !important;
-        }
-    </style>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/base.css' %}" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/accessibility.css' %}" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/settings.css' %}" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        <link rel="stylesheet" href="{% static 'myapp/CSS/base_usuarios.css' %}" />
-    <link rel="stylesheet" href="{% static 'myapp/CSS/sidebar_styles.css' %}" /> 
+    <link rel="stylesheet" href="{% static 'myapp/CSS/base_usuarios.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/sidebar_styles.css' %}" />
+
+    <style>
+        nav.navbar,
+        .custom-navbar,
+        .navbar.scrolled,
+        .custom-navbar.scrolled,
+        .sidebar {
+            background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+            background-image: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818 100%) !important;
+            background-color: #191818 !important;
+        }
+
+        .navbar-brand,
+        .navbar-nav .nav-link,
+        .sidebar-hamburger,
+        .sidebar .nav-link,
+        .sidebar-title,
+        .sidebar .user-info-sidebar {
+            color: #EDEBE3 !important;
+        }
+
+        .sidebar-buttons .btn {
+            color: #121212 !important;
+            background: rgba(255,255,255,0.95) !important;
+            border-color: rgba(0,0,0,0.08) !important;
+        }
+
+        main.main-content {
+            padding-top: 110px !important;
+        }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
@@ -41,7 +65,7 @@
 
 <body class="d-flex flex-column min-vh-100" data-authenticated="true">
     <header>
-        <nav class="navbar custom-navbar navbar-expand-md fixed-top custom-navbar-bg" aria-label="Navegación principal">
+        <nav class="navbar custom-navbar navbar-expand-md navbar-dark fixed-top" aria-label="Navegación principal">
             <div class="container-fluid d-flex justify-content-between align-items-center">
                 <!-- Botón para abrir sidebar izquierdo -->
                 <button class="sidebar-hamburger" id="sidebarHamburger" type="button" aria-controls="sidebar" aria-expanded="false">

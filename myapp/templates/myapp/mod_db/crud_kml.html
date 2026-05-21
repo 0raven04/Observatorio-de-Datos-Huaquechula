@@ -5,6 +5,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/CSS/style_crud.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 {% block content %}
@@ -63,9 +64,9 @@
 
   <!-- Tabla de archivos -->
   <div class="card mb-4">
-    <div class="card-header py-3" style="background-color: var(--color-gris-oscuro);">
+    <div class="card-header py-3 card-header-dark text-center">
       <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 text-white">
+        <h5 class="mb-0 text-black">
           <i class="fas fa-external-link-alt me-2"></i> Archivos por URL
           <span class="badge bg-light text-dark ms-2" id="totalCount">{{ archivos|length }}</span>
         </h5>
@@ -227,8 +228,8 @@
                     <div class="d-flex justify-content-center gap-1">
                     <!-- Botón Editar -->
                     <button onclick="abrirModalEdicion({{ archivo.id_archivo }})" 
-                            class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1"
-                            style="width: 65px; height: 50px; background-color: #D6CEAA; border: none; color: #4A4A4A;">
+                            class="btn btn-sm btn-action btn-light d-flex flex-column align-items-center justify-content-center"
+                            title="Editar archivo">
                         <i class="fas fa-edit"></i>
                         <span class="small mt-1">Editar</span>
                     </button>
@@ -237,16 +238,16 @@
                     {% if archivo.tipo_archivo == 'kml' or archivo.tipo_archivo == 'kmz' %}
                         {% if archivo.procesado and archivo.num_geometrias > 0 %}
                             <a href="{% url 'mapa' %}?archivo_id={{ archivo.id_archivo }}" 
-                            class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
-                            style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
+                            class="btn btn-sm btn-action btn-dark d-flex flex-column align-items-center justify-content-center"
+                            title="Ver mapa">
                                 <i class="fas fa-map"></i>
                                 <span class="small mt-1">Mapa</span>
                             </a>
 
                         {% elif not archivo.procesado %}
                             <button onclick="procesarArchivo({{ archivo.id_archivo }})" 
-                                    class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
-                                    style="width: 65px; height: 50px; background-color: #4A4A4A; color: white;">
+                                    class="btn btn-sm btn-action btn-dark d-flex flex-column align-items-center justify-content-center"
+                                    title="Procesar archivo">
                                 <i class="fas fa-cogs"></i>
                                 <span class="small mt-1">Procesar</span>
                             </button>
@@ -261,8 +262,8 @@
                     <div class="d-flex justify-content-center gap-1">
                     <!-- Botón Actualizar -->
                     <button onclick="actualizarDesdeURL({{ archivo.id_archivo }})" 
-                            class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
-                            style="width: 65px; height: 50px; background-color: #D6CEAA; border: none; color: #4A4A4A;">
+                            class="btn btn-sm btn-action btn-light d-flex flex-column align-items-center justify-content-center"
+                            title="Actualizar desde URL">
                         <i class="fas fa-sync-alt"></i>
                         <span class="small mt-1">Actualizar</span>
                     </button>
@@ -274,8 +275,8 @@
                             onsubmit="return confirm('¿Eliminar este archivo y todas sus relaciones?');">
                         {% csrf_token %}
                         <button type="submit" 
-                                class="btn btn-sm d-flex flex-column align-items-center justify-content-center p-1" 
-                                style="background-color: #e74c3c; border: none; color: white; width: 65px; height: 50px;">
+                                class="btn btn-sm btn-action btn-danger d-flex flex-column align-items-center justify-content-center"
+                                title="Eliminar archivo">
                         <i class="fas fa-trash"></i>
                         <span class="small mt-1">Eliminar</span>
                         </button>

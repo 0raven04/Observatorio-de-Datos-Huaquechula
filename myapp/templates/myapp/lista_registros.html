@@ -2,8 +2,8 @@
 {% load static %}
 {% block title %}Listado de Visitantes{% endblock %}
 {% block extra_css %}
-    <link href="{% static 'myapp/CSS/style_crud.css' %}" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
+    <link href="{% static 'myapp/CSS/style_crud.css' %}" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
             <button
               type="button"
               id="btnNuevoRegistro"
-              class="btn boton bt-body me-2"
+              class="btn btn-action btn-dark me-2"
               data-url="{% url 'lista_registros' %}"
               data-bs-toggle="modal"
               data-bs-target="#miModal"
@@ -25,7 +25,7 @@
             </button>
 
             <!-- Botón para eliminar selección múltiple -->
-            <button type="button" class="btn boton bt-body" id="botonEliminar">
+            <button type="button" class="btn btn-action btn-danger" id="botonEliminar">
               Borrar Selección
             </button>
           </div>
@@ -48,8 +48,8 @@
       <!-- Cuerpo de la tarjeta con la tabla de registros -->
       <div class="card shadow-sm mb-4">
         <!-- Encabezado de la tarjeta -->
-        <div class="card-header py-3 text-center" style="background-color: #4A4A4A">
-            <h5 class="mb-0 text-white"><i class="fas fa-users me-2"></i>Registros de Visitantes</h5>
+        <div class="card-header py-3 text-center card-header-dark">
+            <h5 class="mb-0 text-black"><i class="fas fa-users me-2"></i>Registros de Visitantes</h5>
         </div>
 
         <!-- Formulario oculto para eliminación múltiple -->
@@ -175,20 +175,18 @@
                     <div class="d-flex justify-content-center gap-1">
                         <!-- Botón para editar registro -->
                         <button 
-                            class="btn btn-sm btn-editar"
+                            class="btn btn-sm btn-action btn-light"
                             data-id="{{ r.id_registro }}"
                             data-url="{% url 'editar_registro' r.id_registro %}"
                             data-edit-url="{% url 'editar_registro' 0 %}"
-                            style="background-color: #D6CEAA; border: none; color: #4A4A4A; display:flex; flex-direction:column; align-items:center; justify-content:center; width:65px; height:50px;">
-                            
+                            title="Editar registro">
                             <i class="fas fa-edit"></i>
                             <span class="small">Editar</span>
                         </button>
 
                         <!-- Botón Ver detalles -->
-                        <button class="btn btn-sm"
+                        <button class="btn btn-sm btn-action btn-dark"
                                 onclick="verRegistro('{{ r.id_registro }}')"
-                                style="background-color: #4A4A4A; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 50px; padding: 2px;" 
                                 title="Ver detalles">
                             <i class="fas fa-eye" style="font-size: 1rem;"></i>
                             <span style="font-size: 0.65rem; line-height: 1;">Ver</span>
@@ -198,10 +196,9 @@
                     <!-- Fila 2: Eliminar -->
                     <div class="d-flex justify-content-center gap-1">
                         <!-- Botón Eliminar -->
-                        <button class="btn btn-sm btn-eliminar"
+                        <button class="btn btn-sm btn-action btn-danger"
                                 data-id="{{ r.id_registro }}"
                                 data-delete-url="{% url 'eliminar_registro' r.id_registro %}"
-                                style="background-color: #e74c3c; border: none; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 50px; padding: 2px;"
                                 title="Eliminar registro">
                             <i class="fas fa-trash" style="font-size: 1rem;"></i>
                             <span style="font-size: 0.65rem; line-height: 1;">Eliminar</span>
