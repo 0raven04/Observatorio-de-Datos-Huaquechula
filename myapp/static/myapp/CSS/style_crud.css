@@ -97,28 +97,66 @@ body {
     border-radius: 10px;
 }
 
+.modal {
+    z-index: 11150 !important;
+}
+
+.modal-backdrop {
+    z-index: 11140 !important;
+}
+
+.modal .modal-dialog {
+    margin: calc(80px + 1rem) auto 1rem;
+    transition: margin 0.25s ease;
+}
+
+@media (max-width: 767.98px) {
+    .modal .modal-dialog {
+        margin: calc(56px + 0.75rem) auto 0.75rem;
+    }
+    .modal-dialog-scrollable {
+        max-height: calc(100vh - 8rem);
+    }
+}
+
+.modal-dialog-scrollable {
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
+    padding: 1rem;
+}
+
 /* Estilo para el encabezado del modal */
-.custom-modal-header {
+.custom-modal-header,
+.modal-header {
     background-color: var(--color-gris-oscuro);
     color: white;
     border-bottom: 1px solid var(--color-beige);
 }
 
+/* Estilo para el cuerpo del modal */
+.modal-body {
+    background-color: #ffffff;
+    color: var(--color-gris-oscuro);
+}
+
 /* Estilo para el pie del modal */
-.custom-modal-footer {
+.custom-modal-footer,
+.modal-footer {
     background-color: var(--color-arena-claro);
     border-top: 1px solid var(--color-beige);
     padding: 1rem;
 }
 
 /* Botón cancelar con tu paleta */
-.custom-modal-footer .btn-warning {
+.custom-modal-footer .btn-warning,
+.custom-modal-footer .btn-secondary {
     background-color: var(--color-arena-oscuro);
     border-color: var(--color-arena-oscuro);
     color: var(--color-gris-oscuro);
 }
 
-.custom-modal-footer .btn-warning:hover {
+.custom-modal-footer .btn-warning:hover,
+.custom-modal-footer .btn-secondary:hover {
     background-color: #c4b897;
     border-color: #c4b897;
     color: var(--color-gris-oscuro);
@@ -154,6 +192,135 @@ body {
     font-weight: 500;
 }
 
+.table-hover tbody tr:hover {
+    background-color: #f3f1e6;
+}
+
+.card-header h5,
+.card-header .card-title {
+    color: var(--color-gris-oscuro);
+}
+
+.card-header.card-header-dark h5,
+.card-header.card-header-dark .card-title,
+.card-header.card-header-dark .text-white {
+    color: white !important;
+}
+
+.btn-action {
+    min-width: 65px;
+    min-height: 50px;
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transition: background-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.btn-action.btn-dark {
+    background-color: var(--color-gris-oscuro);
+    color: white;
+    border-color: var(--color-gris-oscuro);
+}
+
+.btn-action.btn-dark:hover {
+    background-color: #383838;
+}
+
+.btn-action.btn-light {
+    background-color: var(--color-arena-claro);
+    color: var(--color-gris-oscuro);
+    border-color: var(--color-beige);
+}
+
+.btn-action.btn-light:hover {
+    background-color: #ece8dd;
+}
+
+.btn-action.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.btn-action.btn-success:hover {
+    background-color: #23913f;
+}
+
+.btn-action.btn-primary {
+    background-color: #4A4A4A;
+    border-color: #4A4A4A;
+    color: white;
+}
+
+.btn-action.btn-primary:hover {
+    background-color: #3c3c3c;
+}
+
+.btn-action.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.btn-action.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-action.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+}
+
+.btn-action.btn-danger:hover {
+    background-color: #d6453c;
+}
+
+.badge-soft {
+    background-color: var(--color-arena-oscuro);
+    color: var(--color-gris-oscuro);
+}
+
+.card-header-dark {
+    background-color: var(--color-gris-oscuro);
+    color: white;
+}
+
+.custom-modal-header {
+    background-color: var(--color-gris-oscuro);
+    color: white;
+    border-bottom: 1px solid var(--color-beige);
+}
+
+.custom-modal-footer {
+    background-color: var(--color-arena-claro);
+    border-top: 1px solid var(--color-beige);
+    padding: 1rem;
+}
+
+.custom-modal-footer .btn-secondary,
+.custom-modal-footer .btn-warning {
+    background-color: var(--color-arena-oscuro);
+    border-color: var(--color-arena-oscuro);
+    color: var(--color-gris-oscuro);
+}
+
+.custom-modal-footer .btn-secondary:hover,
+.custom-modal-footer .btn-warning:hover {
+    background-color: #c4b897;
+    border-color: #c4b897;
+    color: var(--color-gris-oscuro);
+}
+
 .slug-input {
     background-color: #e9ecef;
     color: #495057;
@@ -185,5 +352,10 @@ body {
 /* Para que el modal de categoría sea más estrecho */
 #categoriaModal .modal-dialog {
     max-width: 500px;
+}
+
+/* Forzar que el modal de categoría quede por encima de otros modales abiertos */
+#categoriaModal.modal {
+    z-index: 20050 !important;
 }
 

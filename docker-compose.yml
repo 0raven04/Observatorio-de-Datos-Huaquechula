@@ -6,8 +6,10 @@ services:
     container_name: observatorio_db
     restart: always
     environment:
-      MYSQL_DATABASE: observatorio_de_datos
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+          MYSQL_DATABASE: observatorio_db
+          MYSQL_USER: observatorio_user
+          MYSQL_PASSWORD: 123456
+          MYSQL_ROOT_PASSWORD: password_root_seguro
     ports:
       - "3306:3306"
     volumes:

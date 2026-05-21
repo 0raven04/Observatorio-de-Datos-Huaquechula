@@ -214,9 +214,15 @@ class RutaDetalleAdmin(admin.ModelAdmin):
 # =====================================================
 @admin.register(ResenaGlobal)
 class ResenaGlobalAdmin(admin.ModelAdmin):
-    list_display  = ['id_resena', 'autor_display', 'calificacion_stars',
-                     'estado', 'fecha_publicacion', 'likes', 'ip_visitante']
-    list_filter   = ['estado', 'calificacion', 'fecha_publicacion']
+    list_display  = [
+        'id_resena', 'autor_display', 'calificacion_stars',
+        'estado', 'fecha_publicacion', 'likes', 'ip_visitante',
+        'modelo_label', 'modelo_score'  
+    ]
+    list_filter   = [
+        'estado', 'calificacion', 'fecha_publicacion',
+        'modelo_label'                  
+    ]
     search_fields = ['nombre_visitante', 'comentario', 'ip_visitante']
     readonly_fields = ['fecha_publicacion', 'ip_visitante', 'likes']
     list_per_page = 30

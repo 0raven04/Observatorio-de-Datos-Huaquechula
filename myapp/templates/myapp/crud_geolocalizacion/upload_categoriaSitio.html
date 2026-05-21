@@ -1,5 +1,3 @@
-{% block content %}
-
 <div class="modal fade" id="categoriaModal" tabindex="-1" aria-labelledby="tituloCategoria" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered"> <div class="modal-content">
       
@@ -37,7 +35,28 @@
                 </div>
             </div>
 
-                      <button type="submit" class="btn boton bt-body">
+            <div class="mb-4">
+                <h6 class="fw-bold">Categorías existentes</h6>
+                <div class="table-responsive" style="max-height:250px; overflow:auto;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Slug</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaCategoriasSitio">
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Cargando categorías...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <small class="text-muted">Las categorías se actualizan dinámicamente. Solo se puede eliminar una categoría si no está asociada a un sitio turístico.</small>
+            </div>
+
+            <button type="submit" class="btn boton bt-body">
              <i class="fas fa-save me-2"></i>Guardar
           </button>
         </div>
@@ -54,9 +73,40 @@
   </div>
 </div>
 
-{% endblock %}
-
 <script>
+    const categoriaApiUrl = "{% url 'get_categorias_json' %}";
+    const crearCategoriaUrl = "{% url 'crear_categoria' %}";
+    const eliminarCategoriaUrlTemplate = "{% url 'eliminar_categoria' categoria_id=0 %}";
+
+    function showToastModal(message, type = 'info') {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+            return;
+        }
+
+        const bg = type === 'success' ? '#28a745' : type === 'error' ? '#e74c3c' : '#17a2b8';
+        const toast = document.createElement('div');
+        toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: ${bg};`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         
         // --- 1. LÓGICA DE LIMPIEZA AL CERRAR ---
@@ -72,6 +122,11 @@
         // --- 2. FOCO AUTOMÁTICO AL ABRIR ---
         modalCatEl.addEventListener('shown.bs.modal', function () {
             document.getElementById('cat_nombre').focus();
+            cargarCategoriasSitio();
+        });
+
+        modalCatEl.addEventListener('show.bs.modal', function () {
+            actualizarZIndexModal();
         });
 
         // --- FUNCIÓN PARA MOSTRAR ALERTAS PERSONALIZADAS ---
@@ -143,46 +198,132 @@
             e.preventDefault(); 
             
             const formData = new FormData(this);
-            const urlDestino = this.action;
+            const urlDestino = crearCategoriaUrl;
 
             fetch(urlDestino, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
                 }
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Error en la red');
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Cerrar el modal usando la instancia de Bootstrap
                     const modalInstance = bootstrap.Modal.getInstance(modalCatEl);
                     modalInstance.hide();
                     
-                    showCustomAlert("Categoría creada con éxito.", "success");
-                    
-                    // Agregar la nueva categoría al selector y seleccionarla
-                    const selectCategoria = document.getElementById('select_categoria_bd') || document.getElementById('id_categoria');
-                    if (selectCategoria) {
-                        const option = document.createElement('option');
-                        option.value = data.new_id;
-                        option.textContent = data.new_name;
-                        option.selected = true;
-                        selectCategoria.appendChild(option);
-                    }
+                    alert("✅ " + data.message);
+                    location.reload(); 
                 } else {
-                    showCustomAlert(data.message || 'Error al crear la categoría.', "error");
+                    alert("⚠️ " + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showCustomAlert("Error: " + error.message, "error");
+                alert("❌ Error de conexión");
             });
         });
     });
+
+    function abrirModalCategoria() {
+        const modalEl = document.getElementById('categoriaModal');
+        if (!modalEl) return;
+        cargarCategoriasSitio();
+        const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        instance.show();
+    }
+
+    function actualizarZIndexModal() {
+        const modalEl = document.getElementById('categoriaModal');
+        if (!modalEl) return;
+
+        // Si hay otra modal abierta, forzar que esta categoría se muestre encima.
+        const otherModal = document.querySelector('.modal.show:not(#categoriaModal)');
+        if (otherModal) {
+            modalEl.style.zIndex = 20050;
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.style.zIndex = 20040;
+            }
+        }
+    }
+
+    function cargarCategoriasSitio() {
+        const lista = document.getElementById('listaCategoriasSitio');
+        if (!lista) return;
+        lista.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Cargando categorías...</td></tr>';
+
+        fetch(categoriaApiUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    lista.innerHTML = '<tr><td colspan="3" class="text-danger">No se pudieron cargar las categorías.</td></tr>';
+                    return;
+                }
+
+                if (data.length === 0) {
+                    lista.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">No hay categorías registradas.</td></tr>';
+                    return;
+                }
+
+                lista.innerHTML = data.map(cat => {
+                    const deleteButton = `<button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarCategoriaSitio(${cat.id_categoria})"><i class="fas fa-trash-alt"></i></button>`;
+                    return `
+                        <tr>
+                            <td>${cat.nombre}</td>
+                            <td>${cat.codigo_slug}</td>
+                            <td class="text-end">${deleteButton}</td>
+                        </tr>
+                    `;
+                }).join('');
+            })
+            .catch(err => {
+                console.error(err);
+                lista.innerHTML = '<tr><td colspan="3" class="text-danger">Error al cargar categorías.</td></tr>';
+            });
+    }
+
+    function eliminarCategoriaSitio(categoriaId) {
+        if (!confirm('¿Eliminar esta categoría? Esta acción no puede deshacerse.')) return;
+
+        const url = eliminarCategoriaUrlTemplate.replace('/0/', `/${categoriaId}/`);
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToastModal(data.message, 'success');
+                cargarCategoriasSitio();
+            } else {
+                showToastModal(data.message || 'No se pudo eliminar la categoría.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToastModal('Error al eliminar categoría.', 'error');
+        });
+    }
+
+    function actualizarSelectCategoria(id, nombre) {
+        const select = document.getElementById('select_categoria_bd');
+        if (!select) return;
+
+        const optionExists = Array.from(select.options).some(opt => Number(opt.value) === Number(id));
+        if (!optionExists) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.text = nombre;
+            select.appendChild(option);
+        }
+        select.value = id;
+    }
 
     // --- 4. GENERADOR DE SLUG ---
     // Esta función debe estar fuera del DOMContentLoaded para que el onkeyup del HTML la encuentre

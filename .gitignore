@@ -51,3 +51,7 @@ Thumbs.db
 
 # Regresión / archivos temporales
 regresion_lineal_resultado.png
+
+
+
+*.safetensors
