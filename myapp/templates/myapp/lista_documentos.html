@@ -218,9 +218,25 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-bold">URL del documento <span class="text-danger">*</span></label>
-                                <input type="url" class="form-control" name="url" required placeholder="https://ejemplo.com/documento.pdf">
-                                <small class="form-text text-muted">Ingresa la URL donde se encuentra el documento</small>
+                                <label class="form-label fw-bold">Archivo Físico (Local)</label>
+                                <input type="file" class="form-control" name="archivo" id="archivoInput">
+                                <small class="form-text text-muted">Sube el documento directamente al servidor</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Ó URL externa</label>
+                                <input type="url" class="form-control" name="url" id="urlInput" placeholder="https://ejemplo.com/documento.pdf">
+                                <small class="form-text text-muted">Proporciona un enlace externo (p. ej. Google Drive, OneDrive) si no subes un archivo local</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Categoría del Repositorio</label>
+                                <select class="form-select" name="categoria">
+                                    <option value="">General (Sin categoría)</option>
+                                    {% for cat in categorias %}
+                                        <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
 
                             <div class="mb-3">
@@ -255,7 +271,7 @@
                                 </div>
                             </div>
                         </form>
-                        <button type="submit" form="uploadForm" class="btn boton bt-body">Guardar Documento</button>
+                        <button type="submit" form="uploadForm" class="btn boton bt-body" id="btnGuardarDocumento">Guardar Documento</button>
                     </div>
 
                     <div class="modal-footer custom-modal-footer">
@@ -287,13 +303,24 @@
 
 {% block extra_js %}
     <script>
-    // Script para manejar subida del formulario tradicional
+    // Script para manejar subida del formulario tradicional con validación híbrida
     document.addEventListener('DOMContentLoaded', function() {
-    const uploadForm = document.getElementById('uploadForm');
+        const uploadForm = document.getElementById('uploadForm');
         if (uploadForm) {
             uploadForm.addEventListener('submit', function(e) {
-                const url = this.querySelector('[name="url"]').value;
-                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                const archivoInput = document.getElementById('archivoInput');
+                const urlInput = document.getElementById('urlInput');
+                
+                const hasFile = archivoInput && archivoInput.files && archivoInput.files.length > 0;
+                const urlValue = urlInput ? urlInput.value.trim() : '';
+                
+                if (!hasFile && !urlValue) {
+                    e.preventDefault();
+                    alert('Debes seleccionar un archivo local para subir o ingresar una URL externa.');
+                    return;
+                }
+                
+                if (urlValue && !urlValue.startsWith('http://') && !urlValue.startsWith('https://')) {
                     e.preventDefault();
                     alert('La URL debe comenzar con http:// o https://');
                 }

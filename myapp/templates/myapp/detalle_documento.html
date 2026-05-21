@@ -370,7 +370,7 @@
 <script>
     // Función para editar documento
     function editarDocumento(docId) {
-        fetch(`/documentos/editar/${docId}/`)
+        fetch(`/editar-documento/${docId}/`)
             .then(response => {
                 if (!response.ok) throw new Error('Error al cargar el formulario');
                 return response.text();
@@ -389,7 +389,7 @@
     // Función para confirmar eliminación
     function confirmarEliminacion(docId, docTitulo) {
         if (confirm(`¿Estás seguro de eliminar el documento "${docTitulo}"? Esta acción no se puede deshacer.`)) {
-            fetch(`/documentos/eliminar/${docId}/`, {
+            fetch(`/eliminar/${docId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
@@ -399,7 +399,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
+                    alert(data.message || data.mensaje);
                     window.location.href = "{% url 'repositorio' %}";
                 } else {
                     alert('Error: ' + data.error);
