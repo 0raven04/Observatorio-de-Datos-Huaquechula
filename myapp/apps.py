@@ -13,20 +13,34 @@ class ResenasConfig(AppConfig):
     detector_toxicidad = None
 
     def ready(self):
+        # ML_MODEL_PATH puede ser:
+        #   "disabled"  → no cargar modelo (solo reglas de palabras)
+        #   ""          → usar ruta local por defecto
+        #   "usuario/repo" → descargar desde Hugging Face Hub
+        #   "/ruta/local"  → cargar desde disco
+        model_path_env = os.environ.get('ML_MODEL_PATH', '')
+
+        if model_path_env.strip().lower() == 'disabled':
+            logger.warning("Modelo de moderación desactivado por ML_MODEL_PATH=disabled.")
+            return
+
+        # Si la variable está vacía usa la ruta local del repositorio
+        ruta_modelo = model_path_env.strip() or os.path.join(
+            settings.BASE_DIR, self.name, 'ml_models', 'mi_modelo_moderador'
+        )
+
         try:
-            # Ruta exacta a tu carpeta local
-            ruta_modelo = os.path.join(settings.BASE_DIR, self.name, 'ml_models', 'mi_modelo_moderador')
-            
-            # Carga TU modelo en CPU (device=-1) para evitar uso inesperado de GPU
             self.detector_toxicidad = pipeline(
                 "text-classification",
                 model=ruta_modelo,
                 tokenizer=ruta_modelo,
-                device=-1,
+                device=-1,   # CPU
             )
-            logger.info("¡Modelo PROPIO cargado con éxito!")
+            logger.info("¡Modelo de moderación cargado con éxito desde: %s!", ruta_modelo)
         except Exception as e:
-            logger.error(f"Error al cargar el modelo: {e}")
+            logger.error("Error al cargar el modelo de moderación: %s", e)
+            logger.warning("El sistema seguirá funcionando usando solo el filtro de palabras prohibidas.")
+
 
     def classify_review(self, text: str, score_threshold: float = 0.70) -> dict:
         """Clasifica un texto (apodo+comentario) usando el pipeline cargado.

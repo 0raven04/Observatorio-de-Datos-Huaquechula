@@ -33,3 +33,4 @@ transformers
 torch --index-url https://download.pytorch.org/whl/cpu
 drf-spectacular==0.27.2
 django-extensions
+django-storages[azure]

@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 import django.db.backends.mysql.base
+from datetime import timedelta
 
 def check_database_version_supported(self):
     pass
@@ -37,8 +38,27 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirigir/'
 LOGOUT_REDIRECT_URL = '/login/'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
+
+# Hosts: locales + el dominio de Azure inyectado por variable de entorno
+_allowed_env = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2'] + \
+    [h.strip() for h in _allowed_env.split(',') if h.strip()]
+
+# CSRF: necesario para que los formularios funcionen desde el dominio de Azure
+_csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()]
+
+# ── Seguridad HTTPS (solo en producción, cuando DEBUG=False) ──────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000        # 1 año
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
 
 
 # Application definition
@@ -168,17 +188,23 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-#prueba 
 
-# settings.py
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Media files
+# Media files (local — usado en desarrollo)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/vol/web/media')
+
+# ── Azure Blob Storage (sólo en producción si la variable está definida) ──────
+_azure_storage_account = os.environ.get('AZURE_STORAGE_ACCOUNT_NAME')
+if _azure_storage_account:
+    INSTALLED_APPS += ['storages']
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+    AZURE_ACCOUNT_NAME = _azure_storage_account
+    AZURE_ACCOUNT_KEY = os.environ.get('AZURE_STORAGE_KEY')
+    AZURE_CONTAINER = os.environ.get('AZURE_STORAGE_CONTAINER', 'media')
+    AZURE_OVERWRITE_FILES = True
+    # Expira URL firmada en 1 hora
+    AZURE_URL_EXPIRATION_SECS = 3600
+
 
 # Configuración para tipos de archivos permitidos
 ALLOWED_EXTENSIONS = {
@@ -232,19 +258,20 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS — Permitir conexiones desde la app Expo en desarrollo
+# CORS — Permitir conexiones desde la app Expo en desarrollo y desde Azure en producción
+_cors_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
     'http://127.0.0.1:8081',
     'http://10.0.2.2:8081',  # Emulador Android
-]
+] + [o.strip() for o in _cors_env.split(',') if o.strip()]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS abierto para endpoints públicos /api/v1/public/
