@@ -105,6 +105,20 @@
                                 {% endif %}
                             </ul>
                         </li>
+
+                        <!-- Separador + Botón de Configuración -->
+                        <li class="nav-item" style="margin-top: 12px; padding: 0 1rem;">
+                            <hr style="border-color: rgba(237,235,227,0.3); margin: 0 0 10px 0;">
+                            <button
+                                id="offcanvasSettingsBtn"
+                                class="nav-link w-100"
+                                style="background:rgba(255,255,255,0.1); border:1px solid rgba(237,235,227,0.3); border-radius:10px; padding:10px 16px; display:flex; align-items:center; gap:10px; cursor:pointer; color:#EDEBE3; font-weight:600;"
+                                onclick="document.getElementById('settingsBtn')?.click(); bootstrap.Offcanvas.getInstance(document.getElementById('mobileMenu'))?.hide();"
+                            >
+                                <i class="fas fa-sliders-h"></i>
+                                Configuración
+                            </button>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -143,7 +157,7 @@
         </div>
     </nav>
 
-    <main class="container flex-grow-1 mx-auto align-self-center" style="margin-top: 140px;">
+    <main class="container flex-grow-1 mx-auto align-self-center main-page-content">
         {% block content %}{% endblock %}
     </main>
 

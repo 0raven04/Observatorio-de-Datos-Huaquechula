@@ -35,6 +35,27 @@ document.addEventListener("DOMContentLoaded", function () {
         inicializarValidacionBootstrap();
     }
 
+    function mostrarMensaje(titulo, texto, icono = 'info') {
+        return Swal.fire({
+            title: titulo,
+            text: texto,
+            icon: icono,
+            confirmButtonText: 'OK'
+        });
+    }
+
+    function confirmarAccion(titulo, texto) {
+        return Swal.fire({
+            title: titulo,
+            text: texto,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí',
+            cancelButtonText: 'No',
+            reverseButtons: true
+        });
+    }
+
     function inicializarManejoRegistros() {
         // ===== BOTONES DE EDICIÓN =====
         document.querySelectorAll('.btn-editar').forEach(button => {
@@ -121,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                     .catch(error => {
                         console.error('Error al cargar datos:', error);
-                        alert('Error al cargar los datos del registro');
+                        mostrarMensaje('Error', 'Error al cargar los datos del registro', 'error');
                     });
             });
         });
@@ -130,17 +151,14 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll('.btn-eliminar').forEach(button => {
             button.addEventListener('click', function() {
                 const registroId = this.getAttribute('data-id');
+                const deleteUrl = this.getAttribute('data-delete-url') || `/visitas/eliminar/${registroId}/`;
                 
-                if (confirm('¿Está seguro de que desea eliminar este registro?')) {
-                    // Si hay una URL específica para eliminación, usarla
-                    const deleteUrl = this.getAttribute('data-delete-url');
-                    if (deleteUrl) {
-                        window.location.href = deleteUrl.replace('0', registroId);
-                    } else {
-                        // Si no, usar el patrón genérico
-                        window.location.href = `/visitas/eliminar/${registroId}/`;
-                    }
-                }
+                confirmarAccion('Eliminar registro', '¿Está seguro de que desea eliminar este registro?')
+                    .then(result => {
+                        if (result.isConfirmed) {
+                            window.location.href = deleteUrl.replace('0', registroId);
+                        }
+                    });
             });
         });
         
@@ -151,14 +169,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 const checkboxes = document.querySelectorAll('.checkbox-seleccion:checked');
                 
                 if (checkboxes.length === 0) {
-                    alert('Por favor, seleccione al menos un registro para eliminar.');
+                    mostrarMensaje('Sin selección', 'Por favor, seleccione al menos un registro para eliminar.', 'info');
                     return;
                 }
                 
-                if (confirm(`¿Está seguro de que desea eliminar ${checkboxes.length} registro(s)?`)) {
-                    const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
-                    window.location.href = `/visitas/eliminar-seleccionados/?ids=${ids}`;
-                }
+                confirmarAccion('Eliminar registros', `¿Está seguro de que desea eliminar ${checkboxes.length} registro(s)?`)
+                    .then(result => {
+                        if (result.isConfirmed) {
+                            const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+                            window.location.href = `/visitas/eliminar-seleccionados/?ids=${ids}`;
+                        }
+                    });
             });
         }
     }
@@ -354,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function inicializarValidacionBootstrap() {
         const forms = document.querySelectorAll('.needs-validation');
         Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
+            form.addEventListener('submit', async event => {
                 if (!form.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -363,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 form.classList.add('was-validated');
                 
                 // Validación personalizada adicional
-                if (!validarFormularioPersonalizado(form)) {
+                if (!await validarFormularioPersonalizado(form)) {
                     event.preventDefault();
                     event.stopPropagation();
                 }
@@ -378,7 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function validarFormularioPersonalizado(form) {
+    async function validarFormularioPersonalizado(form) {
         // Solo aplicar esta validación al formulario de registro de visitas o edición
         if (form.id !== 'formulario') {
             return true;
@@ -394,24 +415,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Validar que haya al menos una persona
         if (totalGeneral < 1) {
-            alert("Debe ingresar al menos una persona para registrar.");
+            await mostrarMensaje('Datos incompletos', 'Debe ingresar al menos una persona para registrar.', 'warning');
             return false;
         }
 
         // Validar procedencia
         if (!procedencia || procedencia === "") {
-            alert("Debe ingresar la procedencia.");
+            await mostrarMensaje('Datos incompletos', 'Debe ingresar la procedencia.', 'warning');
             return false;
         }
 
         // Si es extranjero, validar que se seleccione un país diferente a México
         if (esExtranjero && (esExtranjero.value === "1" || esExtranjero.value === "si")) {
             if (!paisOrigen || paisOrigen === "") {
-                alert("Si el visitante es extranjero, debe seleccionar un país de origen.");
+                await mostrarMensaje('Datos incompletos', 'Si el visitante es extranjero, debe seleccionar un país de origen.', 'warning');
                 return false;
             }
             if (paisOrigen === "Mexico") {
-                if (!confirm("¿Está seguro que es extranjero pero seleccionó México como país de origen?")) {
+                const resultado = await confirmarAccion('Confirmación requerida', '¿Está seguro que es extranjero pero seleccionó México como país de origen?');
+                if (!resultado.isConfirmed) {
                     return false;
                 }
             }
@@ -427,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
         for (let input of numberInputs) {
             const value = parseInt(input.value);
             if (isNaN(value) || value < 0 || value > 255) {
-                alert(`El valor en ${input.previousElementSibling?.textContent || input.name} debe estar entre 0 y 255.`);
+                await mostrarMensaje('Valor inválido', `El valor en ${input.previousElementSibling?.textContent || input.name} debe estar entre 0 y 255.`, 'warning');
                 return false;
             }
         }

@@ -6,6 +6,11 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
     <link rel="stylesheet" href="{% static 'myapp/CSS/style_crud.css' %}" />
+    <style>
+        /* Forzar scroll interno en modal de edición */
+        #editModal .modal-content { max-height: calc(100vh - 80px); overflow: hidden; }
+        #editModal .modal-body { overflow-y: auto; }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -217,9 +222,9 @@
                                     <input type="text" class="form-control" name="titulo" required maxlength="200" minlength="3">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">URL del documento <span class="text-danger">*</span></label>
-                                    <input type="url" class="form-control" name="url" required placeholder="https://ejemplo.com/documento.pdf">
-                                    <small class="form-text text-muted">Ingresa la URL donde se encuentra el documento</small>
+                                    <label class="form-label fw-bold">Archivo del documento <span class="text-danger">*</span></label>
+                                    <input type="file" id="archivoInput" class="form-control" name="archivo" required accept="application/pdf,image/*,video/*,audio/*">
+                                    <small class="form-text text-muted">Selecciona el archivo local a subir (PDF, imagen, audio o video).</small>
                                 </div>
                             </div>
 
@@ -227,6 +232,8 @@
                                 <label class="form-label fw-bold">Descripción</label>
                                 <textarea class="form-control" name="descripcion" rows="3"></textarea>
                             </div>
+
+                            <!-- Eliminado campo duplicado 'Archivo físico (opcional)' para evitar IDs dobles -->
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -276,8 +283,8 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
 
-                    <div id="editModalBody">
-                        </div>
+                    <div id="editModalBody" class="modal-body p-4" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+                            </div>
 
                 </div>
             </div>
@@ -366,20 +373,12 @@
         if (uploadForm) {
             uploadForm.addEventListener('submit', function(e) {
                 const archivoInput = document.getElementById('archivoInput');
-                const urlInput = document.getElementById('urlInput');
-                
                 const hasFile = archivoInput && archivoInput.files && archivoInput.files.length > 0;
-                const urlValue = urlInput ? urlInput.value.trim() : '';
-                
-                if (!hasFile && !urlValue) {
+
+                if (!hasFile) {
                     e.preventDefault();
-                    alert('Debes seleccionar un archivo local para subir o ingresar una URL externa.');
+                    alert('Debes seleccionar un archivo local para subir.');
                     return;
-                }
-                
-                if (urlValue && !urlValue.startsWith('http://') && !urlValue.startsWith('https://')) {
-                    e.preventDefault();
-                    alert('La URL debe comenzar con http:// o https://');
                 }
             });
         }
@@ -438,39 +437,9 @@
     }
 
     function showToast(message, type = 'info') {
-        let toastContainer = document.getElementById('toastContainer');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.id = 'toastContainer';
-            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-            toastContainer.style.zIndex = "2000"; 
-            document.body.appendChild(toastContainer);
+        if (window.showSweetAlertToast) {
+            return window.showSweetAlertToast(message, type);
         }
-
-        const toastId = 'toast-' + Date.now();
-        const bgColor = type === 'success' ? 'bg-success' : 
-                        type === 'error' ? 'bg-danger' : 'bg-info';
-        
-        const toastHTML = `
-            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header ${bgColor} text-white">
-                    <strong class="me-auto">${type === 'success' ? 'Éxito' : type === 'error' ? 'Error' : 'Información'}</strong>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                </div>
-                <div class="toast-body">
-                    ${message}
-                </div>
-            </div>
-        `;
-        
-        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-        const toastEl = document.getElementById(toastId);
-        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-        toast.show();
-        
-        toastEl.addEventListener('hidden.bs.toast', function () {
-            toastEl.remove();
-        });
     }
 
     // --- FUNCION DE FILTRADO ACTUALIZADA ---
@@ -511,16 +480,21 @@
         const editModal = new bootstrap.Modal(document.getElementById('editModal'));
         editModal.show();
 
-        fetch(url)
+        // Usamos header para indicar AJAX y capturamos errores de red/servidor
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => {
-                if (!response.ok) throw new Error("Error de conexión");
+                if (!response.ok) {
+                    // Mostrar detalles en modal para depuración
+                    return response.text().then(text => { throw new Error(`HTTP ${response.status}: ${text}`); });
+                }
                 return response.text();
             })
             .then(html => {
                 modalBody.innerHTML = html;
             })
             .catch(error => {
-                modalBody.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                console.error('Error al cargar editar_documento:', error);
+                modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar formulario: ${error.message}</div>`;
             });
     }
 
@@ -576,4 +550,13 @@
         });
     });
     </script>
+    <style>
+        /* Overrides finales para forzar scroll interno en modal de edición */
+        #editModal .modal-content { max-height: calc(100vh - 80px) !important; display: flex !important; flex-direction: column !important; overflow: visible !important; }
+        #editModal .modal-body, #editModalBody { overflow-y: auto !important; max-height: calc(100vh - 180px) !important; }
+        #editModalBody { display: block !important; min-height: 0 !important; }
+        #editModalBody form { display: block !important; }
+        /* Asegurar que los inputs no empujen fuera del contenedor */
+        #editModalBody .row { margin: 0; }
+    </style>
 {% endblock %}

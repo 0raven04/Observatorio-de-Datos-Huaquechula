@@ -1,63 +1,66 @@
-<form id="editDocumentForm" method="POST" enctype="multipart/form-data" action="{% url 'editar_documento' documento.id %}">
+{% load static %}
+<form id="editDocumentForm" method="POST" enctype="multipart/form-data" action="{% url 'editar_documento' documento.id_documento %}">
     {% csrf_token %}
-    
-    <div class="modal-body p-4">
-        
-        <!-- Título + URL en la misma fila -->
+
+    <div class="container p-3">
+         <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold">Archivo local (reemplaza el actual)</label>
+                <input type="file" name="archivo" class="form-control" accept="application/pdf,image/*,video/*,audio/*">
+                {% if documento.archivo %}
+                    <small class="form-text text-muted">Archivo actual: <a href="{{ documento.archivo.url }}" target="_blank">Ver</a></small>
+                {% endif %}
+            </div>
+        </div>
         <div class="row">
-            <div class="col-md-6 mb-3">
+            
+            <div class="col-md-8 mb-3">
                 <label class="form-label fw-bold">Título <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="titulo" value="{{ documento.titulo }}" 
-                       required maxlength="200" minlength="3">
+                <input type="text" name="titulo" class="form-control" required maxlength="200" value="{{ documento.titulo }}">
             </div>
             
-            <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">URL del documento <span class="text-danger">*</span></label>
-                <input type="url" class="form-control" name="url" value="{{ documento.url }}" 
-                       required placeholder="https://ejemplo.com/documento.pdf">
-            </div>
         </div>
-        
+
         <div class="mb-3">
             <label class="form-label fw-bold">Descripción</label>
-            <textarea class="form-control" name="descripcion" rows="3">{{ documento.descripcion|default:'' }}</textarea>
+            <textarea name="descripcion" class="form-control" rows="3">{{ documento.descripcion }}</textarea>
         </div>
-        
+
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">Clasificación <span class="text-danger">*</span></label>
-                <select class="form-select" name="clasificacion" required>
-                    <option value="publico" {% if documento.clasificacion == 'publico' %}selected{% endif %}>Público</option>
-                    <option value="privado" {% if documento.clasificacion == 'privado' %}selected{% endif %}>Privado</option>
-                    <option value="confidencial" {% if documento.clasificacion == 'confidencial' %}selected{% endif %}>Confidencial</option>
+                <label class="form-label fw-bold">Tipo</label>
+                <select name="tipo" class="form-select">
+                    {% for val, label in tipos_choices %}
+                        <option value="{{ val }}" {% if documento.tipo == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Clasificación</label>
+                <select name="clasificacion" class="form-select">
+                    {% for val, label in clasificacion_choices %}
+                        <option value="{{ val }}" {% if documento.clasificacion == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
+
             <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">Tipo de Archivo <span class="text-danger">*</span></label>
-                <select class="form-select" name="tipo" required>
-                    {% if tipos_choices %}
-                        {% for valor, nombre in tipos_choices %}
-                            <option value="{{ valor }}" {% if documento.tipo == valor %}selected{% endif %}>
-                                {{ nombre }}
-                            </option>
-                        {% endfor %}
-                    {% else %}
-                        <option value="reporte" {% if documento.tipo == 'reporte' %}selected{% endif %}>Reporte</option>
-                        <option value="video" {% if documento.tipo == 'video' %}selected{% endif %}>Video</option>
-                        <option value="historico" {% if documento.tipo == 'historico' %}selected{% endif %}>Documento Histórico</option>
-                    {% endif %}
+                <label class="form-label fw-bold">Categoría</label>
+                <select name="categoria" class="form-select">
+                    <option value="">-- Ninguna --</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.id }}" {% if documento.categoria and documento.categoria.id == cat.id %}selected{% endif %}>{{ cat.nombre }}</option>
+                    {% endfor %}
                 </select>
             </div>
         </div>
-        <button type="submit" class="btn boton bt-body">
-            <i class="fas fa-save me-2"></i>Guardar Cambios
-        </button>
 
-    </div> 
-    
-    <div class="modal-footer custom-modal-footer">
-        <button type="button" class="btn btn-warning me-2" data-bs-dismiss="modal">Cancelar</button>
+       
+
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn boton bt-body">Guardar cambios</button>
+        </div>
     </div>
-
 </form>

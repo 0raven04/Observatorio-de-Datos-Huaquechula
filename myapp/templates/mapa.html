@@ -50,20 +50,20 @@
         }
     }
 
-    /* Móvil - bottom sheet */
+    /* Móvil - Pantalla Completa */
     @media (max-width: 768px) {
         #custom-marker-panel {
+            top: 0 !important;
             bottom: 0 !important;
-            top: auto !important;
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
-            height: 75vh !important;
-            border-radius: 20px 20px 0 0 !important;
+            height: 100% !important;
+            border-radius: 0 !important;
         }
 
         #custom-marker-panel.panel-visible {
-            animation: gmPanelUp 0.38s cubic-bezier(0.25, 0.8, 0.25, 1) both !important;
+            animation: gmPanelUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) both !important;
         }
 
         #custom-marker-panel::before {
@@ -74,34 +74,34 @@
             transform: translateX(-50%);
             width: 40px;
             height: 5px;
-            background: #ccc;
+            background: rgba(0,0,0,0.15);
             border-radius: 5px;
             z-index: 100000;
+        }
+
+        /* Botón cerrar más grande en móvil */
+        #custom-marker-panel .close-panel-btn {
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 18px !important;
+            top: 14px !important;
+            right: 14px !important;
+        }
+
+        /* Imagen de portada más grande en full-screen */
+        #custom-marker-panel .panel-cover {
+            height: 240px !important;
         }
     }
 
     @keyframes gmPanelLeft {
-        from {
-            transform: translateX(-110%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(-110%); opacity: 0; }
+        to   { transform: translateX(0);     opacity: 1; }
     }
 
     @keyframes gmPanelUp {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
+        from { transform: translateY(100%); opacity: 0; }
+        to   { transform: translateY(0);   opacity: 1; }
     }
 
     /* Contenido interno */
@@ -200,32 +200,33 @@
 
     #custom-marker-panel .btn-primary-route {
         width: 100% !important;
-            max-width: 100% !important;
-            height: 50px !important;
-            color: black !important;
-            border: 2px solid var(--color-arena-oscuro) !important;
-            border-radius: 10px !important;
-            padding: 0 20px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            font-size: 14px !important;
-            letter-spacing: 1px !important;
-            cursor: pointer !important;
-            box-shadow: inset 0 0 0 0 var(--color-arena-oscuro) !important;
-            transition: ease-out 0.4s !important;
-            background-color: white !important;
-        }
+        max-width: 100% !important;
+        height: 50px !important;
+        color: black !important;
+        border: 2px solid var(--color-arena-oscuro) !important;
+        border-radius: 10px !important;
+        padding: 0 20px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 14px !important;
+        letter-spacing: 1px !important;
+        cursor: pointer !important;
+        box-shadow: inset 0 0 0 0 var(--color-arena-oscuro) !important;
+        transition: ease-out 0.4s !important;
+        background-color: white !important;
+    }
 
-        #custom-marker-panel .btn-primary-route:hover {
-            transform: scale(1) !important;
-            color: white !important;
-            box-shadow: inset 0 0 0 50px var(--color-arena-oscuro) !important;
-            background-color: var(--color-arena-oscuro) !important;
-        }
+    #custom-marker-panel .btn-primary-route:hover {
+        color: white !important;
+        box-shadow: inset 0 0 0 50px var(--color-arena-oscuro) !important;
+        background-color: var(--color-arena-oscuro) !important;
+    }
 
-        #custom-marker-panel .btn-primary-route:active {
-            transform: translateY(-1px) !important;
+    #custom-marker-panel .btn-primary-route:active {
+        transform: translateY(-1px) !important;
+    }
+
     #custom-marker-panel .panel-instructions {
         font-size: 0.88rem;
         color: #444;
@@ -285,6 +286,12 @@
         </div>
     </div>
 </div>
+
+<!-- Botón flotante "Ver Indicaciones" - visible en móvil cuando la ruta está activa y el panel cerrado -->
+<button id="btn-ver-indicaciones" title="Ver indicaciones de ruta" aria-label="Ver indicaciones de ruta">
+    <i class="fas fa-directions"></i>
+    Ver Indicaciones
+</button>
 
 <div class="content">
     <div class="full-map">
@@ -764,6 +771,19 @@
                 if (panel) {
                     panel.classList.remove('panel-visible');
                 }
+                // En móvil: si hay ruta activa, mostrar FAB; si no, ocultarlo
+                if (window.innerWidth <= 768) {
+                    var fabInd = document.getElementById('btn-ver-indicaciones');
+                    if (fabInd) {
+                        if (window._controlRutaActual) {
+                            // Hay ruta activa → mostrar FAB para reabrir indicaciones
+                            fabInd.classList.add('fab-visible');
+                        } else {
+                            // No hay ruta → ocultar FAB
+                            fabInd.classList.remove('fab-visible');
+                        }
+                    }
+                }
             };
 
             if (btnCerrarPanel) {
@@ -873,6 +893,12 @@
 
                 // Mostrar panel
                 panel.classList.add('panel-visible');
+
+                // En móvil: ocultar FAB de indicaciones al abrir un nuevo punto
+                if (window.innerWidth <= 768) {
+                    var fabInd = document.getElementById('btn-ver-indicaciones');
+                    if (fabInd) fabInd.classList.remove('fab-visible');
+                }
             };
 
         }); 
@@ -1047,10 +1073,33 @@
                     document.getElementById('marker-panel-instructions').innerHTML = htmlInstrucciones;
                     document.getElementById('marker-panel-actions').style.display = 'none'; // Ocultar el boton de Iniciar Ruta
 
-                    // Asegurarse de que el panel está visible en escritorio, en móvil opcionalmente cerrarlo o dejarlo
+                    // En MÓVIL: cerrar panel para ver el mapa y mostrar FAB flotante
                     var panelActivo = document.getElementById('custom-marker-panel');
-                    if (panelActivo && !panelActivo.classList.contains('panel-visible') && window.innerWidth > 768) {
-                        panelActivo.classList.add('panel-visible');
+                    var fabInd = document.getElementById('btn-ver-indicaciones');
+
+                    if (window.innerWidth <= 768) {
+                        // Cerrar panel para ver el mapa
+                        if (panelActivo) panelActivo.classList.remove('panel-visible');
+                        // Mostrar botón flotante "Ver Indicaciones"
+                        if (fabInd) fabInd.classList.add('fab-visible');
+
+                        // Configurar el botón para reabrir el panel
+                        if (fabInd && !fabInd._listenerAttached) {
+                            fabInd._listenerAttached = true;
+                            fabInd.addEventListener('click', function() {
+                                if (panelActivo) {
+                                    panelActivo.classList.add('panel-visible');
+                                    // Scroll al inicio del panel al reabrirlo
+                                    var scroll = panelActivo.querySelector('.panel-content-scroll');
+                                    if (scroll) scroll.scrollTop = 0;
+                                }
+                            });
+                        }
+                    } else {
+                        // ESCRITORIO: mantener panel visible
+                        if (panelActivo && !panelActivo.classList.contains('panel-visible')) {
+                            panelActivo.classList.add('panel-visible');
+                        }
                     }
                 }
 
@@ -1082,6 +1131,13 @@
 
                             document.getElementById('marker-panel-instructions').innerHTML = '';
                             document.getElementById('marker-panel-actions').style.display = 'block';
+
+                            // Ocultar FAB de indicaciones al terminar la ruta
+                            var fabFin = document.getElementById('btn-ver-indicaciones');
+                            if (fabFin) {
+                                fabFin.classList.remove('fab-visible');
+                                fabFin._listenerAttached = false;
+                            }
                         }, 1000);
                     } else {
                         window._marcadorUsuario.setLatLng(coordenadasLinea[indiceActual]);

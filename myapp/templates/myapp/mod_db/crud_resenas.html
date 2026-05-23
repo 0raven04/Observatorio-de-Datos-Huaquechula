@@ -346,13 +346,9 @@ function accionMasivaEliminar() {
 }
 
 function showToast(msg, type='info') {
-    const t = document.createElement('div');
-    t.style.cssText = `position:fixed;top:20px;right:20px;padding:14px 20px;border-radius:8px;color:white;z-index:10000;
-                       box-shadow:0 4px 12px rgba(0,0,0,0.2);font-weight:600;display:flex;align-items:center;gap:10px;`;
-    t.style.backgroundColor = type==='success' ? '#28a745' : type==='error' ? '#e74c3c' : '#4A4A4A';
-    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(()=>t.remove(),400); }, 2800);
+    if (window.showSweetAlertToast) {
+        return window.showSweetAlertToast(msg, type);
+    }
 }
 </script>
 {% endblock %}

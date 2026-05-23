@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Código de verificación</title>
+    <style>
+        body {
+            background-color: #f4f7fb;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1f2937;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #2563eb);
+            padding: 32px;
+            color: white;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 32px;
+        }
+        .code-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 24px 0;
+            padding: 22px 16px;
+            background: #f8fafc;
+            border-radius: 18px;
+            border: 1px dashed #cbd5e1;
+            font-size: 2rem;
+            letter-spacing: 0.45em;
+            font-weight: 700;
+            color: #111827;
+        }
+        .footer {
+            padding: 24px 32px 32px;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 24px;
+            border-radius: 999px;
+            background: #334155;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        .small {
+            color: #475569;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>{{ system_name }}</h1>
+                <p style="margin-top: 12px; font-size: 16px; opacity: 0.9;">Código de verificación de inicio de sesión</p>
+            </div>
+            <div class="content">
+                <p>Hola {{ user.nombre }},</p>
+                <p>Tu código de verificación es:</p>
+                <div class="code-box">{{ code }}</div>
+                <p>Este código expirará en {{ expires_minutes }} minutos.</p>
+                <p>Si no solicitaste este código, ignora este mensaje o contacta con el equipo de soporte.</p>
+                <a href="{{ system_name }}" class="button">Ir al Observatorio</a>
+            </div>
+            <div class="footer">
+                <p class="small">Mantén tu código en privado. No compartas esta información con nadie.</p>
+                <p class="small">Gracias por confiar en el Observatorio de Datos de Huaquechula.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

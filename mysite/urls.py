@@ -21,20 +21,41 @@ from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
-    # URL para la página de inicio de sesión
-    # - Utiliza la vista de inicio de sesión incorporada de Django
-    # - Especifica la plantilla personalizada: registration/login.html
-    # - Nombre de la ruta: 'login'
+    # Inicio de sesión
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    
-    # NOTA: Hay dos definiciones para 'logout/' - esto es redundante y puede causar confusión
-    # Se recomienda mantener solo una definición
-    
-    # URL para cerrar sesión (versión 1)
-    # - Utiliza la vista de cierre de sesión incorporada de Django
-    # - Redirige a la página de login después de cerrar sesión
-    # - Nombre de la ruta: 'logout'
+
+    # Cierre de sesión
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+
+    # ─── Recuperación de contraseña ──────────────────────────────────────────
+    # Paso 1 – El usuario ingresa su correo electrónico
+    path(
+        'password-reset/',
+        views.CustomPasswordResetView.as_view(),
+        name='password_reset',
+    ),
+    # Paso 2 – Confirmación: "revisa tu correo"
+    path(
+        'password-reset/done/',
+        auth_views.PasswordResetDoneView.as_view(
+            template_name='registration/password_reset_done.html'
+        ),
+        name='password_reset_done',
+    ),
+    # Paso 3 – El usuario hace clic en el enlace del correo → ingresa nueva contraseña
+    path(
+        'password-reset/confirm/<uidb64>/<token>/',
+        views.CustomPasswordResetConfirmView.as_view(),
+        name='password_reset_confirm',
+    ),
+    # Paso 4 – Contraseña cambiada exitosamente
+    path(
+        'password-reset/complete/',
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name='registration/password_reset_complete.html'
+        ),
+        name='password_reset_complete',
+    ),
     
     # URL para cerrar sesión (versión 2 - redundante)
     # - Esta es una definición duplicada que debería eliminarse

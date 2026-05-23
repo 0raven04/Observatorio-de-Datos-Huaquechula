@@ -215,8 +215,9 @@
                   <input type="text" class="form-control" name="nombre_punto">
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label small fw-bold">Imagen de Portada (URL)</label>
-                  <input type="url" class="form-control" name="imagen_portada">
+                  <label class="form-label small fw-bold">Imagen de Portada (archivo local)</label>
+                  <input type="file" id="imagenPortadaInput" class="form-control" name="imagen_portada" accept="image/*">
+                  <div id="portadaPreview" class="mt-2"></div>
                 </div>
               </div>
               
@@ -369,7 +370,19 @@
             if (urlForm) {
                 urlForm.reset();
                 urlForm.classList.remove('was-validated');
+                urlForm.action = '{% url "subir_desde_url" %}';
             }
+
+            // Resetear el modo de edición
+            const modoForm = document.querySelector('#archivoModal form input[name="modo_edicion"]');
+            if (modoForm) modoForm.value = 'false';
+            const archivoIdForm = document.querySelector('#archivoModal form input[name="archivo_id_editar"]');
+            if (archivoIdForm) archivoIdForm.value = '';
+            const modoGlobal = document.getElementById('modo_edicion');
+            const archivoGlobal = document.getElementById('archivo_id_editar');
+            if (modoGlobal) modoGlobal.value = 'false';
+            if (archivoGlobal) archivoGlobal.value = '';
+
             // Limpiar galería
             dt = new DataTransfer();
             if (inputGaleria) inputGaleria.files = dt.files;
@@ -377,6 +390,16 @@
             
             // Ocultar campos condicionales
             gestionarSelectores(""); 
+
+            const modalTitle = document.getElementById('modalTitle');
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Agregar Archivo por URL';
+            }
+            // Limpiar imagen de portada local y su vista previa
+            const imgPort = document.getElementById('imagenPortadaInput');
+            if (imgPort) imgPort.value = '';
+            const portadaPrev = document.getElementById('portadaPreview');
+            if (portadaPrev) portadaPrev.innerHTML = '';
         });
 
         // Al abrir, verificar estado inicial (por si es edición en el futuro)

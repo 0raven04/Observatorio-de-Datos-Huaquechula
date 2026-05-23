@@ -20,12 +20,17 @@ from django.contrib.auth import logout
 from django.contrib import messages
 import subprocess
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from datetime import datetime
 import os
 import sys
 from django.shortcuts import render
 import urllib.parse
 import urllib.error
+import secrets
+import string
+import hashlib
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -119,6 +124,254 @@ def cerrar_sesion(request):
     logout(request)
     messages.success(request, "Sesión cerrada correctamente.")
     return redirect('login')  
+
+
+def mask_email(email):
+    if not email or '@' not in email:
+        return email
+    local, domain = email.split('@', 1)
+    if len(local) <= 2:
+        masked = '*' * len(local)
+    else:
+        masked = f"{local[0]}{'*' * (len(local) - 2)}{local[-1]}"
+    return f"{masked}@{domain}"
+
+
+def get_request_data(request):
+    content_type = request.content_type or ''
+    if content_type.startswith('application/json'):
+        try:
+            return json.loads(request.body.decode('utf-8'))
+        except ValueError:
+            return {}
+    return request.POST
+
+
+def authenticate_username_or_email(request, identifier, password):
+    identifier = (identifier or '').strip()
+    if '@' in identifier:
+        try:
+            usuario = Usuario.objects.get(email__iexact=identifier)
+            identifier = usuario.nombre_usuario
+        except Usuario.DoesNotExist:
+            return None
+    return authenticate(request, username=identifier, password=password)
+
+
+def send_two_factor_email(user, code):
+    subject = 'Código de verificación - Observatorio de Datos de Huaquechula'
+    context = {
+        'user': user,
+        'code': code,
+        'system_name': 'Observatorio de Datos de Huaquechula',
+        'expires_minutes': 5,
+    }
+    text_content = (
+        f"Hola {user.nombre},\n\n"
+        f"Tu código de verificación es: {code}\n"
+        f"Este código expirará en {context['expires_minutes']} minutos.\n\n"
+        "Si no pediste este código, ignora este mensaje.\n"
+        "Gracias por usar el Observatorio de Datos de Huaquechula."
+    )
+    html_content = render_to_string('registration/2fa_email.html', context)
+    message = EmailMultiAlternatives(
+        subject,
+        text_content,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+    )
+    message.attach_alternative(html_content, 'text/html')
+    message.send(fail_silently=False)
+    if settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+        print(f"[2FA DEBUG] Código de verificación para {user.email}: {code}")
+
+
+def login_with_2fa(request):
+    next_url = request.GET.get('next') or request.POST.get('next') or settings.LOGIN_REDIRECT_URL
+    if request.method == 'GET':
+        return render(request, 'registration/login.html', {'next': next_url})
+
+    data = get_request_data(request)
+    username_or_email = data.get('username', '').strip()
+    password = data.get('password', '')
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or (request.content_type or '').startswith('application/json')
+
+    if not username_or_email or not password:
+        error_message = 'Por favor ingresa usuario/correo y contraseña.'
+        if is_ajax:
+            return JsonResponse({
+                'status': 'missing_credentials',
+                'message': error_message
+            }, status=400)
+        return render(request, 'registration/login.html', {'next': next_url, 'error_message': error_message})
+
+    user = authenticate_username_or_email(request, username_or_email, password)
+    if user is None:
+        error_message = 'Usuario o contraseña incorrectos.'
+        if is_ajax:
+            return JsonResponse({
+                'status': 'invalid_credentials',
+                'message': error_message
+            }, status=401)
+        return render(request, 'registration/login.html', {'next': next_url, 'error_message': error_message})
+
+    if not user.is_active:
+        error_message = 'La cuenta no está activa. Contacta al administrador.'
+        if is_ajax:
+            return JsonResponse({
+                'status': 'inactive_user',
+                'message': error_message
+            }, status=403)
+        return render(request, 'registration/login.html', {'next': next_url, 'error_message': error_message})
+
+    from .models import TwoFactorCode
+    code_obj, code = TwoFactorCode.create_for_user(
+        user,
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+    )
+
+    try:
+        send_two_factor_email(user, code)
+    except Exception as exc:
+        error_message = 'No se pudo enviar el correo de verificación. Revisa la configuración SMTP.'
+        if is_ajax:
+            return JsonResponse({
+                'status': 'email_failed',
+                'message': error_message,
+                'detail': str(exc),
+            }, status=500)
+        return render(request, 'registration/login.html', {
+            'next': next_url,
+            'error_message': error_message,
+        })
+
+    request.session['pre_2fa_user_id'] = user.pk
+    request.session['pre_2fa_next'] = next_url
+    request.session['last_2fa_resend'] = timezone.now().timestamp()
+
+    result = {
+        'email': mask_email(user.email),
+        'expiry_seconds': 300,
+        'next': next_url,
+    }
+    if settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+        result['email_backend'] = 'console'
+
+    if is_ajax:
+        return JsonResponse({'status': 'challenge', **result})
+
+    return render(request, 'registration/login.html', {
+        'next': next_url,
+        'initial_2fa': json.dumps(result),
+    })
+
+
+@require_POST
+def verify_2fa_code(request):
+    data = get_request_data(request)
+    code = (data.get('code') or '').strip()
+    user_id = request.session.get('pre_2fa_user_id')
+
+    if not user_id:
+        return JsonResponse({
+            'status': 'session_expired',
+            'message': 'La sesión de autenticación expiró. Vuelve a iniciar sesión.'
+        }, status=401)
+
+    try:
+        user = Usuario.objects.get(pk=user_id)
+    except Usuario.DoesNotExist:
+        return JsonResponse({
+            'status': 'invalid_session',
+            'message': 'No se encontró el usuario. Inicia sesión nuevamente.'
+        }, status=404)
+
+    from .models import TwoFactorCode
+    code_obj = TwoFactorCode.objects.filter(user=user, used=False).order_by('-created_at').first()
+    if code_obj is None or code_obj.is_expired():
+        return JsonResponse({
+            'status': 'expired',
+            'message': 'El código expiró. Reenvía uno nuevo.',
+        }, status=400)
+
+    if not code_obj.verify_code(code):
+        code_obj.attempts += 1
+        code_obj.save(update_fields=['attempts'])
+        remaining = max(0, 5 - code_obj.attempts)
+        if remaining <= 0:
+            code_obj.mark_as_used()
+            return JsonResponse({
+                'status': 'blocked',
+                'message': 'Has excedido el número de intentos. Se generará un nuevo código.',
+            }, status=403)
+        return JsonResponse({
+            'status': 'invalid_code',
+            'message': 'Código incorrecto. Intenta de nuevo.',
+            'remaining_attempts': remaining,
+        }, status=400)
+
+    code_obj.mark_as_used()
+    login(request, user)
+    next_url = request.session.pop('pre_2fa_next', settings.LOGIN_REDIRECT_URL)
+    request.session.pop('pre_2fa_user_id', None)
+    request.session.pop('last_2fa_resend', None)
+
+    return JsonResponse({
+        'status': 'ok',
+        'redirect_url': next_url,
+    })
+
+
+@require_POST
+def resend_2fa_code(request):
+    user_id = request.session.get('pre_2fa_user_id')
+    if not user_id:
+        return JsonResponse({
+            'status': 'session_expired',
+            'message': 'La sesión de autenticación expiró. Vuelve a iniciar sesión.'
+        }, status=401)
+
+    last_resend = request.session.get('last_2fa_resend')
+    now_ts = timezone.now().timestamp()
+    if last_resend and now_ts - float(last_resend) < 30:
+        return JsonResponse({
+            'status': 'too_early',
+            'message': 'Espera unos segundos antes de reenviar el código.',
+            'retry_seconds': int(30 - (now_ts - float(last_resend)))
+        }, status=429)
+
+    try:
+        user = Usuario.objects.get(pk=user_id)
+    except Usuario.DoesNotExist:
+        return JsonResponse({
+            'status': 'invalid_session',
+            'message': 'No se encontró el usuario. Inicia sesión nuevamente.'
+        }, status=404)
+
+    from .models import TwoFactorCode
+    code_obj, code = TwoFactorCode.create_for_user(
+        user,
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+    )
+
+    try:
+        send_two_factor_email(user, code)
+    except Exception as exc:
+        return JsonResponse({
+            'status': 'email_failed',
+            'message': 'No se pudo enviar el correo de verificación. Revisa la configuración SMTP.',
+            'detail': str(exc),
+        }, status=500)
+
+    request.session['last_2fa_resend'] = now_ts
+    return JsonResponse({
+        'status': 'resent',
+        'expiry_seconds': 300,
+        'email': mask_email(user.email),
+    })
+
 
 def graficos_indicadores(request):  
     """  
@@ -1386,7 +1639,13 @@ def subir_desde_url(request):
                     h_cie = request.POST.get('hora_cierre') or None
                     
                     # --- [CORRECCIÓN 1: IMAGEN PORTADA] ---
-                    img_portada = request.POST.get('imagen_portada', '') # <-- Agregado
+                    img_portada = ''
+                    if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
+                        from django.core.files.storage import FileSystemStorage
+                        fs = FileSystemStorage()
+                        f_port = request.FILES['imagen_portada']
+                        filename_port = fs.save(f"portadas/{f_port.name}", f_port)
+                        img_portada = fs.url(filename_port)
 
                     # --- [CORRECCIÓN 2: DÍAS DE OPERACIÓN] ---
                     dias_lista = request.POST.getlist('dias_semana') # <-- Usar getlist
@@ -1649,28 +1908,6 @@ def editar_archivo(request, archivo_id):
             archivo.descripcion = request.POST.get('descripcion', archivo.descripcion)
             archivo.tipo_archivo = request.POST.get('tipo_archivo', archivo.tipo_archivo)
             archivo.visible = request.POST.get('visible') == 'on'
-
-            # Procesamiento de Fechas del Archivo
-            fecha_inicio_str = request.POST.get('fecha_inicio')
-            if fecha_inicio_str:
-                try:
-                    fecha_inicio_naive = datetime.datetime.strptime(fecha_inicio_str, '%Y-%m-%dT%H:%M')
-                    archivo.fecha_inicio = timezone.make_aware(fecha_inicio_naive)
-                except ValueError:
-                    pass
-            else:
-                archivo.fecha_inicio = None
-
-            fecha_fin_str = request.POST.get('fecha_fin')
-            if fecha_fin_str:
-                try:
-                    fecha_fin_naive = datetime.datetime.strptime(fecha_fin_str, '%Y-%m-%dT%H:%M')
-                    archivo.fecha_fin = timezone.make_aware(fecha_fin_naive)
-                except ValueError:
-                    pass
-            else:
-                archivo.fecha_fin = None
-
             archivo.save()
 
             # 2. Actualizar Geometría
@@ -1679,125 +1916,103 @@ def editar_archivo(request, archivo_id):
                 geometria.nombre = archivo.nombre_archivo
                 geometria.save()
 
-                # 3. Actualizar Punto de Interés
+                # 3. Actualizar o Crear Punto de Interés
                 punto = Punto_Interes.objects.filter(id_geometria=geometria).first()
-                
-                if punto:
+                tipo_seleccionado = request.POST.get('tipo_punto', '')
+
+                # Si el usuario seleccionó que ESTE archivo es un ofrenda, servicio o sitio:
+                if tipo_seleccionado:
+                    if not punto:
+                        # Si no existía punto para este archivo, lo creamos
+                        punto = Punto_Interes(id_geometria=geometria, usuario_creacion=request.user)
+
                     punto.nombre = request.POST.get('nombre_punto') or archivo.nombre_archivo
                     punto.descripcion = archivo.descripcion 
-                    punto.estado = request.POST.get('estado_punto', punto.estado)
+                    punto.estado = request.POST.get('estado_punto', 'activo')
                     
-                    punto.fecha_inicio = request.POST.get('fecha_inicio') or punto.fecha_inicio
-                    punto.fecha_fin = request.POST.get('fecha_fin') or punto.fecha_fin
-                    punto.hora_apertura = request.POST.get('hora_apertura') or punto.hora_apertura
-                    punto.hora_cierre = request.POST.get('hora_cierre') or punto.hora_cierre
-                    
-                    # --- [CORRECCIÓN IMPORTANTE 1: PORTADA Y DÍAS] ---
-                    punto.imagen_portada = request.POST.get('imagen_portada', punto.imagen_portada)
-                    
-                    # Capturamos lista de días (checkboxes)
+                    # Manejo seguro de fechas vacías
+                    punto.fecha_inicio = request.POST.get('fecha_inicio') or None
+                    punto.fecha_fin = request.POST.get('fecha_fin') or None
+                    punto.hora_apertura = request.POST.get('hora_apertura') or None
+                    punto.hora_cierre = request.POST.get('hora_cierre') or None
+
+                    # --- IMAGEN DE PORTADA LOCAL ---
+                    if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
+                        fs = FileSystemStorage()
+                        f_port = request.FILES['imagen_portada']
+                        filename_port = fs.save(f"portadas/{f_port.name}", f_port)
+                        punto.imagen_portada = fs.url(filename_port)
+
+                    # --- DIAS DE LA SEMANA ---
                     dias_lista = request.POST.getlist('dias_semana')
                     if dias_lista:
                         punto.dias_semana = ",".join(dias_lista)
-                    # Nota: Si dias_lista viene vacío, decidimos si borrar o mantener. 
-                    # Normalmente en un edit, si no marcas nada, se asume borrar.
-                    elif 'dias_semana' in request.POST: # Solo si el campo existía en el form
-                         punto.dias_semana = ''
-                    
+                    elif 'dias_semana' in request.POST:
+                        punto.dias_semana = ''
+
+                    punto.categoria = tipo_seleccionado
                     punto.save()
 
-                    # 4. Actualizar Subtipos
-                    tipo_seleccionado = request.POST.get('tipo_punto', '')
-
+                    # 4. Actualizar Subtipos (get_or_create evita errores si antes no existían)
                     if tipo_seleccionado == 'sitio_turistico':
-                        id_cat_seleccionada = request.POST.get('id_categoria_bd')
-                        if id_cat_seleccionada:
-                            categoria_instancia = Categoria_Sitio.objects.get(id_categoria=id_cat_seleccionada)
-                            
-                            sitio_obj = getattr(punto, 'sitio_turistico', None)
-                            reglas = request.POST.get('reglas_acceso', '')
-                            
-                            if sitio_obj:
-                                sitio_obj.id_categoria = categoria_instancia
+                        id_cat = request.POST.get('id_categoria_bd')
+                        reglas = request.POST.get('reglas_acceso', '')
+                        if id_cat:
+                            cat_obj = Categoria_Sitio.objects.get(id_categoria=id_cat)
+                            sitio_obj, created = Sitio_turistico.objects.get_or_create(id_punto=punto, defaults={'id_categoria': cat_obj, 'reglas_acceso': reglas})
+                            if not created:
+                                sitio_obj.id_categoria = cat_obj
                                 sitio_obj.reglas_acceso = reglas
                                 sitio_obj.save()
-                            else:
-                                Sitio_turistico.objects.create(
-                                    id_punto=punto,
-                                    id_categoria=categoria_instancia,
-                                    reglas_acceso=reglas
-                                )
 
                     elif tipo_seleccionado == 'ofrenda':
                         anfitrion = request.POST.get('anfitrion', 'Sin anfitrión')
-                        ofr_obj = getattr(punto, 'ofrenda', None)
-                        if ofr_obj:
+                        ofr_obj, created = Ofrenda.objects.get_or_create(id_punto=punto, defaults={'anfitrion': anfitrion})
+                        if not created:
                             ofr_obj.anfitrion = anfitrion
                             ofr_obj.save()
-                        else:
-                            Ofrenda.objects.create(id_punto=punto, anfitrion=anfitrion)
 
                     elif tipo_seleccionado == 'servicio':
-                        tipo_servicio_input = request.POST.get('tipo_servicio', 'hospedaje')
-                        contacto_input = request.POST.get('contacto_servicio', '')
-                        
+                        tipo_serv = request.POST.get('tipo_servicio', 'hospedaje')
+                        contacto = request.POST.get('contacto_servicio', '')
                         pagos_lista = request.POST.getlist('tipo_pago')
-                        if not pagos_lista and request.POST.get('tipo_pago'):
-                             pagos_lista = [request.POST.get('tipo_pago')]
-                        
                         pagos_str = ",".join(pagos_lista) if pagos_lista else 'efectivo'
-
-                        serv_obj = getattr(punto, 'servicio', None)
-                        if serv_obj:
-                            serv_obj.tipo_servicio = tipo_servicio_input
-                            serv_obj.contacto = contacto_input
-                            if pagos_lista:
-                                serv_obj.tipo_pago = pagos_str
+                        
+                        serv_obj, created = Servicio.objects.get_or_create(id_punto=punto, defaults={'tipo_servicio': tipo_serv, 'contacto': contacto, 'tipo_pago': pagos_str})
+                        if not created:
+                            serv_obj.tipo_servicio = tipo_serv
+                            serv_obj.contacto = contacto
+                            serv_obj.tipo_pago = pagos_str
                             serv_obj.save()
-                        else:
-                            Servicio.objects.create(
-                                id_punto=punto,
-                                tipo_servicio=tipo_servicio_input,
-                                contacto=contacto_input,
-                                tipo_pago=pagos_str
-                            )
-                    
-                    # --- [CORRECCIÓN IMPORTANTE 2: PROCESAR NUEVAS FOTOS DE GALERÍA] ---
-                    # Esto faltaba por completo en tu código
+
+                    # --- 5. GALERIA MULTIMEDIA ---
                     archivos_galeria = request.FILES.getlist('galeria_multimedia')
                     if archivos_galeria:
-                        # Importar almacenamiento local si usas FileSystemStorage
-                        from django.core.files.storage import FileSystemStorage
                         fs = FileSystemStorage()
-                        
                         for f in archivos_galeria:
                             ext = f.name.split('.')[-1].lower()
-                            tipo = 'imagen'
-                            if ext in ['mp4', 'avi', 'mov', 'webm']:
-                                tipo = 'video'
-                            elif ext in ['mp3', 'wav']:
-                                tipo = 'audio'
+                            tipo = 'video' if ext in ['mp4', 'avi', 'mov', 'webm'] else 'audio' if ext in ['mp3', 'wav'] else 'imagen'
                             
-                            # Guardamos archivo físico y obtenemos URL
                             filename = fs.save(f"galeria/{f.name}", f)
-                            url_publica = fs.url(filename)
-
                             Galeria_Multimedia.objects.create(
                                 id_punto=punto,
-                                url_archivo=url_publica,
+                                url_archivo=fs.url(filename),
                                 tipo_archivo=tipo,
                                 descripcion=f"Subido el {timezone.now().date()}"
                             )
 
-        return JsonResponse({'success': True, 'message': 'Archivo y datos relacionados actualizados correctamente.'})
+                    # Eliminar fotos de galería marcadas con la "X"
+                    ids_eliminar = request.POST.getlist('galeria_eliminar')
+                    if ids_eliminar:
+                        Galeria_Multimedia.objects.filter(id_foto__in=ids_eliminar, id_punto=punto).delete()
+
+        return JsonResponse({'success': True, 'message': 'Archivo actualizado correctamente.'})
 
     except ArchivoKMZ.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'El archivo no existe o no tienes permiso.'}, status=404)
-    except Categoria_Sitio.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'La categoría seleccionada no existe.'}, status=400)
     except Exception as e:
-        # Imprimir error en consola para depuración
-        print(f"Error en editar_archivo: {str(e)}")
+        import traceback
+        traceback.print_exc() # Esto imprimirá el error real en la terminal de Docker
         return JsonResponse({'success': False, 'error': f'Error interno: {str(e)}'}, status=400)
 
 
@@ -1878,7 +2093,8 @@ def detalle_punto(request, punto_id):
             'categoria': punto.categoria,
             'nombre': punto.nombre,
             'descripcion': punto.descripcion or '',
-            'imagen_portada': punto.imagen_portada or '',
+            # Modificación segura para proteger la serialización JSON
+            'imagen_portada': getattr(punto.imagen_portada, 'url', str(punto.imagen_portada)) if punto.imagen_portada else '',
             'estado': punto.estado,
             'fecha_inicio': fmt_date(punto.fecha_inicio),
             'fecha_fin': fmt_date(punto.fecha_fin),
@@ -1919,7 +2135,12 @@ def editar_punto(request, punto_id):
         punto.nombre = request.POST.get('nombre_punto', punto.nombre)
         punto.categoria = request.POST.get('categoria', punto.categoria)
         punto.descripcion = request.POST.get('descripcion', '')
-        punto.imagen_portada = request.POST.get('imagen_portada', '') or None
+        if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
+            from django.core.files.storage import FileSystemStorage
+            fs = FileSystemStorage()
+            f_port = request.FILES['imagen_portada']
+            filename_port = fs.save(f"portadas/{f_port.name}", f_port)
+            punto.imagen_portada = fs.url(filename_port)
 
         fecha_inicio = request.POST.get('fecha_inicio')
         punto.fecha_inicio = fecha_inicio if fecha_inicio else None
@@ -1978,26 +2199,30 @@ def editar_punto(request, punto_id):
                     tipo_pago=pagos_str
                 )
 
-        # 3. Galería multimedia — guardada como URLs (no archivos locales)
-        urls_galeria = request.POST.getlist('galeria_url_nueva')
-        for url in urls_galeria:
-            url = url.strip()
-            if not url:
-                continue
-            # Detectar tipo por extensión
-            url_lower = url.lower().split('?')[0]  # sin query params
-            if any(url_lower.endswith(ext) for ext in ['.mp4', '.avi', '.mov', '.webm']):
-                tipo = 'video'
-            elif any(url_lower.endswith(ext) for ext in ['.mp3', '.wav', '.ogg']):
-                tipo = 'audio'
-            else:
+       # 3. Procesar nueva Galería Multimedia (Archivos locales)
+        archivos_galeria = request.FILES.getlist('galeria_multimedia')
+        if archivos_galeria:
+            from django.core.files.storage import FileSystemStorage
+            fs = FileSystemStorage()
+            
+            for f in archivos_galeria:
+                ext = f.name.split('.')[-1].lower()
                 tipo = 'imagen'
-            Galeria_Multimedia.objects.create(
-                id_punto=punto,
-                url_archivo=url,
-                tipo_archivo=tipo,
-                descripcion=''
-            )
+                if ext in ['mp4', 'avi', 'mov', 'webm']:
+                    tipo = 'video'
+                elif ext in ['mp3', 'wav', 'ogg']:
+                    tipo = 'audio'
+                
+                # Guardar archivo físico y obtener la ruta pública
+                filename = fs.save(f"galeria/{f.name}", f)
+                url_publica = fs.url(filename)
+
+                Galeria_Multimedia.objects.create(
+                    id_punto=punto,
+                    url_archivo=url_publica,
+                    tipo_archivo=tipo,
+                    descripcion=f"Subido el {timezone.now().date()}"
+                )
 
         # 4. Eliminar fotos marcadas para borrar
         ids_eliminar = request.POST.getlist('galeria_eliminar')
@@ -2268,34 +2493,23 @@ def actualizar_desde_url(request, archivo_id):
 
 
 @login_required
+@require_POST
 def eliminar_archivo(request, archivo_id):
-    """Elimina un archivo y toda la información asociada en cascada"""
-    if request.method != 'POST':
-        messages.error(request, 'Método no permitido')
-        return redirect('lista_archivos')
-    
     try:
+        # 1. Busca en el modelo correcto: ArchivoKMZ
+        # 2. Usa el campo clave correcto: id_archivo
         archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        
         nombre = archivo.nombre_archivo
         
-        # --- NUEVA LÓGICA DE LIMPIEZA PROFUNDA ---
-        # 1. Buscamos todas las geometrías que le pertenecen a este archivo
-        geometrias_del_archivo = GeometriaEspacial.objects.filter(id_archivo=archivo)
-        
-        # 2. Buscamos todos los Puntos de Interés que usan esas geometrías y los destruimos.
-        # (Esto también destruirá Ofrendas, Sitios y Servicios asociados por CASCADE)
-        Punto_Interes.objects.filter(id_geometria__in=geometrias_del_archivo).delete()
-        # -----------------------------------------
-        
-        # 3. Ahora sí, borramos el archivo original
+        # Como tienes on_delete=models.CASCADE en tus relaciones,
+        # al borrar el archivo, se borrarán automáticamente las geometrías y puntos.
         archivo.delete()
         
-        messages.success(request, f'Recurso "{nombre}" y sus puntos vinculados fueron eliminados exitosamente')
-        return redirect('lista_archivos')
+        return JsonResponse({'success': True, 'message': f'Archivo "{nombre}" eliminado.'})
         
     except Exception as e:
-        messages.error(request, f'Error al eliminar recurso: {str(e)}')
-        return redirect('lista_archivos')
+        return JsonResponse({'success': False, 'error': f'Error al eliminar: {str(e)}'}, status=400)
 
 @login_required
 def verificar_urls(request):
@@ -2803,8 +3017,13 @@ def editar_mi_propiedad(request, id_punto):
         # 1. Campos básicos permitidos
         punto.nombre = request.POST.get('nombre_punto', punto.nombre)
         punto.descripcion = request.POST.get('descripcion', '')
-        punto.imagen_portada = request.POST.get('imagen_portada', '') or None
-        
+        if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
+            from django.core.files.storage import FileSystemStorage
+            fs = FileSystemStorage()
+            f_port = request.FILES['imagen_portada']
+            filename_port = fs.save(f"portadas/{f_port.name}", f_port)
+            punto.imagen_portada = fs.url(filename_port)
+                
         fecha_inicio = request.POST.get('fecha_inicio')
         punto.fecha_inicio = fecha_inicio if fecha_inicio else None
 
@@ -2851,6 +3070,27 @@ def editar_mi_propiedad(request, id_punto):
                 )
                 
         # Propietario no puede editar geometría ni borrar
+        archivos_galeria = request.FILES.getlist('galeria_multimedia')
+        if archivos_galeria:
+            from django.core.files.storage import FileSystemStorage
+            fs = FileSystemStorage()
+            for f in archivos_galeria:
+                ext = f.name.split('.')[-1].lower()
+                tipo = 'video' if ext in ['mp4', 'avi', 'mov', 'webm'] else 'audio' if ext in ['mp3', 'wav'] else 'imagen'
+                
+                filename = fs.save(f"galeria/{f.name}", f)
+                url_publica = fs.url(filename)
+                Galeria_Multimedia.objects.create(
+                    id_punto=punto,
+                    url_archivo=url_publica,
+                    tipo_archivo=tipo,
+                    descripcion=f"Subido por propietario el {timezone.now().date()}"
+                )
+
+        # 4. Eliminar fotos marcadas para borrar
+        ids_eliminar = request.POST.getlist('galeria_eliminar')
+        if ids_eliminar:
+            Galeria_Multimedia.objects.filter(id_foto__in=ids_eliminar, id_punto=punto).delete()
         
         return JsonResponse({'success': True, 'message': 'Propiedad actualizada exitosamente.'})
         
@@ -3618,3 +3858,59 @@ def nueva_encuesta_comercio(request):
 
     return render(request, 'myapp/form_comercio.html', {'form': form})
 
+
+# ================================================================
+# RECUPERACIÓN DE CONTRASEÑA — Vistas personalizadas
+# ================================================================
+
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetConfirmView,
+)
+from django.contrib.auth.forms import SetPasswordForm
+from django.urls import reverse_lazy
+
+
+class CustomPasswordResetView(PasswordResetView):
+    """
+    Vista de solicitud de recuperación de contraseña.
+    Usa el modelo de usuario personalizado (Usuario) y busca por email.
+    """
+    template_name           = 'registration/password_reset.html'
+    email_template_name     = 'registration/password_reset_email.html'
+    html_email_template_name = 'registration/password_reset_email.html'
+    subject_template_name   = 'registration/password_reset_subject.txt'
+    success_url             = reverse_lazy('password_reset_done')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Asegurarse de que se busque el email en el modelo correcto
+        form.fields['email'].label = 'Correo electrónico'
+        return form
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    """
+    Vista de confirmación de nueva contraseña.
+    Valida que la nueva contraseña sea diferente a la actual.
+    """
+    template_name = 'registration/password_reset_confirm.html'
+    success_url   = reverse_lazy('password_reset_complete')
+
+    def form_valid(self, form):
+        """
+        Antes de guardar, verifica que la nueva contraseña
+        no sea idéntica a la contraseña actual del usuario.
+        """
+        nueva = form.cleaned_data.get('new_password1')
+        usuario = self.user  # disponible porque PasswordResetConfirmView lo establece en dispatch()
+
+        if usuario and usuario.check_password(nueva):
+            form.add_error(
+                'new_password2',
+                'La nueva contraseña no puede ser igual a la contraseña anterior. '
+                'Por favor, elige una contraseña diferente.'
+            )
+            return self.form_invalid(form)
+
+        return super().form_valid(form)
