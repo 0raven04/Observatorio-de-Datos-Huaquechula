@@ -307,22 +307,24 @@ footer {
     }
 }
 
-/* -------- MÓVIL (≤768px) – Bottom Sheet -------- */
+/* -------- MÓVIL (≤768px) – Full Screen Sheet -------- */
 @media (max-width: 768px) {
     #custom-marker-panel {
         bottom: 0;
+        top: 0;
         left: 0;
         right: 0;
         width: 100%;
-        height: 75vh;
-        border-radius: 20px 20px 0 0;
+        height: 100%;
+        border-radius: 0;
+        /* Full screen en móvil */
     }
 
     #custom-marker-panel.panel-visible {
-        animation: panelSlideInUp 0.38s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+        animation: panelSlideInUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) both;
     }
 
-    /* Manija de arrastre */
+    /* Manija de arrastre arriba */
     #custom-marker-panel::before {
         content: '';
         position: absolute;
@@ -331,9 +333,23 @@ footer {
         transform: translateX(-50%);
         width: 40px;
         height: 5px;
-        background: #ccc;
+        background: rgba(0,0,0,0.18);
         border-radius: 5px;
         z-index: 10000;
+    }
+
+    /* Botón cerrar más grande en móvil */
+    #custom-marker-panel .close-panel-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+        top: 14px;
+        right: 14px;
+    }
+
+    /* Imagen de portada más alta en full-screen */
+    #custom-marker-panel .panel-cover {
+        height: 240px !important;
     }
 }
 
@@ -1006,3 +1022,66 @@ footer {
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0);   opacity: 1; }
 }
+
+/* =========================================
+   BOTÓN FLOTANTE "VER INDICACIONES" (móvil durante ruta activa)
+   ========================================= */
+#btn-ver-indicaciones {
+    position: fixed !important;
+    bottom: 28px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 9800 !important;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #4A4A4A, #2a2a2a);
+    color: #EDEBE3;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 28px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    animation: fabBounceIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+#btn-ver-indicaciones.fab-visible {
+    display: flex !important;
+}
+@keyframes fabBounceIn {
+    from { transform: translateX(-50%) translateY(60px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+}
+#btn-ver-indicaciones i {
+    font-size: 1.1rem;
+}
+
+/* Mapa full-height en móvil */
+@media (max-width: 768px) {
+    .full-map {
+        height: calc(100vh - 90px) !important;
+        border-radius: 0 !important;
+    }
+    #map {
+        min-height: calc(100vh - 90px) !important;
+    }
+    /* Header del mapa más compacto */
+    header h1 {
+        font-size: 1.6rem !important;
+    }
+    header .subtitle {
+        font-size: 0.95rem !important;
+    }
+    /* FAB reseñas en móvil: mover para no tapar el btn indicaciones */
+    #fab-resenas {
+        bottom: 90px !important;
+    }
+    /* Filtros: en móvil, panel flotante más pequeño */
+    #custom-filter {
+        max-width: 85vw !important;
+        font-size: 0.85rem !important;
+    }
+}

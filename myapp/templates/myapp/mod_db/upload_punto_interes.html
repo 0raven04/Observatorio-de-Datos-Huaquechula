@@ -55,7 +55,7 @@
                     <label class="form-label fw-bold">Nombre del Lugar *</label>
                     <input type="text" class="form-control" id="edit_nombre" name="nombre_punto" required>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Categoría *</label>
                     <select class="form-select" id="edit_categoria" name="categoria" required onchange="cambiarCategoriaPunto(this.value)">
                         <option value="ofrenda">Ofrenda</option>
@@ -63,9 +63,10 @@
                         <option value="servicio">Servicio</option>
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label fw-bold">Imagen de Portada (URL)</label>
-                    <input type="url" class="form-control" id="edit_imagen_portada" name="imagen_portada">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Imagen de Portada</label>
+                    <input type="file" class="form-control" id="edit_imagen_portada" name="imagen_portada" accept="image/*">
+                    <div id="portadaPreviewEdicion"></div>
                 </div>
             </div>
             
@@ -76,19 +77,19 @@
 
             <h6 class="border-bottom pb-2 mt-3 text-secondary"><i class="far fa-calendar-alt me-1"></i> Fechas y Horarios</h6>
             <div class="row">
-                <div class="col-md-3 mb-3">
+                <div class="col-md-5 mb-3">
                     <label class="form-label small fw-bold">Fecha Inicio</label>
                     <input type="date" class="form-control" id="edit_fecha_inicio" name="fecha_inicio">
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-5 mb-3">
                     <label class="form-label small fw-bold">Fecha Fin</label>
                     <input type="date" class="form-control" id="edit_fecha_fin" name="fecha_fin">
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-5 mb-3">
                     <label class="form-label small fw-bold">Apertura</label>
                     <input type="time" class="form-control" id="edit_hora_apertura" name="hora_apertura">
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-5 mb-3">
                     <label class="form-label small fw-bold">Cierre</label>
                     <input type="time" class="form-control" id="edit_hora_cierre" name="hora_cierre">
                 </div>
@@ -107,17 +108,13 @@
                 </div>
             </div>
 
-            <!-- Galería Multimedia por URL -->
             <div class="mb-3">
                 <label class="form-label small fw-bold"><i class="fas fa-images me-1"></i> Galería Multimedia</label>
                 <div id="galeriaExistente" class="preview-container mb-2"></div>
-                <div class="input-group mb-2">
-                    <input type="url" id="inputNuevaUrlGaleria" class="form-control" placeholder="https://... URL de imagen o video">
-                    <button type="button" class="btn btn-outline-primary" onclick="agregarUrlGaleria()">
-                        <i class="fas fa-plus"></i> Agregar
-                    </button>
+                <div class="mb-2">
+                    <input type="file" id="inputGaleriaPunto" class="form-control" multiple accept="image/*,video/*">
                 </div>
-                <div id="listaUrlsNuevas"></div>
+                <div id="previewGaleriaPunto" class="preview-container"></div>
             </div>
 
             <div id="campos_ofrenda_punto" class="conditional-section-punto" style="display:none;">
@@ -143,7 +140,7 @@
                             <option value="alimentacion">Alimentación</option>
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label class="form-label fw-bold">Contacto</label>
                         <input type="text" class="form-control" id="edit_contacto_servicio" name="contacto_servicio" placeholder="Tel, Email o Web">
                     </div>
@@ -175,7 +172,7 @@
                         </button>
                       </div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label class="fw-bold form-label">Reglas de Acceso</label>
                         <textarea class="form-control" id="edit_reglas_acceso" name="reglas_acceso" rows="2" placeholder="Ej: No mascotas..."></textarea>
                     </div>
@@ -219,7 +216,22 @@
                 document.getElementById('edit_categoria').value = data.categoria || '';
                 cambiarCategoriaPunto(data.categoria || '');
                 document.getElementById('edit_descripcion').value = data.descripcion || '';
-                document.getElementById('edit_imagen_portada').value = data.imagen_portada || '';
+                const imgInput = document.getElementById('edit_imagen_portada');
+                const previewContainer = document.getElementById('portadaPreviewEdicion'); // Asegúrate de crear este DIV en tu HTML
+
+                imgInput.value = ''; 
+
+                if (previewContainer) {
+                    if (data.imagen_portada) {
+                        previewContainer.innerHTML = `
+                            <div class="mt-2 p-2 border rounded bg-light text-center">
+                                <small class="text-muted d-block">Imagen actual:</small>
+                                <img src="${data.imagen_portada}" alt="Portada" style="max-height: 80px; max-width: 100%; border-radius: 4px;">
+                            </div>`;
+                    } else {
+                        previewContainer.innerHTML = '<small class="text-muted">Sin imagen</small>';
+                    }
+                }
                 document.getElementById('edit_fecha_inicio').value = data.fecha_inicio || '';
                 document.getElementById('edit_fecha_fin').value = data.fecha_fin || '';
                 document.getElementById('edit_hora_apertura').value = data.hora_apertura || '';
@@ -252,8 +264,9 @@
                 }
 
                 cargarGaleriaExistente(data.galeria || []);
-                document.getElementById('listaUrlsNuevas').innerHTML = '';
-                document.getElementById('inputNuevaUrlGaleria').value = '';
+                const galeriaInput = document.getElementById('inputGaleriaPunto');
+                if (galeriaInput) galeriaInput.value = '';
+                actualizarPreviewPunto();
 
                 new bootstrap.Modal(document.getElementById('modalEdicionPunto')).show();
             })
@@ -298,50 +311,6 @@
             div.appendChild(btn);
             cont.appendChild(div);
         });
-    }
-
-    // =============================================
-    // AGREGAR NUEVA URL A LA GALERÍA
-    // =============================================
-    function agregarUrlGaleria() {
-        const input = document.getElementById('inputNuevaUrlGaleria');
-        const url = input.value.trim();
-        if (!url) { showToast('Ingresa una URL válida', 'error'); return; }
-
-        const cont = document.getElementById('listaUrlsNuevas');
-
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'galeria_url_nueva';
-        hiddenInput.value = url;
-
-        const esVideo = /\.(mp4|webm|avi|mov)(\?|$)/i.test(url);
-        const preview = document.createElement('div');
-        preview.className = 'd-flex align-items-center gap-2 mb-1 p-1 border rounded bg-light';
-        preview.innerHTML = esVideo
-            ? `<i class="fas fa-film text-primary"></i>`
-            : `<img src="${url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.src=''" >`;
-
-        const span = document.createElement('span');
-        span.className = 'small text-truncate flex-grow-1';
-        span.style.maxWidth = '300px';
-        span.textContent = url;
-
-        const btnDel = document.createElement('button');
-        btnDel.type = 'button';
-        btnDel.className = 'btn btn-sm btn-outline-danger py-0 px-1';
-        btnDel.innerHTML = '<i class="fas fa-times"></i>';
-        btnDel.onclick = function() {
-            preview.remove();
-            hiddenInput.remove();
-        };
-
-        preview.appendChild(span);
-        preview.appendChild(btnDel);
-        cont.appendChild(hiddenInput);
-        cont.appendChild(preview);
-
-        input.value = '';
     }
 
     // =============================================

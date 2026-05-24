@@ -175,7 +175,7 @@
                     <div class="d-flex justify-content-center gap-1">
                         <!-- Botón para editar registro -->
                         <button 
-                            class="btn btn-sm btn-action btn-light"
+                            class="btn btn-sm btn-action btn-light btn-editar"
                             data-id="{{ r.id_registro }}"
                             data-url="{% url 'editar_registro' r.id_registro %}"
                             data-edit-url="{% url 'editar_registro' 0 %}"
@@ -196,7 +196,7 @@
                     <!-- Fila 2: Eliminar -->
                     <div class="d-flex justify-content-center gap-1">
                         <!-- Botón Eliminar -->
-                        <button class="btn btn-sm btn-action btn-danger"
+                        <button class="btn btn-sm btn-action btn-danger btn-eliminar"
                                 data-id="{{ r.id_registro }}"
                                 data-delete-url="{% url 'eliminar_registro' r.id_registro %}"
                                 title="Eliminar registro">
@@ -257,9 +257,6 @@
               <button type="button" class="btn btn-warning px-4" data-bs-dismiss="modal">
                 <i class="fas fa-times me-2"></i>Cancelar
               </button>
-              <button type="submit" class="btn boton px-4">
-                <i class="fas fa-save me-2"></i>Guardar Registro
-              </button>
             </div>
           </div>
         </div>
@@ -272,7 +269,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'myapp/JAV/js_lista_registro.js' %}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -280,16 +277,63 @@
         var myModalEl = document.getElementById('miModal');
         
         // 2. Escuchamos el evento de Bootstrap cuando el modal se oculta
-        myModalEl.addEventListener('hidden.bs.modal', function (event) {
-            
+        function limpiarModalRegistro() {
             // 3. Seleccionamos el formulario por su ID real 'formulario' y lo reseteamos
             var form = document.getElementById('formulario');
             if (form) {
                 form.reset();
                 // Si tienes validaciones visuales de Bootstrap, quítalas también:
                 form.classList.remove('was-validated'); 
+                form.action = '{% url "lista_registros" %}';
             }
+            var titulo = document.getElementById('tituloModal');
+            if (titulo) {
+                titulo.innerText = 'Nuevo Registro de Visita';
+            }
+            // Asegurar que los inputs queden habilitados y el botón de guardar visible
+            document.querySelectorAll('#formulario input, #formulario select, #formulario textarea').forEach(function(el){
+                try { el.disabled = false; } catch(e) {}
+            });
+            var btnGuardar = document.querySelector('#formulario button[type="submit"]');
+            if (btnGuardar) {
+                btnGuardar.style.display = '';
+                btnGuardar.disabled = false;
+            }
+
+            // Limpieza robusta: eliminar cualquier backdrop residual y quitar clase modal-open
+            document.querySelectorAll('.modal-backdrop').forEach(function(b){ b.parentNode && b.parentNode.removeChild(b); });
+            document.body.classList.remove('modal-open');
+            // Restaurar padding-right que Bootstrap añade al body al mostrar modal (si aplica)
+            document.body.style.paddingRight = '';
+        }
+
+        myModalEl.addEventListener('hidden.bs.modal', function (event) {
+            limpiarModalRegistro();
         });
+
+        var nuevoRegistroBtn = document.getElementById('btnNuevoRegistro');
+        if (nuevoRegistroBtn) {
+            nuevoRegistroBtn.addEventListener('click', function () {
+                var titulo = document.getElementById('tituloModal');
+                if (titulo) {
+                    titulo.innerText = 'Nuevo Registro de Visita';
+                }
+                var form = document.getElementById('formulario');
+                if (form) {
+                    form.action = '{% url "lista_registros" %}';
+                }
+                var hidden = document.querySelector('#formulario input[name="id_registro"]');
+                if (hidden) {
+                    hidden.remove();
+                }
+                // Asegurar que el botón guardar esté visible cuando se crea uno nuevo
+                var btnGuardar = document.querySelector('#formulario button[type="submit"]');
+                if (btnGuardar) {
+                    btnGuardar.style.display = '';
+                    btnGuardar.disabled = false;
+                }
+            });
+        }
     });
 
   function editarRegistro(id) {
@@ -326,11 +370,17 @@
               hidden.value = id;
 
               // Abrir el modal
-              const modal = new bootstrap.Modal(document.getElementById("miModal"));
+              const modalEl = document.getElementById("miModal");
+              const modal = new bootstrap.Modal(modalEl);
               modal.show();
+
+              // Asegurar limpieza si por alguna razón el evento no se dispara
+              modalEl.addEventListener('hidden.bs.modal', function () { 
+                  try { limpiarModalRegistro(); } catch(e){}
+              }, { once: true });
           })
           .catch(err => {
-              alert("Error: " + err.message);
+              showToast(err.message || 'Error', 'error');
           });
   }
 
@@ -371,7 +421,7 @@
               }, {once: true});
           })
           .catch(err => {
-              alert("Error: " + err.message);
+              showToast(err.message || 'Error', 'error');
           });
   }
   </script>

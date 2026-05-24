@@ -5,8 +5,10 @@ from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 import os
 import uuid
-from django.utils import timezone
-
+import secrets
+import string
+import hashlib
+from datetime import timedelta
 from mysite import settings
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -66,6 +68,52 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.nombre_usuario
+
+
+class TwoFactorCode(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='two_factor_codes')
+    code_hash = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    used = models.BooleanField(default=False)
+    used_at = models.DateTimeField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = 'TwoFactorCode'
+        ordering = ['-created_at']
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def verify_code(self, code):
+        return (
+            not self.used
+            and not self.is_expired()
+            and self.code_hash == hashlib.sha256(code.encode()).hexdigest()
+        )
+
+    def mark_as_used(self):
+        self.used = True
+        self.used_at = timezone.now()
+        self.save(update_fields=['used', 'used_at'])
+
+    @classmethod
+    def create_for_user(cls, user, ip_address=None, user_agent='', expiry_minutes=5):
+        cls.objects.filter(user=user, used=False).update(used=True)
+        code = ''.join(secrets.choice(string.digits) for _ in range(6))
+        code_hash = hashlib.sha256(code.encode()).hexdigest()
+        now = timezone.now()
+        expires_at = now + timedelta(minutes=expiry_minutes)
+        return cls.objects.create(
+            user=user,
+            code_hash=code_hash,
+            expires_at=expires_at,
+            ip_address=ip_address,
+            user_agent=user_agent[:255]
+        ), code
 
 
 class Encuestador(models.Model):
@@ -456,7 +504,7 @@ class Punto_Interes(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     
     # Imagen de portada (URL)
-    imagen_portada = models.URLField(max_length=500, blank=True, null=True, verbose_name="URL de imagen portada")
+    imagen_portada = models.CharField(max_length=500, blank=True, null=True, verbose_name="Ruta o URL de imagen portada")
     
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo')
     

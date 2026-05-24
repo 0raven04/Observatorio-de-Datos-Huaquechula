@@ -255,13 +255,31 @@ body {
 
 /* Estilos responsive */
 @media (max-width: 767px) {
-    .sidebar {
-        width: 85%;
-        max-width: 300px;
+    .navbar {
+        height: 64px !important;
     }
-    
+
+    .sidebar {
+        width: 90%;
+        max-width: 300px;
+        top: 64px;
+        height: calc(100vh - 64px);
+    }
+
+    .sidebar-overlay {
+        top: 64px;
+    }
+
     .main-content {
-        padding-top: 80px; /* Mantener offset */
+        padding-top: 64px;
+    }
+
+    /* Sidebar ocupa todo el ancho visible en pantallas muy pequeñas */
+    @media (max-width: 400px) {
+        .sidebar {
+            width: 100%;
+            max-width: 100%;
+        }
     }
 }
 

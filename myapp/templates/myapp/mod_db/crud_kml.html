@@ -15,7 +15,7 @@
     <div class="col-md-12 mb-3">
       <div class="d-flex justify-content-end">
         <div class="d-flex">
-          <button type="button" class="btn boton bt-body me-1" data-bs-toggle="modal" data-bs-target="#archivoModal">
+          <button type="button" class="btn boton bt-body me-1" data-bs-toggle="modal" data-bs-target="#archivoModal" onclick="abrirModalCreacion()">
             <i class="fas fa-plus me-1"></i> Nuevo Archivo URL
           </button>
           <button type="button" class="btn boton bt-body" data-bs-toggle="modal" data-bs-target="#categoriaModal">
@@ -270,15 +270,12 @@
                     
                     <!-- Botón Eliminar -->
                     <form action="{% url 'eliminar_archivo' archivo.id_archivo %}" 
-                            method="POST" 
-                            class="d-inline"
-                            onsubmit="return confirm('¿Eliminar este archivo y todas sus relaciones?');">
+                        method="POST" 
+                        class="d-inline delete-archivo-form">
                         {% csrf_token %}
-                        <button type="submit" 
-                                class="btn btn-sm btn-action btn-danger d-flex flex-column align-items-center justify-content-center"
-                                title="Eliminar archivo">
-                        <i class="fas fa-trash"></i>
-                        <span class="small mt-1">Eliminar</span>
+                        <button type="submit" class="btn btn-sm btn-action btn-danger ...">
+                            <i class="fas fa-trash"></i>
+                            <span class="small mt-1">Eliminar</span>
                         </button>
                     </form>
                     </div>
@@ -311,77 +308,44 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-    // Variables globales
-    let archivosFiltrados = Number("{{ archivos|length|default:'0' }}");
-
-
-    // Función para alternar visibilidad
-    document.addEventListener('DOMContentLoaded', function() {
-        // Configurar toggles de visibilidad
-        document.querySelectorAll('.visibility-toggle').forEach(function(toggle) {
-            toggle.addEventListener('change', function() {
-                const archivoId = this.getAttribute('data-archivo-id');
-                const visible = this.checked;
-                toggleVisibilidad(archivoId, visible);
-            });
-        });
-        
-        // Configurar filtros
-        setupFilters();
-        
-        // Configurar búsqueda
-        setupSearch();
+    // ==========================================
+    // 1. CONFIGURACIÓN DE SWEETALERT2 Y FUNCIONES GLOBALES
+    // ==========================================
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
     });
-    
-    function toggleVisibilidad(archivoId, visible) {
-        // Usar la URL correcta 'toggle_visibilidad'
-        fetch(`/toggle-visibilidad/${archivoId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: JSON.stringify({ visible: visible })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Actualizar badge de visibilidad
-                const row = document.querySelector(`tr[data-id="${archivoId}"]`);
-                if (row) {
-                    const badge = row.querySelector('td:nth-child(4) .badge');
-                    if (badge) {
-                        badge.textContent = visible ? 'Sí' : 'No';
-                        badge.className = visible ? 'badge bg-success' : 'badge bg-secondary';
-                    }
-                    
-                    // Actualizar atributo data-visible
-                    row.setAttribute('data-visible', visible ? 'visible' : 'oculto');
-                }
-                
-                showToast(visible ? 'Archivo visible' : 'Archivo oculto', 'success');
-            } else {
-                showToast('Error al cambiar visibilidad: ' + data.error, 'error');
-                const toggle = document.querySelector(`input[data-archivo-id="${archivoId}"]`);
-                if (toggle) {
-                    toggle.checked = !visible;
-                }
-            }
-        })
-        
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión', 'error');
-            const toggle = document.querySelector(`input[data-archivo-id="${archivoId}"]`);
-            if (toggle) {
-                toggle.checked = !visible;
-            }
-        });
-    }
 
-    // Función para obtener el CSRF Token de las cookies
-    function getCookie(name) {
+    window.showToast = function(message, type = 'info') {
+        Toast.fire({ icon: type, title: message });
+    };
+
+    window.showConfirmAction = function(message, confirmText = 'Sí', cancelText = 'Cancelar') {
+        return Swal.fire({
+            title: '¿Estás seguro?',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: confirmText,
+            cancelButtonText: cancelText
+        }).then((result) => {
+            return result.isConfirmed;
+        });
+    };
+
+    window.getCookie = function(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
@@ -394,221 +358,408 @@
             }
         }
         return cookieValue;
-    }
+    };
 
-    function procesarArchivo(archivoId) {
-        if (confirm('¿Procesar este archivo para extraer geometrías?')) {
-            showToast('Procesando archivo...', 'info');
-            
-            const url = `/procesar/${archivoId}/`; 
+    // ==========================================
+    // 2. INICIALIZACIÓN, INTERCEPTORES Y EVENTOS
+    // ==========================================
+    let archivosFiltrados = Number("{{ archivos|length|default:'0' }}");
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // CAMBIO AQUÍ: Usamos la función getCookie
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                // Importante: No enviar cuerpo si no es necesario, o enviar {}
-                body: JSON.stringify({}) 
-            })
-            .then(response => {
-                if (response.status === 401 || response.status === 403) {
-                    throw new Error('Sesión expirada o error de seguridad (CSRF)');
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- INTERCEPTOR DE FORMULARIO PARA GUARDAR EDICIÓN CON IMÁGENES ---
+        const urlForm = document.getElementById('urlForm');
+        if (urlForm) {
+            urlForm.addEventListener('submit', function(e) {
+                const modoEdicion = document.getElementById('modo_edicion');
+                const isEdit = modoEdicion && modoEdicion.value === 'true';
+                
+                // Solo interceptamos si es edición (porque devuelve JSON). 
+                // Si es creación, dejamos que el form se envíe normal.
+                if (isEdit) {
+                    e.preventDefault(); 
+                    window.showToast('Guardando cambios y subiendo archivos...', 'info');
+                    
+                    const formData = new FormData(this); 
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': window.getCookie('csrftoken')
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success) {
+                            window.showToast(data.message || 'Actualizado correctamente', 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            window.showToast(data.error || 'Error al guardar', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        window.showToast('Error de red al enviar el formulario', 'error');
+                    });
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    setTimeout(() => location.reload(), 2000);
-                } else {
-                    showToast('Error: ' + data.error, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast(error.message, 'error');
             });
         }
-    }
-    
-    // Actualizar desde URL
-    function actualizarDesdeURL(archivoId) {
-        if (confirm('¿Actualizar este archivo desde su URL? Esto verificará si hay cambios.')) {
-            showToast('Actualizando archivo...', 'info');
-            
-            // Usar la URL correcta 'actualizar_desde_url'
-            fetch(`actualizar-url/${archivoId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.cambiado) {
-                        if (confirm('El archivo ha cambiado. ¿Deseas reprocesarlo?')) {
-                            procesarArchivo(archivoId);
-                        } else {
-                            location.reload();
+
+        // Toggles y botones Eliminar directos
+        document.querySelectorAll('.visibility-toggle').forEach(function(toggle) {
+            toggle.addEventListener('change', function() {
+                window.toggleVisibilidad(this.getAttribute('data-archivo-id'), this.checked);
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-archivo-form button')) {
+                e.preventDefault();
+                const form = e.target.closest('.delete-archivo-form');
+                
+                window.showConfirmAction('¿Eliminar este archivo?', 'Sí, eliminar')
+                    .then(isConfirmed => {
+                        if (isConfirmed) {
+                            fetch(form.action, {
+                                method: 'POST',
+                                headers: { 'X-CSRFToken': window.getCookie('csrftoken') }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    window.showToast(data.message, 'success');
+                                    setTimeout(() => location.reload(), 1000);
+                                } else {
+                                    window.showToast(data.error, 'error');
+                                }
+                            });
                         }
+                    });
+            }
+        });
+        
+        setupFilters();
+        setupSearch();
+    });
+
+    // ==========================================
+    // 3. FUNCIONES DE MODAL Y DIBUJADO DE IMÁGENES
+    // ==========================================
+    
+    // Función para marcar imágenes de la galería que se van a borrar
+    window.marcarEliminarFotoVieja = function(btn, idFoto) {
+        const inputHidden = document.createElement('input');
+        inputHidden.type = 'hidden';
+        inputHidden.name = 'galeria_eliminar'; 
+        inputHidden.value = idFoto;
+        document.getElementById('urlForm').appendChild(inputHidden);
+        
+        btn.closest('.preview-item').remove();
+    };
+
+    window.abrirModalCreacion = function() {
+        const form = document.getElementById('urlForm');
+        if (form) {
+            form.reset();
+            form.action = '{% url "subir_desde_url" %}';
+            // Limpiar inputs ocultos de borrado residuales
+            form.querySelectorAll('input[name="galeria_eliminar"]').forEach(el => el.remove());
+        }
+
+        const modoGlobal = document.getElementById('modo_edicion');
+        if (modoGlobal) modoGlobal.value = "false";
+        
+        const modoForm = document.querySelector('#archivoModal form input[name="modo_edicion"]');
+        if (modoForm) modoForm.value = 'false';
+
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Agregar Archivo por URL';
+
+        if(typeof gestionarSelectores === 'function') {
+            gestionarSelectores(document.getElementById('tipo_punto').value);
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('archivoModal'));
+        modal.show();
+    };
+
+    window.abrirModalEdicion = function(archivoId) {
+        if (!archivoId) return;
+
+        fetch(`/archivos/detalle/${archivoId}/`)
+            .then(res => {
+                if(!res.ok) throw new Error("Error HTTP " + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    window.showToast(data.error, 'error');
+                    return;
+                }
+
+                // Preparar Modal
+                const modalEl = document.getElementById('archivoModal');
+                const form = modalEl.querySelector('form');
+                if (form) {
+                    form.reset();
+                    form.action = `/archivos/editar/${archivoId}/`;
+                    // Limpiar inputs ocultos de borrado de ediciones anteriores
+                    form.querySelectorAll('input[name="galeria_eliminar"]').forEach(el => el.remove());
+                }
+
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Archivo';
+                
+                const setHidden = (name, val) => {
+                    const inp = form.querySelector(`input[name="${name}"]`);
+                    if(inp) inp.value = val;
+                    const glob = document.getElementById(name);
+                    if(glob) glob.value = val;
+                };
+                setHidden('modo_edicion', 'true');
+                setHidden('archivo_id_editar', archivoId);
+
+                const setVal = (name, val) => {
+                    const el = form.querySelector(`[name="${name}"]`) || document.getElementById(name);
+                    if(el) el.value = val || '';
+                };
+
+                setVal('archivo_url', data.archivo_path);
+                setVal('nombre_archivo', data.nombre_archivo);
+                
+                const descArchivo = form.querySelector('textarea[name="descripcion"]');
+                if(descArchivo) descArchivo.value = data.descripcion || '';
+
+                const visibleInput = form.querySelector('input[name="visible"]');
+                if (visibleInput) visibleInput.checked = !!data.visible;
+
+                // --- 1. DIBUJAR IMAGEN DE PORTADA LOCAL ---
+                const imgInput = form.querySelector('input[name="imagen_portada"]');
+                const previewDiv = form.querySelector('#portadaPreview') || document.getElementById('portadaPreview');
+                
+                if (imgInput) imgInput.value = ''; 
+                
+                if (previewDiv) {
+                    if (data.imagen_portada) {
+                        previewDiv.innerHTML = `
+                            <div class="mt-2 p-2 border rounded bg-light text-center">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-image"></i> Portada actual guardada</small>
+                                <img src="${data.imagen_portada}" alt="Portada" style="max-height: 100px; max-width: 100%; object-fit: contain;">
+                                <div class="mt-1"><a href="${data.imagen_portada}" target="_blank" class="small">Ver en grande</a></div>
+                            </div>`;
                     } else {
-                        showToast('El archivo está actualizado', 'info');
-                        location.reload();
+                        previewDiv.innerHTML = ''; 
+                    }
+                }
+
+                // --- 2. DIBUJAR GALERÍA MULTIMEDIA VIEJA ---
+                const previewGaleria = document.getElementById('previewGaleria');
+                if (previewGaleria) {
+                    previewGaleria.innerHTML = ''; 
+                    
+                    if (data.galeria && data.galeria.length > 0) {
+                        data.galeria.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'preview-item border-primary shadow-sm';
+                            // Estilo en línea para asegurar visualización
+                            div.style.cssText = "position: relative; width: 100px; height: 100px; border: 2px solid #0d6efd; border-radius: 8px; overflow: hidden; display: inline-block; margin-right: 10px; margin-bottom: 10px;";
+                            
+                            const contenido = item.tipo === 'video' 
+                                ? '<div class="bg-dark text-white w-100 h-100 d-flex align-items-center justify-content-center"><i class="fas fa-video fa-2x"></i></div>' 
+                                : `<img src="${item.url}" alt="Foto Galeria" style="width:100%; height:100%; object-fit:cover;">`;
+                                
+                            div.innerHTML = `
+                                ${contenido}
+                                <button type="button" class="bg-danger text-white" onclick="marcarEliminarFotoVieja(this, ${item.id})" title="Eliminar foto" style="position: absolute; top: 3px; right: 3px; border: none; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    <i class="fas fa-times" style="font-size: 12px;"></i>
+                                </button>
+                                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(13, 110, 253, 0.8); color: white; font-size: 11px; text-align: center; padding: 2px;">
+                                    Guardada
+                                </div>
+                            `;
+                            previewGaleria.appendChild(div);
+                        });
+                    }
+                }
+
+                // --- 3. DIBUJAR DATOS CONDICIONALES DEL PUNTO ---
+                if (data.tipo_punto) {
+                    const selectTipo = document.getElementById('tipo_punto');
+                    if(selectTipo) {
+                        selectTipo.value = data.tipo_punto;
+                        if(typeof gestionarSelectores === 'function') gestionarSelectores(data.tipo_punto);
+                    }
+
+                    setVal('nombre_punto', data.nombre_punto);
+                    setVal('fecha_inicio', data.fecha_inicio);
+                    setVal('fecha_fin', data.fecha_fin);
+                    setVal('hora_apertura', data.hora_apertura);
+                    setVal('hora_cierre', data.hora_cierre);
+
+                    const diasInputs = form.querySelectorAll('input[name="dias_semana"]');
+                    diasInputs.forEach(cb => cb.checked = false); 
+                    if (data.dias_semana && data.dias_semana.length > 0) {
+                        data.dias_semana.forEach(dia => {
+                            const check = form.querySelector(`input[name="dias_semana"][value="${dia.trim()}"]`);
+                            if(check) check.checked = true;
+                        });
+                    }
+
+                    if (data.tipo_punto === 'sitio_turistico') {
+                        setVal('id_categoria_bd', data.id_categoria_bd);
+                        const reglasArea = form.querySelector('textarea[name="reglas_acceso"]');
+                        if(reglasArea) reglasArea.value = data.reglas_acceso || '';
+                        
+                    } else if (data.tipo_punto === 'ofrenda') {
+                        setVal('anfitrion', data.anfitrion);
+                        
+                    } else if (data.tipo_punto === 'servicio') {
+                        setVal('tipo_servicio', data.tipo_servicio);
+                        setVal('contacto_servicio', data.contacto_servicio);
+                        
+                        const pagosInputs = form.querySelectorAll('input[name="tipo_pago"]');
+                        pagosInputs.forEach(cb => cb.checked = false);
+                        if (data.tipo_pago && data.tipo_pago.length > 0) {
+                            data.tipo_pago.forEach(pago => {
+                                const ch = form.querySelector(`input[name="tipo_pago"][value="${pago.trim()}"]`);
+                                if(ch) ch.checked = true;
+                            });
+                        }
                     }
                 } else {
-                    showToast('Error: ' + data.error, 'error');
+                    const selectTipo = document.getElementById('tipo_punto');
+                    if(selectTipo) {
+                        selectTipo.value = "";
+                        if(typeof gestionarSelectores === 'function') gestionarSelectores("");
+                    }
                 }
+
+                // Abrir Modal
+                const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl); 
+                modalInstance.show();
             })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error de conexión', 'error');
+            .catch(err => {
+                window.showToast("Error al cargar datos: " + err.message, 'error');
             });
-        }
-    }
-    
-    // Mostrar modal de edición
-    function mostrarEditarRecurso(archivoId) {
-    fetch("{% url 'detalle_archivo' 0 %}".replace('0', archivoId), {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error HTTP ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            document.getElementById('editarArchivoId').value = archivoId;
-            document.getElementById('editarNombreArchivo').value = data.nombre_archivo || '';
-            document.getElementById('editarDescripcion').value = data.descripcion || '';
-            document.getElementById('editarTipoArchivo').value = data.tipo_archivo || 'kmz';
-            document.getElementById('editarVisible').checked = data.visible;
+    };
 
-            // 🔥 ABRIR MODAL
-            document.getElementById('editarRecursoModal').classList.add('active');
+    window.cerrarModal = function() {
+        const modalEl = document.getElementById('archivoModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+            modalInstance.hide();
         } else {
-            showToast(data.error || 'Error al cargar datos', 'error');
+            modalEl.classList.remove('active');
         }
-    })
-    .catch(error => {
-        console.error(error);
-        showToast('No se pudo cargar el recurso', 'error');
-    });
-}
+    };
 
-    
-    function cerrarEditarModal() {
-        document.getElementById('editarRecursoModal').classList.remove('active');
-    }
-    
-    // Guardar edición de archivo
-    function guardarEdicionRecurso() {
-        const archivoId = document.getElementById('editarArchivoId').value;
-        const nombre = document.getElementById('editarNombreArchivo').value.trim();
-        
-        if (!nombre) {
-            showToast('El nombre del archivo es obligatorio', 'error');
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('nombre_archivo', nombre);
-        formData.append('descripcion', document.getElementById('editarDescripcion').value);
-        formData.append('tipo_archivo', document.getElementById('editarTipoArchivo').value);
-        formData.append('visible', document.getElementById('editarVisible').checked ? 'on' : 'off');
-        
-        // Usar la URL correcta 'editar_archivo'
-        fetch(`/editar/${archivoId}/`, {
+    // ==========================================
+    // 4. ACCIONES RAPIDAS DE TABLA Y FILTROS
+    // ==========================================
+    window.toggleVisibilidad = function(archivoId, visible) {
+        fetch(`/toggle-visibilidad/${archivoId}/`, {
             method: 'POST',
-            body: formData,
             headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            }
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ visible: visible })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast('Cambios guardados exitosamente', 'success');
-                setTimeout(() => location.reload(), 1500);
+                const row = document.querySelector(`tr[data-id="${archivoId}"]`);
+                if (row) {
+                    const badge = row.querySelector('td:nth-child(4) .badge');
+                    if (badge) {
+                        badge.textContent = visible ? 'Sí' : 'No';
+                        badge.className = visible ? 'badge bg-success' : 'badge bg-secondary';
+                    }
+                    row.setAttribute('data-visible', visible ? 'visible' : 'oculto');
+                }
+                window.showToast(visible ? 'Archivo visible' : 'Archivo oculto', 'success');
             } else {
-                showToast('Error: ' + (data.error || 'Error desconocido'), 'error');
+                window.showToast('Error al cambiar visibilidad: ' + data.error, 'error');
+                const toggle = document.querySelector(`input[data-archivo-id="${archivoId}"]`);
+                if (toggle) toggle.checked = !visible;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión', 'error');
         });
-    }
+    };
+
+    window.procesarArchivo = function(archivoId) {
+        window.showConfirmAction('¿Procesar este archivo para extraer geometrías?', 'Procesar')
+            .then(isConfirmed => {
+                if (!isConfirmed) return;
+                window.showToast('Procesando archivo...', 'info');
+                
+                fetch(`/procesar/${archivoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({}) 
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.showToast(data.message, 'success');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        window.showToast('Error: ' + data.error, 'error');
+                    }
+                });
+            });
+    };
     
-    function guardarArchivo() {
-        const modoEdicion = document.getElementById('modo_edicion').value === "true";
-        const archivoId = document.getElementById('archivo_id_editar').value;
-        const formData = new FormData(document.getElementById('urlForm'));
+    window.actualizarDesdeURL = function(archivoId) {
+        window.showConfirmAction('¿Actualizar este archivo desde su URL? Esto verificará si hay cambios.', 'Actualizar')
+            .then(isConfirmed => {
+                if (!isConfirmed) return;
+                window.showToast('Actualizando archivo...', 'info');
+                
+                fetch(`/actualizar-url/${archivoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.getCookie('csrftoken'),
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.cambiado) {
+                            window.showConfirmAction('El archivo ha cambiado. ¿Deseas reprocesarlo?', 'Sí, reprocesar')
+                                .then(isReprocess => {
+                                    if (isReprocess) window.procesarArchivo(archivoId);
+                                    else location.reload();
+                                });
+                        } else {
+                            window.showToast('El archivo está actualizado (sin cambios)', 'info');
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    } else {
+                        window.showToast('Error: ' + data.error, 'error');
+                    }
+                });
+            });
+    };
 
-        let url = '/subir-url/'; // default: nuevo archivo
-        if (modoEdicion && archivoId) {
-            url = `/editar/${archivoId}/`; // editar archivo existente
-        }
-
-        fetch(url, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCSRFToken() },
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Archivo guardado correctamente', 'success');
-                cerrarModal();
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(data.error || 'Error al guardar', 'error');
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            showToast('Error de conexión', 'error');
-        });
-    }
-
-
-
-
-    // Configurar filtros
     function setupFilters() {
         const filterType = document.getElementById('filterType');
         const filterStatus = document.getElementById('filterStatus');
-        
-        if (filterType) {
-            filterType.addEventListener('change', applyFilters);
-        }
-        
-        if (filterStatus) {
-            filterStatus.addEventListener('change', applyFilters);
-        }
+        if (filterType) filterType.addEventListener('change', applyFilters);
+        if (filterStatus) filterStatus.addEventListener('change', applyFilters);
     }
     
-    // Configurar búsqueda
     function setupSearch() {
         const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', applyFilters);
-        }
+        if (searchInput) searchInput.addEventListener('keyup', applyFilters);
     }
     
-    // Aplicar filtros y búsqueda
     function applyFilters() {
         const searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const filterType = document.getElementById('filterType')?.value || '';
         const filterStatus = document.getElementById('filterStatus')?.value || '';
-        
         const rows = document.querySelectorAll('#archivosTable tbody .archivo-row');
         let visibleCount = 0;
         
@@ -619,316 +770,30 @@
             const name = row.getAttribute('data-name');
             const desc = row.getAttribute('data-desc');
             const url = row.getAttribute('data-url');
-            
             let shouldShow = true;
             
-            // Filtrar por tipo
-            if (filterType && type !== filterType) {
-                shouldShow = false;
-            }
+            if (filterType && type !== filterType) shouldShow = false;
             
-            // Filtrar por estado
             if (filterStatus) {
-                if (filterStatus === 'visible' && visible !== 'visible') {
-                    shouldShow = false;
-                } else if (filterStatus === 'oculto' && visible !== 'oculto') {
-                    shouldShow = false;
-                } else if (filterStatus === 'procesado' && status !== 'procesado') {
-                    shouldShow = false;
-                } else if (filterStatus === 'pendiente' && status !== 'pendiente') {
-                    shouldShow = false;
-                } else if (filterStatus === 'error' && !row.querySelector('.status-error')) {
-                    shouldShow = false;
-                }
+                if (filterStatus === 'visible' && visible !== 'visible') shouldShow = false;
+                else if (filterStatus === 'oculto' && visible !== 'oculto') shouldShow = false;
+                else if (filterStatus === 'procesado' && status !== 'procesado') shouldShow = false;
+                else if (filterStatus === 'pendiente' && status !== 'pendiente') shouldShow = false;
+                else if (filterStatus === 'error' && !row.querySelector('.status-error')) shouldShow = false;
             }
             
-            // Filtrar por búsqueda
             if (searchText) {
-                const matchesSearch = name.includes(searchText) || 
-                                    desc.includes(searchText) || 
-                                    url.includes(searchText);
-                if (!matchesSearch) {
-                    shouldShow = false;
-                }
+                const matchesSearch = name.includes(searchText) || desc.includes(searchText) || url.includes(searchText);
+                if (!matchesSearch) shouldShow = false;
             }
             
-            // Mostrar/ocultar fila
             row.style.display = shouldShow ? '' : 'none';
             if (shouldShow) visibleCount++;
         });
         
-        // Actualizar contador
         const filteredCount = document.getElementById('filteredCount');
-        if (filteredCount) {
-            filteredCount.textContent = visibleCount;
-        }
-        
+        if (filteredCount) filteredCount.textContent = visibleCount;
         archivosFiltrados = visibleCount;
     }
-    
-    // Función para mostrar notificaciones
-    function showToast(message, type = 'info') {
-        // Eliminar toast existente
-        const existingToast = document.getElementById('customToast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-        
-        // Crear nuevo toast
-        const toast = document.createElement('div');
-        toast.id = 'customToast';
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideInRight 0.3s ease-out;
-        `;
-        
-        // Estilo según tipo
-        if (type === 'success') {
-            toast.style.backgroundColor = '#28a745';
-        } else if (type === 'error') {
-            toast.style.backgroundColor = '#e74c3c';
-        } else if (type === 'info') {
-            toast.style.backgroundColor = '#17a2b8';
-        } else {
-            toast.style.backgroundColor = '#6c757d';
-        }
-        
-        toast.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // Remover después de 3 segundos
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }
-        }, 3000);
-        
-        // Añadir animaciones CSS si no existen
-        if (!document.querySelector('#toastAnimations')) {
-            const style = document.createElement('style');
-            style.id = 'toastAnimations';
-            style.textContent = `
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOutRight {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-    
-    // Cerrar modal al hacer clic fuera
-    window.addEventListener('click', function(event) {
-        const modal = document.getElementById('editarRecursoModal');
-        if (event.target === modal) {
-            cerrarEditarModal();
-        }
-    });
-    
-    // Cerrar modal con Escape
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            cerrarEditarModal();
-        }
-    });
-
-    window.abrirModalCreacion = function() {
-        const form = document.getElementById('urlForm');
-        if (form) form.reset();
-
-        document.getElementById('modo_edicion').value = "false";
-        document.getElementById('archivo_id_editar').value = "";
-        // también actualizar los hidden dentro del formulario (evitar IDs duplicados usando selector dentro del modal)
-        const modoForm = document.querySelector('#archivoModal form input[name="modo_edicion"]');
-        if (modoForm) modoForm.value = 'false';
-        const archivoIdForm = document.querySelector('#archivoModal form input[name="archivo_id_editar"]');
-        if (archivoIdForm) archivoIdForm.value = '';
-
-        gestionarSelectores(document.getElementById('tipo_punto').value);
-        const modal = new bootstrap.Modal(document.getElementById('archivoModal'));
-        modal.show();
-    };
-
-
-    window.cerrarModal = function() {
-        document.getElementById('archivoModal').classList.remove('active');
-    };
-
-function abrirModalEdicion(archivoId) {
-    if (!archivoId) return;
-
-    console.log("Cargando ID:", archivoId);
-
-    fetch(`/archivos/detalle/${archivoId}/`)
-        .then(res => {
-            if(!res.ok) throw new Error("Error HTTP " + res.status);
-            return res.json();
-        })
-        .then(data => {
-            if (!data.success) {
-                showToast(data.error, 'error');
-                return;
-            }
-
-            // 1. Preparar Modal y Formulario
-            const modalEl = document.getElementById('archivoModal');
-            const form = modalEl.querySelector('form');
-            if(form) form.reset(); 
-
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar';
-            
-            // Inputs ocultos (IDs globales y del form)
-            const setHidden = (name, val) => {
-                const inp = form.querySelector(`input[name="${name}"]`);
-                if(inp) inp.value = val;
-                // Fallback a global
-                const glob = document.getElementById(name);
-                if(glob) glob.value = val;
-            };
-            setHidden('modo_edicion', 'true');
-            setHidden('archivo_id_editar', archivoId);
-
-            // 2. Datos del Archivo
-            const setVal = (name, val) => {
-                const el = form.querySelector(`[name="${name}"]`) || document.getElementById(name);
-                if(el) el.value = val || '';
-            };
-
-            setVal('archivo_url', data.archivo_path);
-            setVal('nombre_archivo', data.nombre_archivo);
-            // El textarea del archivo
-            const descArchivo = form.querySelector('textarea[name="descripcion"]');
-            if(descArchivo) descArchivo.value = data.descripcion || '';
-
-            if(document.getElementById('visible')) {
-                document.getElementById('visible').checked = data.visible;
-            }
-
-            // 3. Datos del Punto (Imagen, Días, Galería)
-            if (data.tipo_punto) {
-                // Selector tipo
-                const selectTipo = document.getElementById('tipo_punto');
-                if(selectTipo) {
-                    selectTipo.value = data.tipo_punto;
-                    if(typeof gestionarSelectores === 'function') gestionarSelectores(data.tipo_punto);
-                }
-
-                // Campos comunes
-                setVal('nombre_punto', data.nombre_punto);
-                setVal('estado_punto', data.estado_punto);
-                setVal('fecha_inicio', data.fecha_inicio);
-                setVal('fecha_fin', data.fecha_fin);
-                setVal('hora_apertura', data.hora_apertura);
-                setVal('hora_cierre', data.hora_cierre);
-
-                // --- CORRECCIÓN IMAGEN PORTADA ---
-                // Asegúrate que tu input en HTML tenga name="imagen_portada"
-                const imgPortada = form.querySelector('input[name="imagen_portada"]');
-                if(imgPortada) {
-                    imgPortada.value = data.imagen_portada || '';
-                }
-
-                // --- CORRECCIÓN DÍAS DE SEMANA ---
-                const diasInputs = form.querySelectorAll('input[name="dias_semana"]');
-                diasInputs.forEach(cb => cb.checked = false); // Limpiar
-                
-                if (data.dias_semana && data.dias_semana.length > 0) {
-                    data.dias_semana.forEach(dia => {
-                        // value="lunes", value="martes", etc.
-                        const check = form.querySelector(`input[name="dias_semana"][value="${dia.trim()}"]`);
-                        if(check) check.checked = true;
-                    });
-                }
-
-                // --- CORRECCIÓN GALERÍA MULTIMEDIA ---
-                const previewContainer = document.getElementById('previewGaleria');
-                if (previewContainer) {
-                    previewContainer.innerHTML = ''; // Limpiar
-                    
-                    if (data.galeria && data.galeria.length > 0) {
-                        data.galeria.forEach(item => {
-                            const div = document.createElement('div');
-                            div.className = 'preview-item';
-                            // Estilos inline para asegurar visualización
-                            div.style.cssText = "position: relative; width: 80px; height: 80px; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; margin-right: 5px; margin-bottom: 5px;";
-                            
-                            let content = '';
-                            if (item.tipo === 'video') {
-                                content = `<div style="width:100%; height:100%; background:#000; color:#fff; display:flex; align-items:center; justify-content:center;"><i class="fas fa-video"></i></div>`;
-                            } else {
-                                content = `<img src="${item.url}" style="width:100%; height:100%; object-fit:cover;">`;
-                            }
-
-                            div.innerHTML = `
-                                ${content}
-                                <div title="Guardado en BD" style="position: absolute; top: 0; right: 0; background: rgba(0,255,0,0.7); color: white; width: 20px; height: 20px; text-align: center; font-size: 12px;">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                            `;
-                            previewContainer.appendChild(div);
-                        });
-                    }
-                }
-
-                // Subtipos
-                if (data.tipo_punto === 'sitio_turistico') {
-                    setVal('id_categoria_bd', data.id_categoria_bd);
-                    setVal('reglas_acceso', data.reglas_acceso);
-                } else if (data.tipo_punto === 'ofrenda') {
-                    setVal('anfitrion', data.anfitrion);
-                } else if (data.tipo_punto === 'servicio') {
-                    setVal('tipo_servicio', data.tipo_servicio);
-                    setVal('contacto_servicio', data.contacto_servicio);
-                    // Pagos
-                    const pagosInputs = form.querySelectorAll('input[name="tipo_pago"]');
-                    pagosInputs.forEach(cb => cb.checked = false);
-                    if (data.tipo_pago) {
-                        data.tipo_pago.forEach(pago => {
-                            const ch = form.querySelector(`input[name="tipo_pago"][value="${pago.trim()}"]`);
-                            if(ch) ch.checked = true;
-                        });
-                    }
-                }
-            } else {
-                // Sin punto: resetear selectores
-                const selectTipo = document.getElementById('tipo_punto');
-                if(selectTipo) {
-                    selectTipo.value = "";
-                    if(typeof gestionarSelectores === 'function') gestionarSelectores("");
-                }
-            }
-
-            // Abrir Modal Bootstrap
-            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl); 
-            modalInstance.show();
-        })
-        .catch(err => {
-            console.error(err);
-            showToast("Error: " + err.message, 'error');
-        });
-}
-
 </script>
 {% endblock %}

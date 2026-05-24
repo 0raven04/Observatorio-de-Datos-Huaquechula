@@ -383,3 +383,73 @@ body {
     z-index: 11160;
 }
 
+
+/* =============================================
+   RESPONSIVE MEJORAS — VISTA MÓVIL CRUD
+   ============================================= */
+
+@media (max-width: 767px) {
+
+    /* Tablas: scroll horizontal fluido */
+    .table-responsive,
+    .table-responsive-admin {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
+    }
+
+    /* Celdas más compactas */
+    .custom-table td,
+    .custom-table th {
+        padding: 6px 8px !important;
+        font-size: 0.78rem !important;
+        white-space: nowrap;
+    }
+
+    /* Botones de acción: solo icono en pantallas pequeñas */
+    .btn-action {
+        min-width: 34px !important;
+        min-height: 34px !important;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        font-size: 0.85rem !important;
+    }
+    .btn-action i {
+        margin: 0 !important;
+    }
+
+    /* Modales full-width en móvil */
+    .modal-dialog {
+        margin: 60px 8px 8px !important;
+        max-width: calc(100% - 16px) !important;
+    }
+    .modal-dialog.modal-lg {
+        max-width: calc(100% - 16px) !important;
+    }
+
+    /* Formularios en modal: campos en columna */
+    .modal-body .row > .col-md-6,
+    .modal-body .row > .col-md-4,
+    .modal-body .row > .col-md-3 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Card headers más compactos */
+    .card-header {
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    /* Títulos de página más pequeños */
+    h2, .h2 {
+        font-size: 1.3rem !important;
+    }
+
+    /* Botones submit en modales más grandes para touch */
+    .modal-body .boton.bt-body {
+        min-height: 48px !important;
+        font-size: 1rem !important;
+    }
+}

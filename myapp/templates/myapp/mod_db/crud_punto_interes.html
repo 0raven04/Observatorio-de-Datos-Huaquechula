@@ -249,12 +249,9 @@ function cambiarEstadoPunto(id, esActivo, toggleElement) {
     }
 
     function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
-        toast.style.backgroundColor = type === 'success' ? '#28a745' : type === 'error' ? '#e74c3c' : '#17a2b8';
-        toast.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><span>${message}</span></div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        if (window.showSweetAlertToast) {
+            return window.showSweetAlertToast(message, type);
+        }
     }
 </script>
 {% endblock %}

@@ -16,6 +16,13 @@ from pathlib import Path
 import django.db.backends.mysql.base
 from datetime import timedelta
 
+# Cargar variables de entorno desde .env automáticamente
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR if False else Path(__file__).resolve().parent.parent / '.env')
+except ImportError:
+    pass  # python-dotenv no instalado; usar variables de entorno del sistema
+
 def check_database_version_supported(self):
     pass
 
@@ -189,6 +196,18 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',    # para mantener el backend default (opcional)
 ]
 
+# Correo SMTP para códigos de verificación 2FA
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+
+# Enviar correos reales requiere configurar las variables de entorno SMTP.
+# Si quieres forzar esto en desarrollo, define EMAIL_HOST_USER y EMAIL_HOST_PASSWORD.
+
 
 
 # Media files (local — usado en desarrollo)
@@ -293,3 +312,25 @@ SPECTACULAR_SETTINGS = {
     'CONTACT': {'email': 'contacto@observatorio-huaquechula.mx'},
     'LICENSE': {'name': 'CC BY 4.0', 'url': 'https://creativecommons.org/licenses/by/4.0/'},
 }
+
+# =====================================================
+# CORREO ELECTRÓNICO — Recuperación de contraseña
+# =====================================================
+# Configurar en .env: EMAIL_HOST_USER y EMAIL_HOST_PASSWORD
+
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend'
+)
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    'Observatorio Huaquechula <no-reply@observatorio-huaquechula.mx>'
+)
+
+# El enlace de reseteo expira en 1 hora (3600 segundos)
+PASSWORD_RESET_TIMEOUT = 3600

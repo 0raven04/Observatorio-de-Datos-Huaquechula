@@ -46,14 +46,124 @@
             border-color: rgba(0,0,0,0.08) !important;
         }
 
+        /* Padding-top responsive del main */
         main.main-content {
-            padding-top: 110px !important;
+            padding-top: 90px !important;
+        }
+        @media (min-width: 768px) {
+            main.main-content {
+                padding-top: 110px !important;
+            }
+        }
+
+        /* Tablas admin: scroll horizontal en móvil */
+        @media (max-width: 767px) {
+            .table-responsive-admin {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            /* Reducir padding del container en móvil */
+            .container-fluid.px-3 {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+            /* Cards mas compactas */
+            .card-body {
+                padding: 0.5rem !important;
+            }
+            /* Fuente ligeramente menor en tablas */
+            .table th, .table td {
+                font-size: 0.8rem;
+            }
+            /* Botón acción más compacto */
+            .btn-action {
+                min-width: 40px !important;
+                min-height: 36px !important;
+                padding: 0.35rem 0.5rem !important;
+                font-size: 0.75rem !important;
+            }
+            /* Formularios en modales full-width */
+            .modal-dialog {
+                margin: 0.5rem !important;
+                max-width: calc(100% - 1rem) !important;
+            }
+            /* Filtros en vista móvil */
+            .filter-row-mobile {
+                flex-direction: column !important;
+            }
+        }
+
+        /* Forzar SweetAlert2 toast por encima de modales */
+        .swal2-container {
+            z-index: 22000 !important;
+        }
+        .swal2-toast {
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+        }
+        .swal2-confirm-popup {
+            border-radius: 1rem !important;
+            font-size: 0.95rem;
         }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+    <script defer>
+        window.showSweetAlertToast = function(message, type = 'info') {
+            const icon = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            const title = message || '';
+            if (window.Swal) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    zIndex: 20000,
+                    backdrop: false,
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    iconColor: type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#0ea5e9',
+                    customClass: {
+                        popup: 'swal2-toast',
+                    },
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+                Toast.fire({ icon, title });
+            } else {
+                alert(title);
+            }
+        };
+        window.showToast = function(message, type = 'info') {
+            if (window.showSweetAlertToast) {
+                return window.showSweetAlertToast(message, type);
+            }
+        };
+
+        window.showSweetAlertConfirm = function(message, confirmText = 'Sí', cancelText = 'Cancelar') {
+            if (window.Swal) {
+                return Swal.fire({
+                    title: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: confirmText,
+                    cancelButtonText: cancelText,
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'swal2-confirm-popup',
+                    },
+                    backdrop: true,
+                    zIndex: 22000,
+                }).then(result => result.isConfirmed);
+            }
+            return Promise.resolve(confirm(message));
+        };
+    </script>
     <script src="{% static 'myapp/JAV/accessibility.js' %}" defer></script>
     <script src="{% static 'myapp/JAV/settings.js' %}" defer></script>
     <script src="{% static 'myapp/JAV/java.js' %}" defer></script>
@@ -324,8 +434,6 @@
             const sidebar = document.getElementById('sidebar');
             const sidebarHamburger = document.getElementById('sidebarHamburger');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const navbarCollapse = document.getElementById('navbarSupportedContent');
 
             let isSidebarOpen = false;
 
@@ -370,16 +478,6 @@
             // Event listeners
             sidebarHamburger.addEventListener('click', toggleSidebar);
             sidebarOverlay.addEventListener('click', closeSidebar);
-            
-            // El botón móvil ahora también abre el sidebar
-            if (mobileMenuToggle) {
-                mobileMenuToggle.addEventListener('click', function() {
-                    // Si estamos en móvil, abrir el sidebar
-                    if (window.innerWidth < 768) {
-                        toggleSidebar();
-                    }
-                });
-            }
 
             // Cerrar sidebar al hacer clic en enlaces/botones (en móvil)
             document.querySelectorAll('.sidebar-nav .nav-link, .sidebar-buttons .btn').forEach(element => {
@@ -436,5 +534,4 @@
 
     {% block extra_js %} {% endblock %}
 </body>
-
 </html>

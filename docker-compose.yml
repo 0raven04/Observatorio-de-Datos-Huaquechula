@@ -8,6 +8,7 @@ services:
           MYSQL_USER: observatorio_user
           MYSQL_PASSWORD: 123456
           MYSQL_ROOT_PASSWORD: password_root_seguro
+          
     ports:
       - "3306:3306"
     volumes:
@@ -29,10 +30,16 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=3306
+      #Informacion del e-mail para el envio de codigos de verificacion 2FA
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=brayandanielperezpinto@gmail.com
+      - EMAIL_HOST_PASSWORD=ytwtdegwhelarwjm
+      - DEFAULT_FROM_EMAIL=brayandanielperezpinto@gmail.com
     volumes:
       - media_data:/vol/web/media
       - static_data:/vol/web/static
-      # Opcionalmente montar el código para live-reloading en desarrollo
       - .:/app:z
     depends_on:
       db:
