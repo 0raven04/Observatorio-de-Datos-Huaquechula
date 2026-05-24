@@ -49,8 +49,12 @@ _csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()]
 
 # ── Seguridad HTTPS (solo en producción, cuando DEBUG=False) ──────────────────
+# NOTA: Azure App Service termina SSL en el load balancer (proxy), por lo que
+# Django recibe HTTP internamente. Se usa SECURE_PROXY_SSL_HEADER para detectar
+# HTTPS correctamente y evitar loops de redirección infinitos.
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # detectar HTTPS via proxy de Azure
+    SECURE_SSL_REDIRECT = False    # Azure ya fuerza HTTPS externamente; aquí causaría loop
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000        # 1 año
@@ -84,13 +88,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS — debe ir primero
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # debe ir justo después de SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -173,13 +177,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/vol/web/static')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'myapp/static')]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'myapp/static')]
 
 TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'myapp/templates')]
 

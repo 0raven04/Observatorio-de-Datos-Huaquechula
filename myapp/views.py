@@ -3085,57 +3085,60 @@ def dashboard_view(request):
     Vista principal del Dashboard del Observatorio.
     Muestra los indicadores agrupados por Eje y Categoría,
     con datos de sparklines, tendencias y conteos para el dashboard premium.
+
+    NOTA: Los atributos calculados (trend_percent, sparkline_values) se guardan
+    en un dict 'indicators_data' porque el template re-evalúa categoria.indicadores.all()
+    creando objetos Python frescos sin los atributos asignados en el bucle de la vista.
     """
     import json
-    
+
     ejes = Eje.objects.prefetch_related('categorias__indicadores__mediciones').all()
-    
+
     total_indicadores = 0
     total_categorias = 0
-    
+    indicators_data = {}  # {pk: {sparkline_values, trend_direction, trend_percent}}
+
     for eje in ejes:
         eje_indicator_count = 0
         for categoria in eje.categorias.all():
             total_categorias += 1
             for indicador in categoria.indicadores.all():
                 eje_indicator_count += 1
-                # Obtener mediciones ordenadas por período
+
                 mediciones = list(indicador.mediciones.all().order_by('periodo'))
                 values = [float(m.valor) for m in mediciones]
-                
-                # Sparkline data (JSON array of values)
-                indicador.sparkline_values = json.dumps(values) if len(values) > 1 else ''
-                
-                # Trend calculation
+
+                sparkline = json.dumps(values) if len(values) > 1 else ''
+                trend_direction = 'stable'
+                trend_percent = '0.0'
+
                 if len(values) >= 2:
                     prev_val = values[-2]
                     last_val = values[-1]
                     if prev_val != 0:
                         change = ((last_val - prev_val) / abs(prev_val)) * 100
-                        indicador.trend_percent = f"{abs(change):.1f}"
+                        trend_percent = f"{abs(change):.1f}"
                         if change > 0.5:
-                            indicador.trend_direction = 'up'
+                            trend_direction = 'up'
                         elif change < -0.5:
-                            indicador.trend_direction = 'down'
-                        else:
-                            indicador.trend_direction = 'stable'
-                    else:
-                        indicador.trend_direction = 'stable'
-                        indicador.trend_percent = '0.0'
-                else:
-                    indicador.trend_direction = 'stable'
-                    indicador.trend_percent = '0.0'
-        
+                            trend_direction = 'down'
+
+                indicators_data[indicador.pk] = {
+                    'sparkline_values': sparkline,
+                    'trend_direction': trend_direction,
+                    'trend_percent': trend_percent,
+                }
+
         eje.indicator_count = eje_indicator_count
         total_indicadores += eje_indicator_count
-    
+
     return render(request, 'myapp/dashboard.html', {
         'ejes': ejes,
         'total_indicadores': total_indicadores,
         'total_categorias': total_categorias,
+        'indicators_data': indicators_data,
     })
 
-@login_required
 def category_detail_view(request, category_id):
     """
     Vista detallada para una categoría de indicadores.
@@ -3149,11 +3152,17 @@ def category_detail_view(request, category_id):
     # Procesar datos para cada indicador (similar al dashboard)
     indicadores = categoria.indicadores.all()
     for indicador in indicadores:
+        # Siempre inicializar para evitar que el template muestre el nombre de la variable
+        indicador.trend_direction = 'stable'
+        indicador.trend_percent = '0.0'
+        indicador.sparkline_values = ''
+
         mediciones = list(indicador.mediciones.all().order_by('periodo'))
         values = [float(m.valor) for m in mediciones]
-        
-        indicador.sparkline_values = json.dumps(values) if len(values) > 1 else ''
-        
+
+        if len(values) > 1:
+            indicador.sparkline_values = json.dumps(values)
+
         if len(values) >= 2:
             prev_val = values[-2]
             last_val = values[-1]
@@ -3166,12 +3175,6 @@ def category_detail_view(request, category_id):
                     indicador.trend_direction = 'down'
                 else:
                     indicador.trend_direction = 'stable'
-            else:
-                indicador.trend_direction = 'stable'
-                indicador.trend_percent = '0.0'
-        else:
-            indicador.trend_direction = 'stable'
-            indicador.trend_percent = '0.0'
             
     return render(request, 'myapp/category_detail.html', {
         'categoria': categoria,

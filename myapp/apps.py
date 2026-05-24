@@ -2,7 +2,6 @@ from django.apps import AppConfig
 from django.conf import settings
 import os
 import logging
-from transformers import pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +29,7 @@ class ResenasConfig(AppConfig):
         )
 
         try:
+            from transformers import pipeline  # import diferido: solo carga torch cuando se necesita
             self.detector_toxicidad = pipeline(
                 "text-classification",
                 model=ruta_modelo,

@@ -1,0 +1,71 @@
+# Guía de Operaciones en Producción (Azure + Docker)
+
+Esta guía explica cómo está estructurado el entorno de producción en Azure y cómo realizar tareas de mantenimiento.
+
+## 🏗️ 1. ¿Cómo funciona la arquitectura actual?
+
+No fue necesario subir el código fuente (`.py`, `.html`) directamente a Azure porque configuramos una arquitectura moderna basada en **Contenedores (Docker)**. 
+
+El flujo funciona así:
+1. Tu código, dependencias (`requirements.txt`), y sistema operativo base (Linux) se empaquetan en una "Imagen de Docker" en tu computadora.
+2. Esa imagen se sube a **Docker Hub** (en tu cuenta `kevinarana/observatorio-de-datos-huaquechula-web`). Docker Hub funciona como un "repositorio de contenedores".
+3. **Azure App Service** está configurado para descargar y arrancar la imagen más reciente (`latest`) directamente desde Docker Hub.
+
+**Ventajas:**
+* Lo que funciona en tu PC funcionará exactamente igual en Azure (mismo SO, mismas librerías).
+* Azure no necesita saber cómo instalar Python o tus librerías; el contenedor ya trae todo pre-instalado.
+
+---
+
+## 🚀 2. ¿Cómo despliego nuevos cambios a producción?
+
+Si haces cambios en tu código local (ej. editas vistas, templates, CSS) y quieres verlos en producción, debes seguir este proceso de 3 pasos:
+
+### Paso A: Reconstruir la imagen de Docker
+Abre tu terminal en la carpeta del proyecto y ejecuta:
+```bash
+docker build -f Dockerfile.prod -t kevinarana/observatorio-de-datos-huaquechula-web:latest .
+```
+
+### Paso B: Subir la nueva imagen a Docker Hub
+```bash
+docker push kevinarana/observatorio-de-datos-huaquechula-web:latest
+```
+
+### Paso C: Reiniciar Azure para que descargue los cambios
+```bash
+az webapp restart --resource-group rg-observatorio-prod --name observatorio-huaquechula
+```
+*Nota: Azure tardará unos 15-30 segundos en descargar la nueva imagen y arrancar el sitio.*
+
+---
+
+## 🛠️ 3. ¿Cómo ejecuto comandos en Producción? (Crear Superusuario)
+
+La base de datos MySQL está en Azure y por defecto **bloquea conexiones externas por seguridad**. 
+
+Para facilitarte la vida, he creado un script llamado **`run_prod_cmd.sh`** en la carpeta de tu proyecto. Este script automáticamente:
+1. Detecta tu IP pública.
+2. Abre un agujero temporal en el firewall de Azure MySQL para tu IP.
+3. Ejecuta el comando de Django conectándose a la base de datos de producción.
+4. Cierra el firewall inmediatamente para mantener la seguridad.
+
+### Ejemplo: Crear un Superusuario
+Simplemente abre tu terminal en la carpeta del proyecto y ejecuta:
+
+```bash
+./run_prod_cmd.sh createsuperuser
+```
+*(El script te pedirá el correo y la contraseña, exactamente igual que si lo hicieras en desarrollo, pero los datos se guardarán en producción).*
+
+### Otros ejemplos útiles:
+```bash
+# Si haces cambios en tus modelos, debes aplicar las migraciones en producción:
+./run_prod_cmd.sh migrate
+
+# Si necesitas entrar a la consola de Django en producción:
+./run_prod_cmd.sh shell
+
+# Si quieres subir un nuevo archivo fixture:
+./run_prod_cmd.sh loaddata otro_archivo.json
+```

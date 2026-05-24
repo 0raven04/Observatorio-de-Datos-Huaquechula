@@ -1,5 +1,6 @@
 {% extends 'myapp/base.html' %}
 {% load static %}
+{% load dict_extras %}
 
 {% block title %}Observatorio Territorial — Huaquechula{% endblock %}
 
@@ -336,7 +337,7 @@
                             </div>
                         </div>
 
-                        {% with last_med=indicador.mediciones.last %}
+                    {% with last_med=indicador.mediciones.last idata=indicators_data|get_item:indicador.pk %}
                         <div class="indicator-value-row">
                             {% if last_med %}
                             <span class="indicator-main-value">{{ last_med.valor }}</span>
@@ -355,29 +356,28 @@
                             <span style="color: transparent;">-</span>
                             {% endif %}
                         </div>
-                        {% endwith %}
 
                         <!-- Sparkline -->
-                        {% if indicador.sparkline_values %}
-                        <div class="indicator-sparkline">
-                            <canvas data-values="{{ indicador.sparkline_values }}"
+                        {% if idata.sparkline_values %}
+                        <div class="indicator-sparkline" id="spark-wrap-{{ indicador.pk }}">
+                            <canvas
+                                data-values="{{ idata.sparkline_values }}"
                                 data-color="{% if 'Bienestar' in eje.nombre %}#2980B9{% elif 'Tradición' in eje.nombre or 'Patrimonio' in eje.nombre %}#8E44AD{% else %}#27AE60{% endif %}"
                                 height="40"></canvas>
                         </div>
                         {% endif %}
 
                         <div class="indicator-trend-row">
-                            {% if indicador.trend_direction == 'up' %}
-                            <span class="indicator-trend up"><i class="fas fa-arrow-up"></i> {{ indicador.trend_percent
-                                }}%</span>
-                            {% elif indicador.trend_direction == 'down' %}
-                            <span class="indicator-trend down"><i class="fas fa-arrow-down"></i> {{
-                                indicador.trend_percent }}%</span>
+                            {% if idata.trend_direction == 'up' %}
+                            <span class="indicator-trend up"><i class="fas fa-arrow-up"></i> {{ idata.trend_percent }}%</span>
+                            {% elif idata.trend_direction == 'down' %}
+                            <span class="indicator-trend down"><i class="fas fa-arrow-down"></i> {{ idata.trend_percent }}%</span>
                             {% else %}
                             <span class="indicator-trend stable"><i class="fas fa-minus"></i> Estable</span>
                             {% endif %}
                             <span class="indicator-view-btn">Ver gráfica <i class="fas fa-arrow-right"></i></span>
                         </div>
+                    {% endwith %}
                     </div>
                     {% empty %}
                     <p style="color: var(--color-gris-claro); font-size: 0.875rem;">No hay indicadores en esta

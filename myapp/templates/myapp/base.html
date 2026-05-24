@@ -159,12 +159,46 @@
 
     <!-- Dialogflow Messenger -->
     <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
-    <df-messenger
-      intent="WELCOME"
-      chat-title="Guía Turístico Huaquechula"
-      agent-id="7e706205-e76f-45ac-a3ff-c239702204d9"
-      language-code="es"
-    ></df-messenger>
+    <div id="chatbot-container"></div>
+    <script>
+      (function() {
+        var STORAGE_KEY = 'chatbot_greeted';
+        var alreadyGreeted = sessionStorage.getItem(STORAGE_KEY);
+        var container = document.getElementById('chatbot-container');
+        
+        // Crear el elemento df-messenger de forma dinámica con el valor adecuado de wait-open
+        var el = document.createElement('df-messenger');
+        el.setAttribute('intent', 'WELCOME');
+        el.setAttribute('chat-title', 'Guía Turístico Huaquechula');
+        el.setAttribute('agent-id', '7e706205-e76f-45ac-a3ff-c239702204d9');
+        el.setAttribute('language-code', 'es');
+        
+        if (alreadyGreeted) {
+          el.setAttribute('wait-open', 'true');
+        } else {
+          el.setAttribute('wait-open', 'false');
+        }
+        
+        container.appendChild(el);
+
+        el.addEventListener('df-messenger-loaded', function() {
+          if (!alreadyGreeted) {
+            sessionStorage.setItem(STORAGE_KEY, 'true');
+            // Auto-ocultar el globo de bienvenida después de 6 segundos
+            setTimeout(function() {
+              if (el.shadowRoot) {
+                var bubble = el.shadowRoot.querySelector('df-messenger-chat-bubble');
+                if (bubble && typeof bubble.closeMinChat === 'function') {
+                  bubble.closeMinChat();
+                } else if (typeof el.closeChat === 'function') {
+                  el.closeChat();
+                }
+              }
+            }, 6000);
+          }
+        });
+      })();
+    </script>
 
     <!-- Accessibility and Settings -->
     <script src="{% static 'myapp/JAV/accessibility.js' %}" defer></script>
