@@ -94,14 +94,72 @@ class KMLProcessor:
 
 
     def _obtener_xml_content(self, contenido_raw):
-        # ... Tu lógica de obtención de XML existente ...
+        import os
+        from django.conf import settings
+
         if contenido_raw.startswith(b'PK'):
             try:
                 with zipfile.ZipFile(io.BytesIO(contenido_raw)) as z:
                     kml_files = [f for f in z.namelist() if f.lower().endswith('.kml')]
                     if not kml_files:
                         raise Exception("El KMZ no contiene archivos .kml")
-                    return z.read(kml_files[0])
+                    
+                    kml_content_bytes = z.read(kml_files[0])
+                    
+                    # 1. Buscar archivos de imagen dentro del KMZ
+                    image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')
+                    media_files = [f for f in z.namelist() if f.lower().endswith(image_extensions)]
+                    
+                    if media_files:
+                        from django.core.files.storage import default_storage
+                        from django.core.files.base import ContentFile
+                        
+                        # Decodificar el contenido KML para poder hacer reemplazos de texto
+                        kml_text = None
+                        for encoding in ('utf-8', 'latin-1', 'cp1252'):
+                            try:
+                                kml_text = kml_content_bytes.decode(encoding)
+                                break
+                            except UnicodeDecodeError:
+                                continue
+                                
+                        for f in media_files:
+                            try:
+                                # Extraer archivo y guardarlo a través del almacenamiento por defecto de Django
+                                data = z.read(f)
+                                ruta_storage = f"kmz_media/{self.archivo_db.id_archivo}/{f}"
+                                
+                                if default_storage.exists(ruta_storage):
+                                    default_storage.delete(ruta_storage)
+                                default_storage.save(ruta_storage, ContentFile(data))
+                                
+                                # Obtener la URL pública correspondiente
+                                public_url = default_storage.url(ruta_storage)
+                                
+                                # Si pudimos decodificar el KML, reemplazamos cualquier referencia relativa
+                                if kml_text:
+                                    # Reemplazo exacto de path con comillas simples/dobles en src
+                                    kml_text = kml_text.replace(f'src="{f}"', f'src="{public_url}"')
+                                    kml_text = kml_text.replace(f"src='{f}'", f"src='{public_url}'")
+                                    
+                                    # También con "./" al principio
+                                    if f.startswith('./'):
+                                        f_sin_punto = f[2:]
+                                    else:
+                                        f_sin_punto = f
+                                        
+                                    kml_text = kml_text.replace(f'src="./{f_sin_punto}"', f'src="{public_url}"')
+                                    kml_text = kml_text.replace(f"src='./{f_sin_punto}'", f"src='{public_url}'")
+                                    
+                                    # Reemplazo de texto libre
+                                    kml_text = kml_text.replace(f, public_url)
+                            except Exception as ex:
+                                print(f"Error extrayendo {f} del KMZ: {ex}")
+                                
+                        if kml_text:
+                            kml_content_bytes = kml_text.encode('utf-8')
+                            
+                    return kml_content_bytes
             except zipfile.BadZipFile:
                 return contenido_raw
         else:
@@ -262,10 +320,74 @@ class KMLProcessor:
             # Auto-crear punto de interés si no existe
             if not geometria_final.punto_interes_set.exists():
                 self._crear_punto_interes_automatico(geometria_final, geo)
+            else:
+                # Si ya existe, pero no tiene imagen de portada, intentamos extraerla del KML
+                punto_existente = geometria_final.punto_interes_set.first()
+                if punto_existente:
+                    if not punto_existente.imagen_portada:
+                        imagen_detectada = self._detectar_imagen_portada_kml(geo)
+                        if imagen_detectada:
+                            punto_existente.imagen_portada = imagen_detectada
+                            punto_existente.save()
+                    if not punto_existente.descripcion or punto_existente.descripcion == "Importado automáticamente del KML":
+                        desc_kml = self._obtener_descripcion_kml(geo)
+                        if desc_kml:
+                            punto_existente.descripcion = desc_kml
+                            punto_existente.save()
 
         return {'creados': creados, 'actualizados': actualizados}
-    
-    
+
+    def _detectar_imagen_portada_kml(self, geo_dict):
+        """
+        Analiza la descripción y propiedades de la geometría para extraer la primera imagen válida.
+        """
+        descripcion = geo_dict.get('descripcion', '')
+        props = geo_dict.get('propiedades', {})
+        
+        # 1. Buscar en descripción (ej. tag <img src="...">)
+        if descripcion:
+            img_match = re.search(r'src=["\']([^"\']+\.(?:png|jpg|jpeg|gif|webp|bmp)[^"\']*)["\']', descripcion, re.IGNORECASE)
+            if img_match:
+                return img_match.group(1)
+            
+            # Buscar URL directa
+            img_url_match = re.search(r'(https?://[^\s"\']+\.(?:png|jpg|jpeg|gif|webp|bmp))', descripcion, re.IGNORECASE)
+            if img_url_match:
+                return img_url_match.group(1)
+                
+            # Buscar patrón de kmz_media
+            kmz_match = re.search(r'(/media/kmz_media/[^\s"\'>]+)', descripcion)
+            if kmz_match:
+                return kmz_match.group(1)
+                
+        # 2. Buscar en propiedades extendidas
+        if props:
+            for k, v in props.items():
+                if isinstance(v, str):
+                    if 'http' in v or '/media/' in v:
+                        img_match = re.search(r'([^\s"\']+\.(?:png|jpg|jpeg|gif|webp|bmp))', v, re.IGNORECASE)
+                        if img_match:
+                            return img_match.group(1)
+                        elif '/media/kmz_media/' in v:
+                            return v
+        return ""
+
+    def _obtener_descripcion_kml(self, geo_dict):
+        """
+        Genera una descripción rica a partir de la descripción o propiedades extendidas.
+        """
+        descripcion = geo_dict.get('descripcion', '')
+        props = geo_dict.get('propiedades', {})
+        
+        if not descripcion and props:
+            detalles = []
+            if 'Dirección' in props: 
+                detalles.append(f"Dirección: {props['Dirección']}")
+            if 'Nom_ánima' in props: 
+                detalles.append(f"Dedicada a: {props['Nom_ánima']}")
+            return "\n".join(detalles) if detalles else "Importado automáticamente del KML"
+            
+        return descripcion
 
     def _crear_punto_interes_automatico(self, geometria, geo_dict):
         """
@@ -287,24 +409,18 @@ class KMLProcessor:
             categoria_detectada = 'sitio_turistico'
 
         # 2. Construir una descripción rica extrayendo datos del KML
-        descripcion = geo_dict.get('descripcion', '')
-        if not descripcion and props:
-            detalles = []
-            if 'Dirección' in props: 
-                detalles.append(f"Dirección: {props['Dirección']}")
-            if 'Nom_ánima' in props: 
-                detalles.append(f"Dedicada a: {props['Nom_ánima']}")
-            
-            descripcion = "\n".join(detalles) if detalles else "Importado automáticamente del KML"
+        descripcion = self._obtener_descripcion_kml(geo_dict)
 
-        # 3. Crear el Punto_Interes principal
+        # 3. Crear el Punto_Interes principal con imagen detectada
+        imagen_detectada = self._detectar_imagen_portada_kml(geo_dict)
         nuevo_punto = Punto_Interes.objects.create(
             id_geometria=geometria,
             categoria=categoria_detectada,
             nombre=geometria.nombre,
             descripcion=descripcion,
             estado='activo',
-            usuario_creacion=self.archivo_db.usuario
+            usuario_creacion=self.archivo_db.usuario,
+            imagen_portada=imagen_detectada or None
         )
 
         # 4. Crear el registro en la sub-tabla correspondiente

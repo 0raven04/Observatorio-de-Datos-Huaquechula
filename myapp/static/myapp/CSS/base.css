@@ -793,3 +793,132 @@ df-messenger {
     --df-messenger-bot-message-font-color: var(--color-gris-oscuro);
     z-index: 99999;
 }
+
+/* ====================================================
+   AJUSTES DE LEGIBILIDAD Y CONTRASTE EN MENÚ MÓVIL
+   ==================================================== */
+.offcanvas {
+    background-color: var(--theme-bg) !important;
+    color: var(--theme-text) !important;
+    border-left: 1px solid var(--theme-border) !important;
+}
+
+.offcanvas-header {
+    border-bottom: 1px solid var(--theme-border) !important;
+    padding: 1.2rem 1.5rem !important;
+}
+
+.offcanvas-title {
+    color: var(--theme-text) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Botón cerrar personalizado y visible */
+.offcanvas-header .btn-close {
+    background-color: rgba(74, 74, 74, 0.08) !important;
+    border-radius: 50% !important;
+    padding: 10px !important;
+    opacity: 0.85 !important;
+    transition: all 0.3s ease !important;
+    filter: none !important; /* Oscuro en modo claro */
+}
+
+.offcanvas-header .btn-close:hover {
+    background-color: rgba(74, 74, 74, 0.15) !important;
+    opacity: 1 !important;
+}
+
+[data-theme="dark"] .offcanvas-header .btn-close {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    filter: invert(1) grayscale(1) brightness(2) !important; /* Blanco en modo oscuro */
+}
+
+[data-theme="dark"] .offcanvas-header .btn-close:hover {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Enlaces del menú móvil - Súper específico para evitar sobreescrituras */
+.navbar .offcanvas .offcanvas-body .mobile-nav .nav-item .nav-link,
+.navbar .offcanvas .offcanvas-body .navbar-nav.mobile-nav .nav-link,
+.offcanvas-body .mobile-nav .nav-link {
+    color: #212529 !important; /* Negro/Gris carbón en modo claro */
+    background-color: #ffffff !important; /* Fondo blanco */
+    border: 1px solid #dcdcdc !important;
+    border-radius: 25px !important;
+    padding: 0.8rem 2rem !important;
+    margin: 0.4rem 0 !important;
+    display: block !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* En modo oscuro, poner las letras claras sobre fondo oscuro */
+[data-theme="dark"] .navbar .offcanvas .offcanvas-body .mobile-nav .nav-item .nav-link,
+[data-theme="dark"] .navbar .offcanvas .offcanvas-body .navbar-nav.mobile-nav .nav-link,
+[data-theme="dark"] .offcanvas-body .mobile-nav .nav-link {
+    color: #f8f9fa !important; /* Blanco en modo oscuro */
+    background-color: #2b3035 !important; /* Fondo gris oscuro */
+    border-color: #495057 !important;
+}
+
+/* Estado al pasar el dedo o hacer hover/focus */
+.navbar .offcanvas .offcanvas-body .mobile-nav .nav-item .nav-link:hover,
+.navbar .offcanvas .offcanvas-body .mobile-nav .nav-item .nav-link:focus,
+.navbar .offcanvas .offcanvas-body .mobile-nav .nav-item .nav-link:active,
+.navbar .offcanvas .offcanvas-body .navbar-nav.mobile-nav .nav-link:hover,
+.navbar .offcanvas .offcanvas-body .navbar-nav.mobile-nav .nav-link:focus,
+.navbar .offcanvas .offcanvas-body .navbar-nav.mobile-nav .nav-link:active,
+.offcanvas-body .mobile-nav .nav-link:hover,
+.offcanvas-body .mobile-nav .nav-link:focus,
+.offcanvas-body .mobile-nav .nav-link:active {
+    background-color: #4A4A4A !important;
+    color: #ffffff !important;
+    border-color: #4A4A4A !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Estado Activo (Página actual) */
+.navbar .offcanvas .offcanvas-body .mobile-nav .nav-item .nav-link.active,
+.navbar .offcanvas .offcanvas-body .navbar-nav.mobile-nav .nav-link.active,
+.offcanvas-body .mobile-nav .nav-link.active {
+    background-color: var(--color-arena-oscuro) !important;
+    color: #121212 !important; /* Letras bien oscuras en el botón activo */
+    border-color: var(--color-arena-oscuro) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 8px rgba(214, 206, 170, 0.2) !important;
+}
+
+/* Submenús en Móvil */
+.navbar .offcanvas .offcanvas-body .submenu .nav-link.submenu-item,
+.offcanvas-body .submenu .nav-link.submenu-item {
+    color: #212529 !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-theme="dark"] .navbar .offcanvas .offcanvas-body .submenu .nav-link.submenu-item,
+[data-theme="dark"] .offcanvas-body .submenu .nav-link.submenu-item {
+    color: #f8f9fa !important;
+}
+
+.offcanvas-body .submenu .nav-link.submenu-item:hover {
+    background-color: rgba(74, 74, 74, 0.1) !important;
+    transform: none !important;
+}
+
+/* Ocultar el botón flotante de configuración cuando el menú móvil está abierto */
+body:has(.offcanvas.show) .settings-button,
+body.offcanvas-open .settings-button {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    display: none !important;
+}

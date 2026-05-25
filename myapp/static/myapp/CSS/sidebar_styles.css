@@ -57,41 +57,44 @@ body {
     color: var(--color-naranja-claro) !important;
 }
 
-/* 4. Sidebar principal - INICIALMENTE OCULTO */
+/* 4. Sidebar principal - INICIALMENTE OCULTO con transform */
 .sidebar {
     width: var(--sidebar-width);
     background: linear-gradient(135deg, var(--color-gris-oscuro) 0%, #191818e6 100%);
     color: var(--sidebar-text-color);
     position: fixed;
     top: 80px; /* Debajo de la navbar */
-    left: calc(var(--sidebar-width) * -1); /* Inicialmente oculto fuera de pantalla */
+    left: 0; /* Siempre en left:0, ocultado con transform */
     height: calc(100vh - 80px);
     overflow-y: auto;
-    transition: left var(--transition-speed) ease;
-    z-index: 1200;
+    transform: translateX(-100%); /* Oculto fuera de pantalla - 100% de su propio ancho */
+    transition: transform var(--transition-speed) ease;
+    z-index: 1250;
     box-shadow: 3px 0 10px rgba(0,0,0,0.2);
-    display: flex; /* Para que el user-info-sidebar de abajo se pegue al fondo */
+    display: flex;
     flex-direction: column;
     font-family: var(--font-sans);
+    will-change: transform; /* Aceleración por hardware */
 }
 
 /* Sidebar visible */
 .sidebar.open {
-    left: 0;
+    transform: translateX(0);
 }
 
 /* Overlay para móvil */
 .sidebar-overlay {
     position: fixed;
-    top: 80px;
+    top: 0; /* Cubre desde el top, incluyendo navbar */
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 999;
+    background-color: rgba(0,0,0,0.55);
+    z-index: 1200; /* Debajo del sidebar (1250) pero sobre todo lo demás */
     display: none;
-    opacity: 0; /* Para la animación de opacidad */
+    opacity: 0;
     transition: opacity var(--transition-speed) ease;
+    backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.active {
@@ -260,26 +263,32 @@ body {
     }
 
     .sidebar {
-        width: 90%;
-        max-width: 300px;
+        width: 85%;
+        max-width: 320px;
         top: 64px;
         height: calc(100vh - 64px);
-    }
-
-    .sidebar-overlay {
-        top: 64px;
+        /* La ocultación y apertura ya se controla con transform en el estilo base */
     }
 
     .main-content {
-        padding-top: 64px;
+        padding-top: 70px;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
-    /* Sidebar ocupa todo el ancho visible en pantallas muy pequeñas */
-    @media (max-width: 400px) {
-        .sidebar {
-            width: 100%;
-            max-width: 100%;
-        }
+    /* Espaciado interior del contenedor principal en móvil */
+    .main-content > .container,
+    .main-content > .container-fluid {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+}
+
+/* Pantallas muy pequeñas (< 400px) */
+@media (max-width: 400px) {
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
     }
 }
 

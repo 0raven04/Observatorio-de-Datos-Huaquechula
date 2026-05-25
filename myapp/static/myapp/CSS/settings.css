@@ -755,3 +755,13 @@
     .settings-button,
     .settings-modal { display: none !important; }
 }
+
+/* Ocultar el botón flotante de configuración cuando el menú lateral o el offcanvas móvil están abiertos */
+body.modal-open .settings-button,
+body.offcanvas-open .settings-button,
+.offcanvas.show ~ .settings-button,
+.sidebar.open ~ .settings-button {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}

@@ -78,7 +78,7 @@ urlpatterns = [
 
     path('procesar/<int:archivo_id>/', views.procesar_archivo, name='procesar_archivo'),
     path('actualizar-url/<int:archivo_id>/', views.actualizar_desde_url, name='actualizar_desde_url'),
-    path('eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
+    path('archivos/eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
     path('crear-categoria/', views.crear_categoria, name='crear_categoria'),
     path('categorias/eliminar/<int:categoria_id>/', views.eliminar_categoria, name='eliminar_categoria'),
     # Verificación masiva

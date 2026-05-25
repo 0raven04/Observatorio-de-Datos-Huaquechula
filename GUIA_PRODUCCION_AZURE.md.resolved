@@ -69,3 +69,15 @@ Simplemente abre tu terminal en la carpeta del proyecto y ejecuta:
 # Si quieres subir un nuevo archivo fixture:
 ./run_prod_cmd.sh loaddata otro_archivo.json
 ```
+
+---
+
+## 🔍 4. Resolución de Problemas Comunes (Troubleshooting)
+
+### ⏱️ Bucle de reinicios o carga infinita en Azure (Timeout de descarga de imagen)
+**Causa:** Por defecto, Azure App Service tiene un límite de **230 segundos** para descargar, extraer e iniciar el contenedor. Dado que la imagen del observatorio pesa considerablemente, la descarga desde Docker Hub puede demorar de 3 a 6 minutos, causando que Azure aborte y reinicie el contenedor constantemente en un bucle infinito de carga.
+**Solución:** Hemos configurado la variable de entorno **`WEBSITES_CONTAINER_START_TIME_LIMIT=1200`** en tu App Service de Azure. Esto le da a Azure hasta 20 minutos para descargar la imagen de forma paciente sin interrumpir el despliegue.
+
+### 📁 Error `Permission denied: '/home/appuser'` en los logs de Gunicorn
+**Causa:** Gunicorn, Django y otras librerías de Python (como HuggingFace o PyTorch) intentan escribir archivos de caché o configuraciones en la carpeta personal del usuario (`$HOME`, es decir, `/home/appuser`). Si la carpeta no existe o no tiene permisos de escritura, Gunicorn arroja errores de permisos que pueden inestabilizar la aplicación.
+**Solución:** Modificamos el `Dockerfile` y `Dockerfile.prod` para crear explícitamente el directorio `/home/appuser` y otorgarle permisos completos al usuario `appuser` (usando `useradd -m`). Esto elimina cualquier advertencia de permisos de raíz en producción.

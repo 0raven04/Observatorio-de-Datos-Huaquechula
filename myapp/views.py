@@ -1124,8 +1124,7 @@ def editar_documento(request, id):
                 # Eliminar archivo físico anterior si existe
                 if documento.archivo:
                     try:
-                        if os.path.isfile(documento.archivo.path):
-                            os.remove(documento.archivo.path)
+                        documento.archivo.delete(save=False)
                     except Exception as e:
                         print(f"Error al eliminar archivo anterior: {e}")
                 documento.archivo = archivo
@@ -1138,8 +1137,7 @@ def editar_documento(request, id):
                 # Si cambian a URL y tenían archivo físico, opcionalmente lo removemos
                 if documento.archivo:
                     try:
-                        if os.path.isfile(documento.archivo.path):
-                            os.remove(documento.archivo.path)
+                        documento.archivo.delete(save=False)
                     except Exception as e:
                         print(f"Error al remover archivo: {e}")
                     documento.archivo = None
@@ -1172,8 +1170,7 @@ def eliminar_documento(request, id):
         # Eliminar archivo físico del disco si existe
         if documento.archivo:
             try:
-                if os.path.isfile(documento.archivo.path):
-                    os.remove(documento.archivo.path)
+                documento.archivo.delete(save=False)
             except Exception as e:
                 print(f"Error al eliminar archivo físico: {e}")
                 
@@ -1212,9 +1209,9 @@ def descargar_documento(request, id):
     # Servir archivo local si existe
     if documento.archivo:
         try:
-            if os.path.exists(documento.archivo.path):
+            if documento.archivo.storage.exists(documento.archivo.name):
                 response = FileResponse(
-                    open(documento.archivo.path, 'rb'),
+                    documento.archivo.open('rb'),
                     as_attachment=True,
                     filename=os.path.basename(documento.archivo.name)
                 )
@@ -1641,8 +1638,7 @@ def subir_desde_url(request):
                     # --- [CORRECCIÓN 1: IMAGEN PORTADA] ---
                     img_portada = ''
                     if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
-                        from django.core.files.storage import FileSystemStorage
-                        fs = FileSystemStorage()
+                        from django.core.files.storage import default_storage as fs
                         f_port = request.FILES['imagen_portada']
                         filename_port = fs.save(f"portadas/{f_port.name}", f_port)
                         img_portada = fs.url(filename_port)
@@ -1679,7 +1675,8 @@ def subir_desde_url(request):
                         punto.hora_cierre = h_cie
                         punto.categoria = tipo_seleccionado
                         # Nuevos campos
-                        punto.imagen_portada = img_portada
+                        if img_portada:
+                            punto.imagen_portada = img_portada
                         punto.dias_semana = dias_str
                         
                         # Integridad de usuario
@@ -1737,8 +1734,7 @@ def subir_desde_url(request):
                     # --- E) PROCESAR GALERÍA MULTIMEDIA ---
                     archivos_galeria = request.FILES.getlist('galeria_multimedia')
                     if archivos_galeria and punto:
-                        from django.core.files.storage import FileSystemStorage # Importar aquí si no es global
-                        fs = FileSystemStorage()
+                        from django.core.files.storage import default_storage as fs
                         
                         for f in archivos_galeria:
                             ext = f.name.split('.')[-1].lower()
@@ -1936,9 +1932,9 @@ def editar_archivo(request, archivo_id):
                     punto.hora_apertura = request.POST.get('hora_apertura') or None
                     punto.hora_cierre = request.POST.get('hora_cierre') or None
 
-                    # --- IMAGEN DE PORTADA LOCAL ---
+                    # --- IMAGEN DE PORTADA CON STORAGE POR DEFECTO ---
                     if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
-                        fs = FileSystemStorage()
+                        from django.core.files.storage import default_storage as fs
                         f_port = request.FILES['imagen_portada']
                         filename_port = fs.save(f"portadas/{f_port.name}", f_port)
                         punto.imagen_portada = fs.url(filename_port)
@@ -1988,7 +1984,7 @@ def editar_archivo(request, archivo_id):
                     # --- 5. GALERIA MULTIMEDIA ---
                     archivos_galeria = request.FILES.getlist('galeria_multimedia')
                     if archivos_galeria:
-                        fs = FileSystemStorage()
+                        from django.core.files.storage import default_storage as fs
                         for f in archivos_galeria:
                             ext = f.name.split('.')[-1].lower()
                             tipo = 'video' if ext in ['mp4', 'avi', 'mov', 'webm'] else 'audio' if ext in ['mp3', 'wav'] else 'imagen'
@@ -2136,8 +2132,7 @@ def editar_punto(request, punto_id):
         punto.categoria = request.POST.get('categoria', punto.categoria)
         punto.descripcion = request.POST.get('descripcion', '')
         if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
-            from django.core.files.storage import FileSystemStorage
-            fs = FileSystemStorage()
+            from django.core.files.storage import default_storage as fs
             f_port = request.FILES['imagen_portada']
             filename_port = fs.save(f"portadas/{f_port.name}", f_port)
             punto.imagen_portada = fs.url(filename_port)
@@ -2202,8 +2197,7 @@ def editar_punto(request, punto_id):
        # 3. Procesar nueva Galería Multimedia (Archivos locales)
         archivos_galeria = request.FILES.getlist('galeria_multimedia')
         if archivos_galeria:
-            from django.core.files.storage import FileSystemStorage
-            fs = FileSystemStorage()
+            from django.core.files.storage import default_storage as fs
             
             for f in archivos_galeria:
                 ext = f.name.split('.')[-1].lower()
@@ -2496,9 +2490,11 @@ def actualizar_desde_url(request, archivo_id):
 @require_POST
 def eliminar_archivo(request, archivo_id):
     try:
-        # 1. Busca en el modelo correcto: ArchivoKMZ
-        # 2. Usa el campo clave correcto: id_archivo
-        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        # Si es administrador, permitir eliminar cualquier archivo. De lo contrario, solo el propio.
+        if request.user.tipo == 'admin':
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id)
+        else:
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
         
         nombre = archivo.nombre_archivo
         
@@ -3018,8 +3014,7 @@ def editar_mi_propiedad(request, id_punto):
         punto.nombre = request.POST.get('nombre_punto', punto.nombre)
         punto.descripcion = request.POST.get('descripcion', '')
         if 'imagen_portada' in request.FILES and request.FILES['imagen_portada']:
-            from django.core.files.storage import FileSystemStorage
-            fs = FileSystemStorage()
+            from django.core.files.storage import default_storage as fs
             f_port = request.FILES['imagen_portada']
             filename_port = fs.save(f"portadas/{f_port.name}", f_port)
             punto.imagen_portada = fs.url(filename_port)
@@ -3072,8 +3067,7 @@ def editar_mi_propiedad(request, id_punto):
         # Propietario no puede editar geometría ni borrar
         archivos_galeria = request.FILES.getlist('galeria_multimedia')
         if archivos_galeria:
-            from django.core.files.storage import FileSystemStorage
-            fs = FileSystemStorage()
+            from django.core.files.storage import default_storage as fs
             for f in archivos_galeria:
                 ext = f.name.split('.')[-1].lower()
                 tipo = 'video' if ext in ['mp4', 'avi', 'mov', 'webm'] else 'audio' if ext in ['mp3', 'wav'] else 'imagen'
@@ -3260,16 +3254,29 @@ def repositorio(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Cargar imágenes de la carpeta carrucel local en media
-    carrucel_dir = os.path.join(settings.MEDIA_ROOT, 'carrucel')
+    # Cargar imágenes de la carpeta carrucel (primero en static, luego en media)
     imagenes_carrucel = []
-    if os.path.exists(carrucel_dir):
-        try:
-            for file in sorted(os.listdir(carrucel_dir)):
-                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
-                    imagenes_carrucel.append(f"{settings.MEDIA_URL}carrucel/{file}")
-        except Exception:
-            pass
+    static_carrucel_dir = os.path.join(settings.BASE_DIR, 'myapp', 'static', 'myapp', 'image', 'carrucel')
+    collected_static_dir = os.path.join(settings.STATIC_ROOT or '', 'myapp', 'image', 'carrucel')
+    
+    dirs_to_try = [
+        (static_carrucel_dir, f"{settings.STATIC_URL}myapp/image/carrucel/"),
+        (collected_static_dir, f"{settings.STATIC_URL}myapp/image/carrucel/"),
+        (os.path.join(settings.MEDIA_ROOT, 'carrucel'), f"{settings.MEDIA_URL}carrucel/")
+    ]
+    
+    for c_dir, url_prefix in dirs_to_try:
+        if c_dir and os.path.exists(c_dir):
+            try:
+                found = []
+                for file in sorted(os.listdir(c_dir)):
+                    if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+                        found.append(f"{url_prefix}{file}")
+                if found:
+                    imagenes_carrucel = found
+                    break
+            except Exception:
+                pass
             
     context = {
         'documentos': page_obj,

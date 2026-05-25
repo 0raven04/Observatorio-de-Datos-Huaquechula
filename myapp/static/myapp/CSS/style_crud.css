@@ -385,71 +385,203 @@ body {
 
 
 /* =============================================
-   RESPONSIVE MEJORAS — VISTA MÓVIL CRUD
+   RESPONSIVE — TODAS LAS VISTAS DEL ADMIN
+   Aplica a: lista_registros, lista_usuarios,
+   lista_documentos, crud_resenas, crud_kml,
+   crud_punto_interes
    ============================================= */
 
+/* ---- Botones superiores de acción (Nuevo, Borrar Selección, etc.) ---- */
 @media (max-width: 767px) {
+    .row .d-flex.mb-3 {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
 
-    /* Tablas: scroll horizontal fluido */
+    .row .d-flex.mb-3 .btn {
+        flex: 1 1 auto !important;
+        min-width: 130px !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    .row .offset-9,
+    .row .offset-md-9 {
+        margin-left: 0 !important;
+    }
+    .row .col-md-3 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+}
+
+/* ---- Tablas de datos: todas las vistas ---- */
+@media (max-width: 767px) {
     .table-responsive,
     .table-responsive-admin {
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
-        border-radius: 10px;
+        border-radius: 0 0 10px 10px;
     }
 
-    /* Celdas más compactas */
-    .custom-table td,
-    .custom-table th {
+    .table th,
+    .table td,
+    .custom-table th,
+    .custom-table td {
         padding: 6px 8px !important;
         font-size: 0.78rem !important;
-        white-space: nowrap;
+        white-space: nowrap !important;
+        vertical-align: middle !important;
     }
 
-    /* Botones de acción: solo icono en pantallas pequeñas */
+    .table .badge {
+        font-size: 0.70rem !important;
+        padding: 3px 7px !important;
+    }
+
+    .table .form-check-input {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}
+
+/* ---- Botones de acción dentro de las tablas ---- */
+@media (max-width: 767px) {
     .btn-action {
-        min-width: 34px !important;
-        min-height: 34px !important;
-        width: 34px !important;
-        height: 34px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        width: 36px !important;
+        height: 36px !important;
         padding: 0 !important;
         border-radius: 8px !important;
-        font-size: 0.85rem !important;
+        font-size: 0.9rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
+
+    .btn-action span,
+    .btn-action .small {
+        display: none !important;
+    }
+
     .btn-action i {
         margin: 0 !important;
+        font-size: 0.85rem !important;
     }
 
-    /* Modales full-width en móvil */
+    td .d-flex.flex-column {
+        gap: 4px !important;
+    }
+
+    td .d-flex.gap-1 {
+        gap: 4px !important;
+        justify-content: center !important;
+    }
+}
+
+/* ---- Modales: posición correcta bajo navbar fija ---- */
+@media (max-width: 767px) {
     .modal-dialog {
-        margin: 60px 8px 8px !important;
-        max-width: calc(100% - 16px) !important;
-    }
-    .modal-dialog.modal-lg {
+        margin: 70px 8px 8px !important;
         max-width: calc(100% - 16px) !important;
     }
 
-    /* Formularios en modal: campos en columna */
+    .modal-dialog.modal-lg,
+    .modal-dialog.modal-xl {
+        max-width: calc(100% - 16px) !important;
+        margin: 70px 8px 8px !important;
+    }
+
+    #categoriaModal .modal-dialog,
+    #archivoModal .modal-dialog {
+        margin-top: 70px !important;
+        max-width: calc(100% - 16px) !important;
+    }
+
+    .modal-body {
+        max-height: 65vh !important;
+        overflow-y: auto !important;
+    }
+
     .modal-body .row > .col-md-6,
     .modal-body .row > .col-md-4,
-    .modal-body .row > .col-md-3 {
+    .modal-body .row > .col-md-3,
+    .modal-body .row > [class*="col-md-"] {
         flex: 0 0 100% !important;
         max-width: 100% !important;
     }
 
-    /* Card headers más compactos */
+    .modal-footer .btn,
+    .custom-modal-footer .btn {
+        min-height: 44px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* ---- Tarjetas de encabezado de sección ---- */
+@media (max-width: 767px) {
+    .card {
+        border-radius: 10px !important;
+        margin-bottom: 12px !important;
+    }
+
     .card-header {
-        padding: 0.5rem 0.75rem !important;
+        padding: 0.55rem 0.85rem !important;
     }
 
-    /* Títulos de página más pequeños */
-    h2, .h2 {
-        font-size: 1.3rem !important;
+    .card-header h5,
+    .card-header .h5 {
+        font-size: 0.95rem !important;
     }
 
-    /* Botones submit en modales más grandes para touch */
-    .modal-body .boton.bt-body {
+    .card-body {
+        padding: 0.5rem 0 !important;
+    }
+}
+
+/* ---- Estadísticas en tarjetas (pantallas medianas+) ---- */
+@media (max-width: 767px) {
+    .row.g-3 > .col-md-3,
+    .row.g-3 > .col-md-4 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+}
+
+/* ---- Títulos de página ---- */
+@media (max-width: 767px) {
+    h1, .h1 { font-size: 1.5rem !important; }
+    h2, .h2 { font-size: 1.3rem !important; }
+    h3, .h3 { font-size: 1.1rem !important; }
+}
+
+/* ---- Botones submit: targets táctiles grandes ---- */
+@media (max-width: 767px) {
+    .modal-body .boton.bt-body,
+    button[type="submit"].boton,
+    button[type="submit"].btn {
         min-height: 48px !important;
         font-size: 1rem !important;
     }
 }
+
+/* ---- Filtros y listas de botones en paneles administrativos ---- */
+@media (max-width: 767px) {
+    .card-body .d-flex.w-100.gap-2,
+    .d-flex.w-100.gap-2 {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    
+    .card-body .d-flex.w-100.gap-2 .btn-filtro,
+    .btn-filtro {
+        flex: 1 1 calc(50% - 4px) !important;
+        font-size: 0.8rem !important;
+        padding: 6px 4px !important;
+        margin: 0 !important;
+        white-space: nowrap;
+    }
+}
+

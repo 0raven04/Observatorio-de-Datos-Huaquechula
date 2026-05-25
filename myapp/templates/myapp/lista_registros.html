@@ -9,27 +9,34 @@
 {% block content %}
 
       <!-- Sección de botones superiores -->
-      <div class="row">
-        <div class="offset-9 col-md-3">
-          <div class="d-flex mb-3">
-            <!-- Botón para abrir modal de nuevo registro -->
-            <button
-              type="button"
-              id="btnNuevoRegistro"
-              class="btn boton bt-body me-1"
-              data-url="{% url 'lista_registros' %}"
-              data-bs-toggle="modal"
-              data-bs-target="#miModal"
-            >
-              <i class="fas fa-plus me-1"></i>Nuevo Registro
-            </button>
+      <div class="d-flex flex-wrap gap-2 justify-content-end mb-3">
+        <!-- Botón para abrir modal de nuevo registro -->
+        <button
+          type="button"
+          id="btnNuevoRegistro"
+          class="btn boton bt-body"
+          data-url="{% url 'lista_registros' %}"
+          data-bs-toggle="modal"
+          data-bs-target="#miModal"
+        >
+          <i class="fas fa-plus me-1"></i>Nuevo Registro
+        </button>
 
-            <!-- Botón para eliminar selección múltiple -->
-            <button type="button" class="btn boton bt-body me-1" id="botonEliminar">
-              <i class="fas fa-trash-alt me-1"></i>Borrar Selección
-            </button>
-          </div>
-        </div>
+        <!-- Botón para generar QR -->
+        <button
+          type="button"
+          id="btnGenerarQR"
+          class="btn boton bt-body"
+          data-bs-toggle="modal"
+          data-bs-target="#qrModal"
+        >
+          <i class="fas fa-qrcode me-1"></i>Generar QR
+        </button>
+
+        <!-- Botón para eliminar selección múltiple -->
+        <button type="button" class="btn boton bt-body" id="botonEliminar">
+          <i class="fas fa-trash-alt me-1"></i>Borrar Selección
+        </button>
       </div>
 
       <!-- Mostrar mensajes del sistema -->
@@ -266,13 +273,148 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para Generar QR -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="tituloQRModal" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+    <div class="modal-content p-0">
+      
+      <!-- Encabezado del modal -->
+      <div class="modal-header custom-modal-header w-100 m-0 p-3" 
+           style="background-color: #4A4A4A; border-bottom: 2px solid #D6CEAA;">
+        <h5 class="modal-title w-100 text-center text-white m-0" id="tituloQRModal">
+          <i class="fas fa-qrcode me-2"></i>Código QR de Encuesta
+        </h5>
+        <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <!-- Cuerpo del modal -->
+      <div class="modal-body text-center p-4">
+        <p class="mb-3 px-2" style="color: #4A4A4A; font-weight: 500; font-size: 0.95rem; line-height: 1.4;">
+          Escanea este código con tu dispositivo móvil para acceder a la encuesta pública de visitantes del Observatorio.
+        </p>
+        
+        <!-- Contenedor del QR (responsivo, con marco premium) -->
+        <div class="d-flex justify-content-center my-4">
+          <div class="p-3 bg-white rounded shadow-sm" style="border: 2px solid #D6CEAA !important; max-width: 100%; box-sizing: border-box;">
+            <div id="qrcode" class="d-flex justify-content-center align-items-center" style="min-width: 200px; min-height: 200px;"></div>
+          </div>
+        </div>
+
+        <!-- Enlace en texto (con break-all para no desbordar en móvil) -->
+        <div class="text-muted small mb-4 p-2" style="font-family: monospace; background: #f8f9fa; border-radius: 6px; border: 1px dashed #B3B3B3; word-break: break-all; font-size: 0.8rem;">
+          https://observatorio-huaquechula-anbjeyeqdehca7cg.mexicocentral-01.azurewebsites.net/registro/
+        </div>
+
+        <!-- Botones del modal de forma adaptativa -->
+        <div class="d-flex justify-content-center gap-2 flex-wrap w-100 px-2">
+          <button type="button" class="btn btn-dark btn-sm px-3 py-2 flex-fill" id="btnCopiarLink" style="font-size: 0.85rem; min-height: 40px;">
+            <i class="fas fa-copy me-1"></i>Copiar Enlace
+          </button>
+          <button type="button" class="btn btn-success btn-sm px-3 py-2 flex-fill" id="btnDescargarQR" style="font-size: 0.85rem; min-height: 40px; background-color: #28a745; border-color: #28a745; color: white;">
+            <i class="fas fa-download me-1"></i>Descargar QR
+          </button>
+        </div>
+      </div>
+
+      <!-- Pie del modal -->
+      <div class="modal-footer custom-modal-footer w-100 m-0 p-3" 
+           style="background-color: #4A4A4A; border-top: 2px solid #D6CEAA;">
+        <div class="w-100 d-flex justify-content-center">
+          <button type="button" class="btn btn-warning px-4" data-bs-dismiss="modal" style="background-color: var(--color-arena-oscuro); border-color: var(--color-arena-oscuro); color: var(--color-gris-oscuro);">
+            <i class="fas fa-times me-2"></i>Cerrar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ----------------- GENERAR CÓDIGO QR -----------------
+        const qrContainer = document.getElementById("qrcode");
+        if (qrContainer) {
+            new QRCode(qrContainer, {
+                text: "https://observatorio-huaquechula-anbjeyeqdehca7cg.mexicocentral-01.azurewebsites.net/registro/",
+                width: 200,
+                height: 200,
+                colorDark : "#4A4A4A", // Coincide con var(--color-gris-oscuro)
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
+        // Copiar Enlace al Portapapeles con SweetAlert Toast
+        const btnCopiarLink = document.getElementById("btnCopiarLink");
+        if (btnCopiarLink) {
+            btnCopiarLink.addEventListener("click", function() {
+                const url = "https://observatorio-huaquechula-anbjeyeqdehca7cg.mexicocentral-01.azurewebsites.net/registro/";
+                navigator.clipboard.writeText(url).then(function() {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: '¡Enlace copiado al portapapeles!'
+                    });
+                }).catch(function() {
+                    Swal.fire({
+                        title: "Error",
+                        text: "No se pudo copiar el enlace automáticamente.",
+                        icon: "error",
+                        confirmButtonText: "Entendido"
+                    });
+                });
+            });
+        }
+
+        // Descargar Código QR en PNG
+        const btnDescargarQR = document.getElementById("btnDescargarQR");
+        if (btnDescargarQR) {
+            btnDescargarQR.addEventListener("click", function() {
+                if (!qrContainer) return;
+                const canvas = qrContainer.querySelector("canvas");
+                const img = qrContainer.querySelector("img");
+                let url = "";
+                if (canvas) {
+                    url = canvas.toDataURL("image/png");
+                } else if (img) {
+                    url = img.src;
+                }
+
+                if (url) {
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "QR_Encuesta_Publica_Huaquechula.png";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: "No se pudo generar la imagen para descargar.",
+                        icon: "error",
+                        confirmButtonText: "Entendido"
+                    });
+                }
+            });
+        }
+
         // 1. Seleccionamos el modal por su ID real 'miModal'
         var myModalEl = document.getElementById('miModal');
         

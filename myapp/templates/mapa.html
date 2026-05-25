@@ -450,6 +450,57 @@
         </div>
     </div>
 </div>
+
+<!-- Lightbox modal for images -->
+<div id="image-lightbox-modal" style="display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <span id="close-lightbox" style="position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.3s; z-index: 100000; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">&times;</span>
+    <img id="lightbox-img" style="margin: auto; display: block; max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);" alt="Ampliado">
+</div>
+
+<style>
+#close-lightbox:hover, #close-lightbox:focus {
+    color: #fff;
+    transform: scale(1.1);
+}
+</style>
+
+<script>
+(function() {
+    window.mostrarImagenAmpliada = function (url) {
+        var modal = document.getElementById('image-lightbox-modal');
+        var modalImg = document.getElementById('lightbox-img');
+        if (modal && modalImg) {
+            modalImg.src = url;
+            modal.style.display = "flex";
+        }
+    };
+
+    window.cerrarImagenAmpliada = function () {
+        var modal = document.getElementById('image-lightbox-modal');
+        if (modal) {
+            modal.style.display = "none";
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var closeBtn = document.getElementById('close-lightbox');
+        var modal = document.getElementById('image-lightbox-modal');
+        if (closeBtn) closeBtn.onclick = window.cerrarImagenAmpliada;
+        if (modal) {
+            modal.onclick = function (e) {
+                if (e.target === this) {
+                    window.cerrarImagenAmpliada();
+                }
+            };
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === "Escape") {
+                window.cerrarImagenAmpliada();
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}
 
 
@@ -829,8 +880,11 @@
                 if (datos.imagen) {
                     divCover.style.backgroundImage = "url('" + datos.imagen + "')";
                     divCover.style.display = "block";
+                    divCover.style.cursor = 'pointer';
+                    divCover.onclick = function () { window.mostrarImagenAmpliada(datos.imagen); };
                 } else {
                     divCover.style.display = "none";
+                    divCover.onclick = null;
                 }
 
                 // Horario
@@ -846,10 +900,23 @@
                 var pDesc = document.getElementById('marker-panel-description');
                 var esOfrenda = datos.categoria_sistema === 'ofrenda' && datos.ofrenda_anfitrion;
                 if (datos.descripcion && !esOfrenda) {
-                    pDesc.innerText = datos.descripcion;
+                    pDesc.innerHTML = datos.descripcion;
                     pDesc.style.display = "block";
+                    // Asegurar que las imágenes dentro de la descripción tengan cursor pointer y se amplíen
+                    pDesc.querySelectorAll('img').forEach(function(img) {
+                        img.style.cursor = 'pointer';
+                        img.style.borderRadius = '8px';
+                        img.style.maxWidth = '100%';
+                        img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    });
+                    pDesc.onclick = function (e) {
+                        if (e.target && e.target.tagName === 'IMG') {
+                            window.mostrarImagenAmpliada(e.target.src);
+                        }
+                    };
                 } else {
                     pDesc.style.display = "none";
+                    pDesc.onclick = null;
                 }
 
                 // Galería multimedia
@@ -863,7 +930,7 @@
                             img.src = item.url;
                             img.alt = 'Foto';
                             img.style.cssText = 'width:100%;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;';
-                            img.onclick = function () { window.open(item.url, '_blank'); };
+                            img.onclick = function () { window.mostrarImagenAmpliada(item.url); };
                             divGrid.appendChild(img);
                         } else if (item.tipo === 'video') {
                             var a = document.createElement('a');

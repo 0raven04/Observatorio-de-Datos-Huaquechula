@@ -15,7 +15,7 @@
     <div class="col-md-12 mb-3">
       <div class="d-flex justify-content-end">
         <div class="d-flex">
-          <button type="button" class="btn boton bt-body me-1" data-bs-toggle="modal" data-bs-target="#archivoModal" onclick="abrirModalCreacion()">
+          <button type="button" class="btn boton bt-body me-1" onclick="abrirModalCreacion()">
             <i class="fas fa-plus me-1"></i> Nuevo Archivo URL
           </button>
           <button type="button" class="btn boton bt-body" data-bs-toggle="modal" data-bs-target="#categoriaModal">
@@ -479,7 +479,7 @@
             gestionarSelectores(document.getElementById('tipo_punto').value);
         }
         
-        const modal = new bootstrap.Modal(document.getElementById('archivoModal'));
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('archivoModal'));
         modal.show();
     };
 

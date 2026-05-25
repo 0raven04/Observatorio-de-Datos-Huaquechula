@@ -214,13 +214,26 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/vol/web/media')
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
+
 # ── Azure Blob Storage (sólo en producción si la variable está definida) ──────
 _azure_storage_account = os.environ.get('AZURE_STORAGE_ACCOUNT_NAME')
-if _azure_storage_account:
+_azure_storage_key = os.environ.get('AZURE_STORAGE_KEY')
+if _azure_storage_account and _azure_storage_key and len(_azure_storage_key.strip()) >= 80:
     INSTALLED_APPS += ['storages']
     DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.azure_storage.AzureStorage",
+    }
     AZURE_ACCOUNT_NAME = _azure_storage_account
-    AZURE_ACCOUNT_KEY = os.environ.get('AZURE_STORAGE_KEY')
+    AZURE_ACCOUNT_KEY = _azure_storage_key
     AZURE_CONTAINER = os.environ.get('AZURE_STORAGE_CONTAINER', 'media')
     AZURE_OVERWRITE_FILES = True
     # Expira URL firmada en 1 hora

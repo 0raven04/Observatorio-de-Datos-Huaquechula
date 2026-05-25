@@ -83,8 +83,17 @@ urlpatterns = [
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+import os
+from django.views.static import serve
+from django.urls import re_path
+
+# Servir archivos multimedia mediante Django si estamos en modo DEBUG o si el almacenamiento por defecto es local
+is_local_storage = getattr(settings, 'STORAGES', {}).get('default', {}).get('BACKEND') == 'django.core.files.storage.FileSystemStorage'
+
+if settings.DEBUG or is_local_storage:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
 
 
 """

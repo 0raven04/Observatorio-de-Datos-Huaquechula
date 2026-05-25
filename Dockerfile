@@ -36,6 +36,7 @@ WORKDIR /app
 # Instalar solo las librerías de sistema en tiempo de ejecución (no el compilador)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-libmysqlclient-dev \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar los paquetes Python instalados desde el builder
@@ -43,14 +44,14 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Crear usuario no-root para mayor seguridad
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN groupadd -r appuser && useradd -m -r -g appuser appuser
 
 # Copiar el código del proyecto
 COPY . /app/
 
 # Crear carpetas de volúmenes y asignar permisos
-RUN mkdir -p /vol/web/media/kmz_files /vol/web/static && \
-    chown -R appuser:appuser /app /vol && \
+RUN mkdir -p /vol/web/media/kmz_files /vol/web/static /home/appuser && \
+    chown -R appuser:appuser /app /vol /home/appuser && \
     chmod -R 755 /vol && \
     chmod +x /app/entrypoint.prod.sh
 

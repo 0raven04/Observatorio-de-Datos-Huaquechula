@@ -530,7 +530,7 @@
             : '';
 
         el.innerHTML =
-            '<div class="chart-metadata-grid" style="grid-template-columns:repeat(5,1fr);">' +
+            '<div class="chart-metadata-grid">' +
                 '<div class="chart-meta-item"><label>Eje</label><span>' + (data.axis || '-') + '</span></div>' +
                 '<div class="chart-meta-item"><label>Categoría</label><span>' + (data.category || '-') + '</span></div>' +
                 '<div class="chart-meta-item"><label>Unidad</label><span>' + (data.unit || '-') + '</span></div>' +

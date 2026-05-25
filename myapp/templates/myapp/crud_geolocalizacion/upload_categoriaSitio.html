@@ -58,15 +58,15 @@
                 <small class="text-muted">Las categorías se actualizan dinámicamente. Solo se puede eliminar una categoría si no está asociada a un sitio turístico.</small>
             </div>
 
-            <button type="submit" class="btn boton bt-body">
-             <i class="fas fa-save me-2"></i>Guardar
-          </button>
         </div>
         
 
         <div class="modal-footer custom-modal-footer d-flex justify-content-between">
           <button type="button" class="btn btn-warning" data-bs-dismiss="modal">
             Cancelar
+          </button>
+          <button type="submit" class="btn boton bt-body">
+             <i class="fas fa-save me-2"></i>Guardar
           </button>
         </div>
 
@@ -119,6 +119,19 @@
                 form.reset();
                 form.classList.remove('was-validated');
             }
+            // Si el modal de archivo sigue abierto, asegurarnos de que la clase modal-open siga en el body
+            // y que los backdrops recuperen su z-index por defecto.
+            const archivoModalEl = document.getElementById('archivoModal');
+            const isArchivoModalOpen = archivoModalEl && archivoModalEl.classList.contains('show');
+            if (isArchivoModalOpen) {
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+                document.querySelectorAll('.modal-backdrop').forEach(bd => {
+                    bd.style.zIndex = '';
+                });
+            } else {
+                document.body.style.overflow = '';
+            }
         });
 
         // --- 2. FOCO AUTOMÁTICO AL ABRIR ---
@@ -141,7 +154,7 @@
                 padding: 15px 20px;
                 border-radius: 12px;
                 color: white;
-                z-index: 10000;
+                z-index: 20100;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                 animation: slideInRight 0.3s ease-out;
                 font-family: inherit;
@@ -216,15 +229,26 @@
                     const modalInstance = bootstrap.Modal.getInstance(modalCatEl);
                     modalInstance.hide();
                     
-                    alert("✅ " + data.message);
-                    location.reload(); 
+                    showCustomAlert(data.message, 'success');
+                    
+                    // Verificar si el modal de archivo está abierto
+                    const archivoModalEl = document.getElementById('archivoModal');
+                    const isArchivoModalOpen = archivoModalEl && archivoModalEl.classList.contains('show');
+                    
+                    if (isArchivoModalOpen) {
+                        // Actualizar el select y seleccionar la nueva categoría sin cerrar el modal principal
+                        actualizarSelectCategoria(data.new_id, data.new_name);
+                    } else {
+                        // Si se abrió desde fuera, recargamos la página después de un momento
+                        setTimeout(() => location.reload(), 1500);
+                    }
                 } else {
-                    alert("⚠️ " + data.message);
+                    showCustomAlert(data.message || 'Error al crear la categoría', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("❌ Error de conexión");
+                showCustomAlert("Error de conexión al guardar la categoría.", 'error');
             });
         });
     });
@@ -245,9 +269,10 @@
         const otherModal = document.querySelector('.modal.show:not(#categoriaModal)');
         if (otherModal) {
             modalEl.style.zIndex = 20050;
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.style.zIndex = 20040;
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 0) {
+                // Seleccionar el último backdrop (el de esta modal)
+                backdrops[backdrops.length - 1].style.zIndex = 20040;
             }
         }
     }
