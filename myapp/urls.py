@@ -112,6 +112,11 @@ urlpatterns = [
     path('api/chatbot/', views.chatbot_api, name='chatbot_api'),
 
     # =====================================================
+    # PROXY DE IMÁGENES EXTERNAS
+    # =====================================================
+    path('api/image-proxy/', views.image_proxy, name='image_proxy'),
+
+    # =====================================================
     # INEGI y Dashboard
     # =====================================================
     path('dashboard/', views.dashboard_view, name='dashboard'),

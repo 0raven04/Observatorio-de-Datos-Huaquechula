@@ -68,6 +68,10 @@ import os
 from datetime import datetime
 
 
+def _is_admin_user(user):
+    """Helper: retorna True si el usuario es superusuario o tiene tipo 'admin'."""
+    return user.is_superuser or (hasattr(user, 'tipo') and user.tipo == 'admin')
+
 
 from django.views.decorators.csrf import csrf_exempt
 import requests
@@ -1498,11 +1502,21 @@ def mapa(request):
                 elif punto.categoria == 'ofrenda': nombre_filtro = "Ofrendas"
                 elif punto.categoria == 'servicio': nombre_filtro = "Servicios"
 
-                # Galería multimedia del punto
+                # Galería multimedia del punto - usar proxy para URLs externas
+                def _proxy_url(url):
+                    """Convierte URLs externas en URLs de proxy local."""
+                    if url and url.startswith(('http://', 'https://')):
+                        return f"/api/image-proxy/?url={urllib.parse.quote(url, safe='')}"
+                    return url  # URLs locales/relativas se dejan igual
+                
                 galeria_items = [
-                    {"url": g.url_archivo, "tipo": g.tipo_archivo}
+                    {"url": _proxy_url(g.url_archivo), "tipo": g.tipo_archivo}
                     for g in punto.galeria_multimedia_set.all()
                 ]
+
+                # Imagen de portada - usar proxy para URLs externas
+                imagen_raw = getattr(punto.imagen_portada, 'url', str(punto.imagen_portada)) if punto.imagen_portada else ""
+                imagen_proxied = _proxy_url(imagen_raw) if imagen_raw else ""
 
                 propiedades.update({
                     "id_punto": punto.id_punto,
@@ -1511,7 +1525,7 @@ def mapa(request):
                     "categoria_sistema": punto.categoria,
                     "id_categoria_bd": id_cat_bd,
                     "descripcion": punto.descripcion or "",
-                    "imagen": getattr(punto.imagen_portada, 'url', str(punto.imagen_portada)) if punto.imagen_portada else "",
+                    "imagen": imagen_proxied,
                     "horario": f"{punto.hora_apertura} - {punto.hora_cierre}" if punto.hora_apertura and punto.hora_cierre else "Siempre abierto",
                     "galeria": galeria_items,
                     "ofrenda_anfitrion": "",
@@ -1770,7 +1784,7 @@ def lista_archivos(request):
     categorias = Categoria_Sitio.objects.all()
     """Vista para listar archivos por URL"""
     # Obtener archivos del usuario (o todos si es superusuario)
-    if request.user.is_superuser:
+    if _is_admin_user(request.user):
         archivos = ArchivoKMZ.objects.all()
     else:
         archivos = ArchivoKMZ.objects.filter(usuario=request.user)
@@ -1818,7 +1832,10 @@ def lista_archivos(request):
 @login_required
 def detalle_archivo(request, archivo_id):
     try:
-        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        if _is_admin_user(request.user):
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id)
+        else:
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
         # VOLVEMOS AL .first() ORIGINAL
         punto = Punto_Interes.objects.filter(id_geometria__id_archivo=archivo).first()
 
@@ -1898,7 +1915,10 @@ def editar_archivo(request, archivo_id):
     try:
         with transaction.atomic():
             # 1. Obtener y Actualizar el ArchivoKMZ base
-            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+            if _is_admin_user(request.user):
+                archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id)
+            else:
+                archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
             
             archivo.nombre_archivo = request.POST.get('nombre_archivo', archivo.nombre_archivo)
             archivo.descripcion = request.POST.get('descripcion', archivo.descripcion)
@@ -2391,7 +2411,10 @@ def eliminar_categoria(request, categoria_id):
 @require_POST 
 def procesar_archivo(request, archivo_id):
     try:
-        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        if _is_admin_user(request.user):
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id)
+        else:
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
         processor = KMLProcessor(archivo)
         resultado = processor.procesar()
         
@@ -2413,7 +2436,10 @@ def actualizar_desde_url(request, archivo_id):
         return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
     
     try:
-        archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
+        if _is_admin_user(request.user):
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id)
+        else:
+            archivo = get_object_or_404(ArchivoKMZ, id_archivo=archivo_id, usuario=request.user)
         
         # Verificar URL
         try:
@@ -2514,7 +2540,10 @@ def verificar_urls(request):
         return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
     
     try:
-        archivos = ArchivoKMZ.objects.filter(usuario=request.user)
+        if _is_admin_user(request.user):
+            archivos = ArchivoKMZ.objects.all()
+        else:
+            archivos = ArchivoKMZ.objects.filter(usuario=request.user)
         total = archivos.count()
         verificados = 0
         disponibles = 0
@@ -3924,3 +3953,96 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
             return self.form_invalid(form)
 
         return super().form_valid(form)
+
+
+# =====================================================
+# PROXY DE IMÁGENES EXTERNAS
+# =====================================================
+import io
+import hashlib
+import urllib.request
+from functools import lru_cache
+from django.views.decorators.cache import cache_page
+
+# Cache en memoria para imágenes proxy (máximo 200 imágenes)
+_image_cache = {}
+_IMAGE_CACHE_MAX = 200
+
+def image_proxy(request):
+    """
+    Proxy de imágenes externas para evitar problemas de CORS y 
+    OpaqueResponseBlocking en el navegador.
+    
+    Uso: /api/image-proxy/?url=<URL_codificada>
+    
+    Descarga la imagen del servidor externo y la sirve desde el 
+    propio dominio con los headers CORS correctos.
+    """
+    image_url = request.GET.get('url', '').strip()
+    
+    if not image_url:
+        return HttpResponse('Parámetro "url" requerido', status=400)
+    
+    # Validar que sea una URL http/https
+    if not image_url.startswith(('http://', 'https://')):
+        return HttpResponse('URL inválida', status=400)
+    
+    # Verificar cache en memoria
+    cache_key = hashlib.md5(image_url.encode('utf-8')).hexdigest()
+    
+    if cache_key in _image_cache:
+        cached = _image_cache[cache_key]
+        response = HttpResponse(cached['data'], content_type=cached['content_type'])
+        response['Cache-Control'] = 'public, max-age=86400'  # Cache 24 horas
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
+    
+    try:
+        # Descargar la imagen con timeout
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'image/*,*/*;q=0.8',
+        }
+        
+        req = urllib.request.Request(image_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            image_data = resp.read(5 * 1024 * 1024)  # Máximo 5MB
+            
+            # Determinar content type
+            content_type = resp.headers.get('Content-Type', '')
+            if not content_type or 'text/html' in content_type:
+                # Intentar detectar por extensión
+                url_lower = image_url.lower()
+                if '.png' in url_lower:
+                    content_type = 'image/png'
+                elif '.gif' in url_lower:
+                    content_type = 'image/gif'
+                elif '.webp' in url_lower:
+                    content_type = 'image/webp'
+                elif '.svg' in url_lower:
+                    content_type = 'image/svg+xml'
+                else:
+                    content_type = 'image/jpeg'
+            
+            # Guardar en cache (con límite)
+            if len(_image_cache) >= _IMAGE_CACHE_MAX:
+                # Eliminar la entrada más antigua
+                oldest_key = next(iter(_image_cache))
+                del _image_cache[oldest_key]
+            
+            _image_cache[cache_key] = {
+                'data': image_data,
+                'content_type': content_type,
+            }
+            
+            response = HttpResponse(image_data, content_type=content_type)
+            response['Cache-Control'] = 'public, max-age=86400'
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
+            
+    except urllib.error.HTTPError as e:
+        return HttpResponse(f'Error al descargar imagen: HTTP {e.code}', status=502)
+    except urllib.error.URLError as e:
+        return HttpResponse(f'No se pudo conectar: {str(e.reason)}', status=502)
+    except Exception as e:
+        return HttpResponse(f'Error al procesar imagen: {str(e)}', status=500)

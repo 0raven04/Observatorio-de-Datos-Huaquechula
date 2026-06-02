@@ -875,13 +875,24 @@
                 document.getElementById('marker-panel-title').innerText = titulo;
                 document.getElementById('marker-panel-category').innerText = datos.categoria;
 
-                // Imagen de portada
+                // Imagen de portada (con manejo de errores)
                 var divCover = document.getElementById('marker-panel-cover');
                 if (datos.imagen) {
-                    divCover.style.backgroundImage = "url('" + datos.imagen + "')";
-                    divCover.style.display = "block";
-                    divCover.style.cursor = 'pointer';
-                    divCover.onclick = function () { window.mostrarImagenAmpliada(datos.imagen); };
+                    // Usar un Image object para detectar si la imagen carga correctamente
+                    var testImg = new Image();
+                    testImg.onload = function () {
+                        divCover.style.backgroundImage = "url('" + datos.imagen + "')";
+                        divCover.style.display = "block";
+                        divCover.style.cursor = 'pointer';
+                        divCover.onclick = function () { window.mostrarImagenAmpliada(datos.imagen); };
+                    };
+                    testImg.onerror = function () {
+                        // Si la imagen no carga, ocultar el div de portada
+                        divCover.style.display = "none";
+                        divCover.onclick = null;
+                        console.warn("No se pudo cargar imagen de portada:", datos.imagen);
+                    };
+                    testImg.src = datos.imagen;
                 } else {
                     divCover.style.display = "none";
                     divCover.onclick = null;
@@ -908,6 +919,8 @@
                         img.style.borderRadius = '8px';
                         img.style.maxWidth = '100%';
                         img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                        // Error handler para imágenes en descripción
+                        img.onerror = function () { this.style.display = 'none'; };
                     });
                     pDesc.onclick = function (e) {
                         if (e.target && e.target.tagName === 'IMG') {
@@ -919,7 +932,7 @@
                     pDesc.onclick = null;
                 }
 
-                // Galería multimedia
+                // Galería multimedia (con manejo de errores)
                 var divGaleria = document.getElementById('marker-panel-galeria');
                 var divGrid = document.getElementById('marker-panel-galeria-grid');
                 divGrid.innerHTML = '';
@@ -931,6 +944,11 @@
                             img.alt = 'Foto';
                             img.style.cssText = 'width:100%;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;';
                             img.onclick = function () { window.mostrarImagenAmpliada(item.url); };
+                            // Error handler: ocultar imagen rota
+                            img.onerror = function () {
+                                this.style.display = 'none';
+                                console.warn("No se pudo cargar imagen de galería:", item.url);
+                            };
                             divGrid.appendChild(img);
                         } else if (item.tipo === 'video') {
                             var a = document.createElement('a');
