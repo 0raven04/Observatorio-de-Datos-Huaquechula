@@ -493,7 +493,7 @@ class Punto_Interes(models.Model):
     # Relación con geometría (opcional)
     id_geometria = models.ForeignKey(
         GeometriaEspacial,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         db_column='id_geometria'

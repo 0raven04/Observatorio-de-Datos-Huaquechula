@@ -1,0 +1,53 @@
+name: 🚀 Deploy — Observatorio Self-Hosted
+
+on:
+  push:
+    branches:
+      - Produccion-AZURE
+
+jobs:
+  deploy:
+    name: Deploy en servidor local
+    runs-on: self-hosted
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout del código
+        uses: actions/checkout@v4
+        with:
+          ref: Produccion-AZURE
+
+      - name: 🔄 Detener contenedores existentes
+        working-directory: /home/kevina/Observatorio-de-Datos-Huaquechula
+        run: docker compose down --remove-orphans
+
+      - name: 📁 Copiar archivos del repo al directorio del proyecto
+        run: |
+          rsync -av --exclude=.git \
+            --exclude=backups \
+            --exclude=.env \
+            $GITHUB_WORKSPACE/ \
+            /home/kevina/Observatorio-de-Datos-Huaquechula/
+
+      - name: 🏗️  Construir y levantar contenedores
+        working-directory: /home/kevina/Observatorio-de-Datos-Huaquechula
+        run: docker compose up --build -d
+
+      - name: ⏳ Esperar a que la app responda
+        run: |
+          echo "Esperando que la app inicie..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/ > /dev/null 2>&1; then
+              echo "✅ Aplicación respondiendo correctamente"
+              exit 0
+            fi
+            echo "  Intento $i/30..."
+            sleep 5
+          done
+          echo "❌ La aplicación no respondió en 150 segundos"
+          docker compose -f /home/kevina/Observatorio-de-Datos-Huaquechula/docker-compose.yml logs --tail=20
+          exit 1
+
+      - name: 📊 Estado final de contenedores
+        working-directory: /home/kevina/Observatorio-de-Datos-Huaquechula
+        run: docker compose ps

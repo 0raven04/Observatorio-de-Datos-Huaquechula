@@ -4,17 +4,17 @@ services:
     container_name: observatorio_db
     restart: always
     environment:
-          MYSQL_DATABASE: observatorio_db
-          MYSQL_USER: observatorio_user
-          MYSQL_PASSWORD: 123456
-          MYSQL_ROOT_PASSWORD: password_root_seguro
-          
+      MYSQL_DATABASE: observatorio_db
+      MYSQL_USER: observatorio_user
+      MYSQL_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: password_root_seguro
+
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}" ]
       interval: 10s
       timeout: 5s
       retries: 5

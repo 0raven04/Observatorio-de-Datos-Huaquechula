@@ -77,7 +77,6 @@
     <thead class="text-white" style="background-color: #4A4A4A">
         <tr>
             <th scope="col" width="50" class="text-center align-middle">Sel.</th>
-            <th scope="col" width="80" class="text-center align-middle">ID</th>
             <th scope="col" width="100" class="text-center align-middle">Fecha</th>
             <th scope="col" width="100" class="text-center align-middle">Total Personas</th>
             <th scope="col" width="100" class="text-center align-middle">Mujeres</th>
@@ -102,18 +101,15 @@
             <td class="text-center align-middle">
                 <div class="form-check d-flex justify-content-center align-items-center">
                     <input
-                        class="form-check-input checkbox-seleccion"
-                        type="checkbox"
-                        value="{{ r.id_registro }}"
-                        style="width: 18px; height: 18px;"
-                    />
+                         class="form-check-input checkbox-seleccion"
+                         type="checkbox"
+                         value="{{ r.id_registro }}"
+                         style="width: 18px; height: 18px;"
+                     />
                 </div>
             </td>
 
             <!-- Datos del registro -->
-            <td class="text-center align-middle">
-                <span class="badge rounded-pill d-inline-block">{{ r.id_registro }}</span>
-            </td>
             <td class="text-center align-middle">{{ r.fecha|date:"Y-m-d H:i" }}</td>
             <td class="text-center align-middle">
                 <span class="badge rounded-pill d-inline-block">
@@ -216,7 +212,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="15" class="text-center py-4 align-middle">
+            <td colspan="14" class="text-center py-4 align-middle">
                 <div class="alert alert-info m-0">
                     <i class="fas fa-info-circle me-2"></i>
                     No hay registros de visitantes disponibles.
