@@ -1,0 +1,383 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}Resultados de Encuesta - {{ survey.titulo }}{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js is already included in base_usuarios.html, but let's make sure it is available -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'lista_encuestas' %}" class="text-dark">Encuestas</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Resultados</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ survey.titulo }}</h1>
+            <p class="text-muted small mb-0">{{ survey.descripcion|default:"Sin descripción" }}</p>
+        </div>
+        <div class="mt-2 mt-md-0 d-flex gap-2">
+            <a href="{% url 'responder_encuesta' survey.id %}" target="_blank" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1">
+                <i class="fas fa-external-link-alt"></i> Ver Formulario
+            </a>
+            <a href="{% url 'lista_encuestas' %}" class="btn btn-secondary btn-sm">
+                Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats summary cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 py-2" style="border-radius: 10px; border-left: 4px solid #4f46e5;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" style="font-size: 0.75rem;">Respuestas Totales</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_respuestas }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-signature fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 py-2" style="border-radius: 10px; border-left: 4px solid #10b981;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1" style="font-size: 0.75rem;">Estado de Recepción</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if survey.activa %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Cerrada</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-toggle-on fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 py-2" style="border-radius: 10px; border-left: 4px solid #0ea5e9;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" style="font-size: 0.75rem;">Privacidad</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if survey.anonima %}
+                                    Anónima
+                                {% else %}
+                                    Nominal (Con Cuenta)
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-secret fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4 border-bottom-0" id="responsesTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold text-dark border-0 px-4 py-2" id="summary-tab" data-bs-toggle="tab" 
+                    data-bs-target="#summary-panel" type="button" role="tab" aria-controls="summary-panel" aria-selected="true"
+                    style="border-radius: 8px 8px 0 0; background-color: transparent;">
+                <i class="fas fa-chart-pie me-2"></i>Resumen Estadístico
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-dark border-0 px-4 py-2" id="individual-tab" data-bs-toggle="tab" 
+                    data-bs-target="#individual-panel" type="button" role="tab" aria-controls="individual-panel" aria-selected="false"
+                    style="border-radius: 8px 8px 0 0; background-color: transparent;">
+                <i class="fas fa-list-ul me-2"></i>Respuestas Individuales ({{ total_respuestas }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content bg-transparent border-0" id="responsesTabContent">
+        <!-- 1. SUMMARY PANEL -->
+        <div class="tab-pane fade show active" id="summary-panel" role="tabpanel" aria-labelledby="summary-tab">
+            {% if total_respuestas > 0 %}
+                <div class="row">
+                    {% for stat in preguntas_stats %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
+                                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-1" style="font-size: 1.1rem;">{{ stat.texto }}</h5>
+                                        <span class="badge bg-light text-muted small border mb-4">
+                                            {{ stat.total }} respuestas
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                                        {% if stat.tipo_pregunta == 'TEXTO' or stat.tipo_pregunta == 'PARRAFO' %}
+                                            <!-- List of text answers -->
+                                            <div class="w-100 overflow-auto" style="max-height: 250px;">
+                                                {% if stat.respuestas_texto %}
+                                                    <ul class="list-group list-group-flush">
+                                                        {% for respuesta in stat.respuestas_texto %}
+                                                            <li class="list-group-item bg-light border-0 rounded mb-2 py-2 px-3 small text-dark">
+                                                                {{ respuesta }}
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% else %}
+                                                    <p class="text-muted small text-center mb-0">Sin respuestas escritas.</p>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <!-- Chart.js canvas -->
+                                            <div class="w-100 h-100 position-relative">
+                                                <canvas id="chart-{{ stat.id }}" style="height: 250px; max-height: 250px; width: 100%;"></canvas>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Render Script for charts -->
+                        {% if stat.tipo_pregunta != 'TEXTO' and stat.tipo_pregunta != 'PARRAFO' %}
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const ctx = document.getElementById('chart-{{ stat.id }}').getContext('2d');
+                                new Chart(ctx, {
+                                    type: '{% if stat.tipo_pregunta == "CASILLAS" %}bar{% else %}pie{% endif %}',
+                                    data: {
+                                        labels: {{ stat.datos_grafico.labels|safe }},
+                                        datasets: [{
+                                            label: 'Respuestas',
+                                            data: {{ stat.datos_grafico.data|safe }},
+                                            backgroundColor: [
+                                                '#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', 
+                                                '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#6b7280'
+                                            ],
+                                            borderWidth: 1
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: {% if stat.tipo_pregunta == "CASILLAS" %}false{% else %}true{% endif %},
+                                                position: 'bottom',
+                                                labels: {
+                                                    boxWidth: 12,
+                                                    font: { size: 11 }
+                                                }
+                                            }
+                                        },
+                                        {% if stat.tipo_pregunta == "CASILLAS" %}
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: { stepSize: 1, font: { size: 10 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 10 } }
+                                            }
+                                        }
+                                        {% endif %}
+                                    }
+                                });
+                            });
+                            </script>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-white shadow-sm rounded-3">
+                    <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+                    <h5 class="text-dark fw-bold">No hay respuestas registradas aún</h5>
+                    <p class="text-muted small">Comparte el enlace de la encuesta para comenzar a recolectar información.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. INDIVIDUAL RESPONSES PANEL -->
+        <div class="tab-pane fade" id="individual-panel" role="tabpanel" aria-labelledby="individual-tab">
+            {% if total_respuestas > 0 %}
+                <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha de Envío</th>
+                                        <th>Usuario</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for resp in respuestas_individuales %}
+                                        <tr>
+                                            <td class="fw-bold">#{{ resp.id }}</td>
+                                            <td>{{ resp.fecha|date:"d M Y, H:i" }}</td>
+                                            <td>
+                                                {% if resp.usuario == 'Anónimo' %}
+                                                    <span class="text-muted"><i class="fas fa-user-secret me-1"></i>Anónimo</span>
+                                                {% else %}
+                                                    <span class="text-dark fw-semibold"><i class="fas fa-user me-1"></i>{{ resp.usuario }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <button class="btn btn-light btn-sm btn-action view-response-btn" 
+                                                            data-id="{{ resp.id }}"
+                                                            data-json='{{ resp.respuestas|json_script:"temp"|safe }}'
+                                                            data-date="{{ resp.fecha|date:'d M Y, H:i' }}"
+                                                            data-user="{{ resp.usuario }}"
+                                                            title="Ver respuestas completas">
+                                                        <i class="fas fa-eye text-primary"></i> Ver Detalle
+                                                    </button>
+                                                    <form action="{% url 'eliminar_respuesta' resp.id %}" method="POST" class="m-0" 
+                                                          onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta respuesta? Esta acción no se puede deshacer.');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-light btn-sm btn-action" title="Eliminar respuesta">
+                                                            <i class="fas fa-trash-alt text-danger"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-white shadow-sm rounded-3">
+                    <i class="fas fa-list-ul fa-4x text-muted mb-3"></i>
+                    <h5 class="text-dark fw-bold">No hay respuestas registradas aún</h5>
+                    <p class="text-muted small">Cuando los usuarios envíen el formulario, verás los desgloses individuales aquí.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detail Responses -->
+<div class="modal fade" id="responseDetailModal" tabindex="-1" aria-labelledby="responseDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 14px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="responseDetailModalLabel">Detalle de Respuesta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="mb-3 p-3 bg-light rounded-3 small">
+                    <div class="row">
+                        <div class="col-6"><strong>ID:</strong> <span id="modal-resp-id"></span></div>
+                        <div class="col-6"><strong>Usuario:</strong> <span id="modal-resp-user"></span></div>
+                        <div class="col-12 mt-1"><strong>Enviado:</strong> <span id="modal-resp-date"></span></div>
+                    </div>
+                </div>
+                
+                <div id="modal-answers-container" class="mt-3">
+                    <!-- Dynamic answers list -->
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Helper dictionary data for Javascript -->
+<script id="questions-metadata" type="application/json">
+    [
+        {% for p in preguntas_lista %}
+            {"id": {{ p.id }}, "texto": "{{ p.texto|escapejs }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse helper metadata
+    let questionsMetadata = [];
+    try {
+        questionsMetadata = JSON.parse(document.getElementById('questions-metadata').textContent);
+    } catch(e) {
+        console.error("Error parsing questions metadata", e);
+    }
+
+    // Modal details triggers
+    const responseDetailModal = new bootstrap.Modal(document.getElementById('responseDetailModal'));
+    const modalRespId = document.getElementById('modal-resp-id');
+    const modalRespUser = document.getElementById('modal-resp-user');
+    const modalRespDate = document.getElementById('modal-resp-date');
+    const modalAnswersContainer = document.getElementById('modal-answers-container');
+
+    // Individual responses list mapper
+    // Since we mapped the responses directly inside context, we can lookup using the DOM attributes
+    {% if total_respuestas > 0 %}
+        const respuestasRaw = {
+            {% for resp in respuestas_individuales %}
+                "{{ resp.id }}": {
+                    {% for q_id, val in resp.respuestas.items %}
+                        "{{ q_id }}": "{{ val|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+    {% else %}
+        const respuestasRaw = {};
+    {% endif %}
+
+    document.querySelectorAll('.view-response-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const user = this.getAttribute('data-user');
+            const date = this.getAttribute('data-date');
+            
+            modalRespId.textContent = `#${id}`;
+            modalRespUser.textContent = user;
+            modalRespDate.textContent = date;
+            
+            modalAnswersContainer.innerHTML = '';
+            
+            const userAnswers = respuestasRaw[id] || {};
+            
+            questionsMetadata.forEach(q => {
+                const val = userAnswers[q.id] || '<em class="text-muted">Sin respuesta</em>';
+                
+                const qDiv = document.createElement('div');
+                qDiv.className = 'mb-3 pb-3 border-bottom';
+                qDiv.innerHTML = `
+                    <div class="fw-bold text-dark small mb-1">${q.texto}</div>
+                    <div class="text-secondary small" style="white-space: pre-wrap;">${val}</div>
+                `;
+                modalAnswersContainer.appendChild(qDiv);
+            });
+            
+            responseDetailModal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

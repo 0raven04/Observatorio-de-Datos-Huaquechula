@@ -2,6 +2,7 @@ from django.urls import path
 from .views import registro_visita
 from myapp.views import backup_database
 from . import views
+from . import views_encuestas
 from .views import obtener_registro, editar_registro, eliminar_seleccionados
 from django.conf import settings
 from django.conf.urls.static import static
@@ -132,6 +133,17 @@ urlpatterns = [
     path('encuestador/residente/', views.nueva_encuesta_residente, name='nueva_encuesta_residente'),
     path('encuestador/comercio/', views.nueva_encuesta_comercio, name='nueva_encuesta_comercio'),
 
-    
+    # =====================================================
+    # Módulo de Encuestas Personalizadas (Google Forms)
+    # =====================================================
+    path('encuestas/', views_encuestas.lista_encuestas, name='lista_encuestas'),
+    path('encuestas/crear/', views_encuestas.crear_encuesta, name='crear_encuesta'),
+    path('encuestas/editar/<int:id_encuesta>/', views_encuestas.editar_encuesta, name='editar_encuesta'),
+    path('encuestas/guardar/', views_encuestas.guardar_encuesta_api, name='guardar_encuesta_api'),
+    path('encuestas/eliminar/<int:id_encuesta>/', views_encuestas.eliminar_encuesta, name='eliminar_encuesta'),
+    path('encuestas/toggle/<int:id_encuesta>/', views_encuestas.toggle_encuesta, name='toggle_encuesta'),
+    path('encuestas/responder/<int:id_encuesta>/', views_encuestas.responder_encuesta, name='responder_encuesta'),
+    path('encuestas/<int:id_encuesta>/respuestas/', views_encuestas.ver_respuestas, name='ver_respuestas'),
+    path('encuestas/respuestas/eliminar/<int:id_respuesta>/', views_encuestas.eliminar_respuesta, name='eliminar_respuesta'),
 ]
 

@@ -296,6 +296,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id_usuario',
+    'USER_ID_CLAIM': 'user_id',
 }
 
 # CORS — Permitir conexiones desde la app Expo en desarrollo y desde Azure en producción
@@ -308,8 +310,8 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# CORS abierto para endpoints públicos /api/v1/public/
-CORS_URLS_REGEX = r'^/api/v1/public/.*$'
+# CORS abierto para endpoints de la API (móvil + pública)
+CORS_URLS_REGEX = r'^/api/.*$'
 
 # =====================================================
 # Swagger / OpenAPI (drf-spectacular)

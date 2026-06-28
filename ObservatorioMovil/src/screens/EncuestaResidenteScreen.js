@@ -5,13 +5,13 @@ import {
 } from 'react-native';
 import { encuestasService } from '../services/encuestasService';
 
-const DORADO = '#FFC300';
+const DORADO = '#D6CEAA';
 const VERDE_OBS = '#2ecc71';
-const TEXTO_OSCURO = '#212529';
-const FONDO = '#eef1f5';
+const TEXTO_OSCURO = '#4A4A4A';
+const FONDO = '#EDEBE3';
 const BLANCO = '#ffffff';
-const GRIS_INPUT = '#f5f5f5';
-const GRIS_BORDE = '#dee2e6';
+const GRIS_INPUT = '#f9f9f9';
+const GRIS_BORDE = '#B3B3B3';
 
 function SelectorEscala({ label, valor, onSeleccionar, max = 5 }) {
     const opciones = Array.from({ length: max }, (_, i) => i + 1);

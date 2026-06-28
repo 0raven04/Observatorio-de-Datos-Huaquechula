@@ -1,0 +1,180 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}{{ survey.titulo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f0f2f5;
+    }
+    .survey-container {
+        max-width: 680px;
+        margin: 40px auto;
+        padding: 0 15px;
+    }
+    .survey-header {
+        border-top: 8px solid var(--color-gris-oscuro);
+        border-radius: 12px;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        padding: 30px;
+        margin-bottom: 24px;
+    }
+    .survey-question-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        padding: 28px;
+        margin-bottom: 20px;
+        border-left: 4px solid transparent;
+        transition: border-left-color 0.2s;
+    }
+    .survey-question-card.has-error {
+        border-left-color: #dc3545;
+    }
+    .question-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #202124;
+        margin-bottom: 12px;
+    }
+    .required-asterisk {
+        color: #d93025;
+        margin-left: 3px;
+    }
+    .form-check-label {
+        color: #3c4043;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+    .form-check-input:checked {
+        background-color: var(--color-gris-oscuro);
+        border-color: var(--color-gris-oscuro);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="survey-container">
+    {% if cerrada %}
+        <!-- Survey Closed -->
+        <div class="survey-header text-center py-5">
+            <i class="fas fa-lock fa-4x text-muted mb-3"></i>
+            <h2 class="fw-bold text-dark">{{ survey.titulo }}</h2>
+            <p class="text-muted mt-3">Esta encuesta ya no acepta respuestas o ha sido desactivada por su creador.</p>
+            <a href="/" class="btn btn-dark mt-3 px-4" style="background-color: var(--color-gris-oscuro);">Volver al Inicio</a>
+        </div>
+    {% elif completada %}
+        <!-- Survey Completed Success -->
+        <div class="survey-header text-center py-5">
+            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+            <h2 class="fw-bold text-dark">¡Gracias por participar!</h2>
+            <p class="text-muted mt-3">Tu respuesta ha sido registrada exitosamente para la encuesta: <strong>{{ survey.titulo }}</strong>.</p>
+            {% if survey.creador %}
+                <p class="small text-muted">Apreciamos tu valioso tiempo para ayudarnos a mejorar.</p>
+            {% endif %}
+            <div class="mt-4">
+                <a href="/" class="btn btn-dark px-4 me-2" style="background-color: var(--color-gris-oscuro);">Volver al Inicio</a>
+                {% if not survey.anonima and not request.user.is_authenticated %}
+                {% else %}
+                    <a href="{% url 'responder_encuesta' survey.id %}" class="btn btn-outline-secondary px-3">Enviar otra respuesta</a>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <!-- Fill Survey Form -->
+        <div class="survey-header">
+            <h1 class="fw-bold text-dark mb-2" style="font-size: 2.2rem;">{{ survey.titulo }}</h1>
+            {% if survey.descripcion %}
+                <p class="text-muted mb-0" style="white-space: pre-line; font-size: 1.05rem;">{{ survey.descripcion }}</p>
+            {% endif %}
+            <div class="mt-3 pt-3 border-top text-muted small d-flex justify-content-between flex-wrap gap-2">
+                <span>* Indica que la pregunta es obligatoria</span>
+                {% if survey.anonima %}
+                    <span class="text-info"><i class="fas fa-user-secret me-1"></i>Esta encuesta es anónima</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <form action="" method="POST" id="survey-form">
+            {% csrf_token %}
+            
+            {% for pregunta in survey.preguntas.all %}
+                {% with error=errors|default:None %}
+                    <div class="survey-question-card {% if errors and pregunta.id in errors %}has-error{% endif %}">
+                        <div class="question-title">
+                            {{ pregunta.texto }}
+                            {% if pregunta.requerida %}
+                                <span class="required-asterisk" title="Obligatoria">*</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Render dynamic input depending on question type -->
+                        <div class="question-answer-area mt-3">
+                            {% if pregunta.tipo_pregunta == 'TEXTO' %}
+                                <input type="text" class="form-control" name="pregunta_{{ pregunta.id }}" 
+                                       placeholder="Tu respuesta corta" 
+                                       value="{% if respuestas_previas %}{{ respuestas_previas.pregunta_pregunta.id }}{% endif %}"
+                                       {% if pregunta.requerida %}required{% endif %}>
+                                       
+                            {% elif pregunta.tipo_pregunta == 'PARRAFO' %}
+                                <textarea class="form-control" name="pregunta_{{ pregunta.id }}" rows="3" 
+                                          placeholder="Tu respuesta larga"
+                                          {% if pregunta.requerida %}required{% endif %}>{% if respuestas_previas %}{{ respuestas_previas.pregunta_pregunta.id }}{% endif %}</textarea>
+                                          
+                            {% elif pregunta.tipo_pregunta == 'OPCION_MULTIPLE' %}
+                                {% for opcion in pregunta.opciones.all %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="pregunta_{{ pregunta.id }}" 
+                                               id="opt_{{ opcion.id }}" value="{{ opcion.texto }}"
+                                               {% if pregunta.requerida %}required{% endif %}>
+                                        <label class="form-check-label" for="opt_{{ opcion.id }}">
+                                            {{ opcion.texto }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                
+                            {% elif pregunta.tipo_pregunta == 'CASILLAS' %}
+                                <div class="checkbox-group">
+                                    {% for opcion in pregunta.opciones.all %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="pregunta_{{ pregunta.id }}" 
+                                                   id="opt_{{ opcion.id }}" value="{{ opcion.texto }}">
+                                            <label class="form-check-label" for="opt_{{ opcion.id }}">
+                                                {{ opcion.texto }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                            {% elif pregunta.tipo_pregunta == 'DESPLEGABLE' %}
+                                <select class="form-select" name="pregunta_{{ pregunta.id }}" {% if pregunta.requerida %}required{% endif %}>
+                                    <option value="" disabled selected>Elige una opción</option>
+                                    {% for opcion in pregunta.opciones.all %}
+                                        <option value="{{ opcion.texto }}">{{ opcion.texto }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+
+                        {% if errors and pregunta.id in errors %}
+                            <div class="text-danger small mt-2 fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i> {{ errors|get_item:pregunta.id|default:"Esta pregunta es obligatoria." }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+            {% endfor %}
+
+            <div class="d-flex justify-content-between align-items-center mb-5 mt-4">
+                <button type="reset" class="btn btn-outline-secondary px-4">Borrar formulario</button>
+                <button type="submit" class="btn btn-dark px-5 py-2 fw-bold" style="background-color: var(--color-gris-oscuro); border-radius: 8px;">
+                    Enviar Respuestas
+                </button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

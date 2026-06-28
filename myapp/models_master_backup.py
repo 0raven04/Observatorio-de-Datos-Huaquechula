@@ -5,10 +5,8 @@ from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 import os
 import uuid
-import secrets
-import string
-import hashlib
-from datetime import timedelta
+from django.utils import timezone
+
 from mysite import settings
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -68,52 +66,6 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.nombre_usuario
-
-
-class TwoFactorCode(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='two_factor_codes')
-    code_hash = models.CharField(max_length=64)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    attempts = models.PositiveSmallIntegerField(default=0)
-    used = models.BooleanField(default=False)
-    used_at = models.DateTimeField(null=True, blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.CharField(max_length=255, blank=True)
-
-    class Meta:
-        db_table = 'TwoFactorCode'
-        ordering = ['-created_at']
-
-    def is_expired(self):
-        return timezone.now() > self.expires_at
-
-    def verify_code(self, code):
-        return (
-            not self.used
-            and not self.is_expired()
-            and self.code_hash == hashlib.sha256(code.encode()).hexdigest()
-        )
-
-    def mark_as_used(self):
-        self.used = True
-        self.used_at = timezone.now()
-        self.save(update_fields=['used', 'used_at'])
-
-    @classmethod
-    def create_for_user(cls, user, ip_address=None, user_agent='', expiry_minutes=5):
-        cls.objects.filter(user=user, used=False).update(used=True)
-        code = ''.join(secrets.choice(string.digits) for _ in range(6))
-        code_hash = hashlib.sha256(code.encode()).hexdigest()
-        now = timezone.now()
-        expires_at = now + timedelta(minutes=expiry_minutes)
-        return cls.objects.create(
-            user=user,
-            code_hash=code_hash,
-            expires_at=expires_at,
-            ip_address=ip_address,
-            user_agent=user_agent[:255]
-        ), code
 
 
 class Encuestador(models.Model):
@@ -493,7 +445,7 @@ class Punto_Interes(models.Model):
     # Relación con geometría (opcional)
     id_geometria = models.ForeignKey(
         GeometriaEspacial,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         db_column='id_geometria'
@@ -504,7 +456,7 @@ class Punto_Interes(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     
     # Imagen de portada (URL)
-    imagen_portada = models.CharField(max_length=500, blank=True, null=True, verbose_name="Ruta o URL de imagen portada")
+    imagen_portada = models.URLField(max_length=500, blank=True, null=True, verbose_name="URL de imagen portada")
     
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo')
     
@@ -816,16 +768,12 @@ class ResenaGlobal(models.Model):
     # Apodo del visitante anónimo
     nombre_visitante = models.CharField(max_length=100, blank=True, null=True)
 
-    
-    
     calificacion = models.PositiveSmallIntegerField()          # 1-5
     comentario   = models.TextField(blank=True, null=True)
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(
         max_length=10, choices=ESTADO_CHOICES, default='aprobada'
     )
-    modelo_label = models.CharField(max_length=50, null=True, blank=True, verbose_name="Etiqueta de la IA")
-    modelo_score = models.FloatField(null=True, blank=True, verbose_name="Certeza de la IA")
     likes = models.PositiveIntegerField(default=0)
 
     # IP para rate limiting
@@ -895,31 +843,8 @@ class Categoria(models.Model):
 class Documento(models.Model):
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True)
-    
-    # Soporte para archivos físicos (opcional)
-    archivo = models.FileField(upload_to='documentos/%Y/%m/', null=True, blank=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='documentos', null=True, blank=True)
-    
-    # Soporte para URLs (opcional)
-    url = models.URLField(max_length=500, blank=True, null=True)
-    clasificacion = models.CharField(
-        max_length=20, 
-        choices=[('publico', 'Público'), ('privado', 'Privado'), ('confidencial', 'Confidencial')], 
-        default='publico'
-    )
-    tipo = models.CharField(
-        max_length=20, 
-        choices=[('reporte', 'Reporte'), ('video', 'Video'), ('historico', 'Documento Histórico')], 
-        default='reporte'
-    )
-    clave_admin = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='documentos_creados'
-    )
-    
+    archivo = models.FileField(upload_to='documentos/%Y/%m/')
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='documentos')
     fecha_subida = models.DateTimeField(default=timezone.now)
     tamaño = models.IntegerField(default=0)  # en bytes
     tipo_archivo = models.CharField(max_length=10, blank=True)
@@ -930,28 +855,13 @@ class Documento(models.Model):
         ordering = ['-fecha_subida']
         verbose_name_plural = "Documentos"
     
-    @property
-    def id_documento(self):
-        return self.id
-
-    @property
-    def nombre_clasificacion(self):
-        return self.get_clasificacion_display()
-
     def __str__(self):
         return self.titulo
     
     def save(self, *args, **kwargs):
         if self.archivo:
-            self.tipo_archivo = self.archivo.name.split('.')[-1].lower()[:10]
+            self.tipo_archivo = self.archivo.name.split('.')[-1].lower()
             self.tamaño = self.archivo.size
-        elif self.url:
-            ext = self.url.split('.')[-1].split('?')[0].lower()[:10]
-            if len(ext) <= 4 and ext.isalnum():
-                self.tipo_archivo = ext
-            else:
-                self.tipo_archivo = 'link'
-        self.es_publico = (self.clasificacion == 'publico')
         super().save(*args, **kwargs)
     
     def tamaño_formateado(self):
@@ -1023,12 +933,6 @@ class Indicador(models.Model):
         ('other', 'Otra fuente')
     ])
     last_sync = models.DateTimeField(null=True, blank=True, help_text="Última sincronización con fuente externa")
-    geo_code = models.CharField(max_length=10, default='21071')
-
-    # Nuevos campos para coincidir con el fixture
-    nivel_geografico = models.CharField(max_length=50, blank=True, null=True)
-    encuesta_tipo = models.CharField(max_length=50, blank=True, null=True)
-    encuesta_pregunta = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre
@@ -1082,125 +986,3 @@ class EncuestaComercio(models.Model):
     def __str__(self):
         return f"Encuesta Comercio {self.id} - {self.tipo_comercio} - {self.fecha.strftime('%Y-%m-%d')}"
 
-
-# =====================================================
-# API KEYS — Acceso a la API Pública Open Data
-# =====================================================
-import secrets
-
-class APIKey(models.Model):
-    """
-    Modelo para gestionar las llaves de acceso a la API pública.
-    Equivalente al sistema de API Keys del portal de desarrolladores de INEGI.
-    """
-    key = models.CharField(max_length=64, unique=True, db_index=True)
-    nombre = models.CharField(max_length=100, help_text="Nombre del proyecto / institución")
-    email = models.EmailField(help_text="Correo de contacto del solicitante")
-    activa = models.BooleanField(default=True)
-    creada = models.DateTimeField(auto_now_add=True)
-    usos_hoy = models.PositiveIntegerField(default=0)
-    limite_diario = models.PositiveIntegerField(default=1000)
-    ultimo_uso = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        db_table = 'APIKey'
-        verbose_name = 'API Key'
-        verbose_name_plural = 'API Keys'
-        ordering = ['-creada']
-
-    def __str__(self):
-        return f"{self.nombre} ({self.email})"
-
-    def save(self, *args, **kwargs):
-        if not self.key:
-            self.key = secrets.token_urlsafe(48)
-        super().save(*args, **kwargs)
-
-    @property
-    def ha_excedido_limite(self):
-        return self.usos_hoy >= self.limite_diario
-
-
-# =====================================================
-# MÓDULO DE ENCUESTAS PERSONALIZADAS (GOOGLE FORMS)
-# =====================================================
-class Encuesta(models.Model):
-    titulo = models.CharField(max_length=200, verbose_name="Título de la Encuesta")
-    descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
-    creador = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, verbose_name="Creador")
-    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
-    activa = models.BooleanField(default=True, verbose_name="Activa / Recibiendo Respuestas")
-    anonima = models.BooleanField(default=True, verbose_name="Permitir respuestas anónimas")
-
-    class Meta:
-        db_table = 'Encuesta'
-        verbose_name = 'Encuesta'
-        verbose_name_plural = 'Encuestas'
-        ordering = ['-fecha_creacion']
-
-    def __str__(self):
-        return self.titulo
-
-class Pregunta(models.Model):
-    TIPO_PREGUNTA_CHOICES = [
-        ('TEXTO', 'Texto Corto'),
-        ('PARRAFO', 'Párrafo / Texto Largo'),
-        ('OPCION_MULTIPLE', 'Opción Múltiple (Una sola respuesta)'),
-        ('CASILLAS', 'Casillas de Verificación (Múltiples respuestas)'),
-        ('DESPLEGABLE', 'Lista Desplegable'),
-    ]
-    encuesta = models.ForeignKey(Encuesta, on_delete=models.CASCADE, related_name='preguntas')
-    texto = models.CharField(max_length=255, verbose_name="Texto de la Pregunta")
-    tipo_pregunta = models.CharField(max_length=20, choices=TIPO_PREGUNTA_CHOICES, default='TEXTO', verbose_name="Tipo de Pregunta")
-    requerida = models.BooleanField(default=False, verbose_name="Obligatoria")
-    orden = models.PositiveIntegerField(default=0, verbose_name="Orden de visualización")
-
-    class Meta:
-        db_table = 'Pregunta'
-        verbose_name = 'Pregunta'
-        verbose_name_plural = 'Preguntas'
-        ordering = ['orden']
-
-    def __str__(self):
-        return f"{self.texto} ({self.get_tipo_pregunta_display()})"
-
-class OpcionPregunta(models.Model):
-    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE, related_name='opciones')
-    texto = models.CharField(max_length=255, verbose_name="Texto de la Opción")
-    orden = models.PositiveIntegerField(default=0, verbose_name="Orden")
-
-    class Meta:
-        db_table = 'OpcionPregunta'
-        verbose_name = 'Opción de Pregunta'
-        verbose_name_plural = 'Opciones de Pregunta'
-        ordering = ['orden']
-
-    def __str__(self):
-        return self.texto
-
-class RespuestaEncuesta(models.Model):
-    encuesta = models.ForeignKey(Encuesta, on_delete=models.CASCADE, related_name='respuestas_recibidas')
-    fecha_envio = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Envío")
-    usuario_responde = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Usuario que responde")
-
-    class Meta:
-        db_table = 'RespuestaEncuesta'
-        verbose_name = 'Respuesta de Encuesta'
-        verbose_name_plural = 'Respuestas de Encuesta'
-        ordering = ['-fecha_envio']
-
-    def __str__(self):
-        return f"Respuesta a {self.encuesta.titulo} - {self.fecha_envio.strftime('%Y-%m-%d %H:%M')}"
-
-class RespuestaPregunta(models.Model):
-    respuesta_encuesta = models.ForeignKey(RespuestaEncuesta, on_delete=models.CASCADE, related_name='detalles')
-    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
-    valor_texto = models.TextField(blank=True, null=True, verbose_name="Valor de la Respuesta")
-
-    class Meta:
-        db_table = 'RespuestaPregunta'
-        verbose_name = 'Respuesta de Pregunta'
-        verbose_name_plural = 'Respuestas de Preguntas'
-
-    def __str__(self):
-        return f"Pregunta: {self.pregunta.texto} -> Respuesta: {self.valor_texto}"

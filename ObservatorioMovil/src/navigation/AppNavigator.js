@@ -23,6 +23,7 @@ import EncuestaComercioScreen from '../screens/EncuestaComercioScreen';
 import MisVisitasScreen from '../screens/MisVisitasScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import IndicadoresScreen from '../screens/IndicadoresScreen';
+import DynamicSurveyScreen from '../screens/DynamicSurveyScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,7 +33,7 @@ function EncuestasStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a7abf' },
+                headerStyle: { backgroundColor: '#4A4A4A' },
                 headerTintColor: '#fff',
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
@@ -57,6 +58,11 @@ function EncuestasStack() {
                 component={EncuestaComercioScreen} 
                 options={{ title: 'Encuesta Comercio' }}
             />
+            <Stack.Screen 
+                name="CompletarEncuesta" 
+                component={DynamicSurveyScreen} 
+                options={{ title: 'Completar Encuesta' }}
+            />
         </Stack.Navigator>
     );
 }
@@ -66,7 +72,7 @@ function EncuestadorTabs() {
     return (
         <Tab.Navigator
             screenOptions={{
-                tabBarActiveTintColor: '#1a7abf',
+                tabBarActiveTintColor: '#4A4A4A',
                 tabBarInactiveTintColor: '#999',
                 headerShown: false, // El header lo maneja el Stack interno
             }}
@@ -83,7 +89,7 @@ function EncuestadorTabs() {
                     headerShown: true,
                     title: 'Mis Registros', 
                     tabBarLabel: 'Mis Visitas',
-                    headerStyle: { backgroundColor: '#1a7abf' },
+                    headerStyle: { backgroundColor: '#4A4A4A' },
                     headerTintColor: '#fff',
                 }}
             />
@@ -134,16 +140,8 @@ export default function AppNavigator() {
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {!usuario ? (
                     <Stack.Screen name="Login" component={LoginScreen} />
-                ) : usuario.tipo === 'encuestador' || usuario.tipo === 'admin' ? (
-                    // Permitimos que el admin vea también las pestañas de encuestador si lo desea,
-                    // pero aquí seguimos la lógica original separada.
-                    usuario.tipo === 'encuestador' ? (
-                        <Stack.Screen name="EncuestadorApp" component={EncuestadorTabs} />
-                    ) : (
-                        <Stack.Screen name="AdminApp" component={AdminTabs} />
-                    )
                 ) : (
-                    <Stack.Screen name="AdminApp" component={AdminTabs} />
+                    <Stack.Screen name="EncuestadorApp" component={EncuestadorTabs} />
                 )}
             </Stack.Navigator>
         </NavigationContainer>

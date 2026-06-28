@@ -27,4 +27,16 @@ export const encuestasService = {
         const response = await api.get('/api/mobile/encuestas/comercio/');
         return response.data;
     },
+
+    /** GET /api/mobile/encuestas-creadas/ — Lista encuestas dinámicas activas */
+    async getEncuestasCreadas() {
+        const response = await api.get('/api/mobile/encuestas-creadas/');
+        return response.data;
+    },
+
+    /** POST /api/mobile/encuestas-creadas/<id>/responder/ — Guarda respuestas de encuesta dinámica */
+    async responderEncuestaCreada(id, respuestas) {
+        const response = await api.post(`/api/mobile/encuestas-creadas/${id}/responder/`, { respuestas });
+        return response.data;
+    },
 };

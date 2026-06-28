@@ -2,8 +2,9 @@
 API Views para la app móvil del Observatorio de Datos Huaquechula.
 Todos los endpoints responden en JSON y usan autenticación JWT.
 """
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.db import transaction
 
 from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
@@ -16,6 +17,7 @@ from .models import (
     RegistroVisita,
     Eje,
     EncuestaResidente, EncuestaComercio,
+    Encuesta, Pregunta, OpcionPregunta, RespuestaEncuesta, RespuestaPregunta
 )
 from .serializers import (
     UsuarioSerializer,
@@ -23,6 +25,7 @@ from .serializers import (
     EjeSerializer,
     EncuestaResidenteSerializer,
     EncuestaComercioSerializer,
+    EncuestaCreadaSerializer,
 )
 
 
@@ -57,17 +60,14 @@ class LoginMobileView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        if not check_password(password, usuario.contrasenia):
+        if not check_password(password, usuario.password):
             return Response(
                 {'error': 'Credenciales incorrectas'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        # Obtener o crear el User de Django (requerido por simplejwt)
-        django_user, _ = User.objects.get_or_create(username=usuario.nombre_usuario)
-
-        # Generar tokens JWT
-        refresh = RefreshToken.for_user(django_user)
+        # Generar tokens JWT directamente con el Usuario personalizado
+        refresh = RefreshToken.for_user(usuario)
         # Embeber el tipo de usuario en el token para uso en la app
         refresh['tipo_usuario'] = usuario.tipo
         refresh['id_usuario'] = usuario.id_usuario
@@ -349,3 +349,74 @@ class EncuestaComercioView(APIView):
             serializer.save(encuestador=encuestador)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ─── Encuestas Creadas / Dinámicas para Móvil ─────────────────────────────────
+
+class EncuestaCreadaListView(generics.ListAPIView):
+    """
+    GET /api/mobile/encuestas-creadas/
+    Retorna la lista de encuestas dinámicas creadas que están activas.
+    Incluye sus preguntas y opciones respectivas.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = EncuestaCreadaSerializer
+    queryset = Encuesta.objects.filter(activa=True)
+
+
+class ResponderEncuestaView(APIView):
+    """
+    POST /api/mobile/encuestas-creadas/<pk>/responder/
+    Recibe las respuestas para una encuesta dinámica específica y las guarda.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        import json
+        survey = generics.get_object_or_404(Encuesta, pk=pk)
+        if not survey.activa:
+            return Response({'error': 'La encuesta está desactivada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        respuestas_data = request.data.get('respuestas', [])
+        
+        # Validar requeridos en base a lo enviado
+        preguntas = survey.preguntas.all()
+        errors = {}
+        respuestas_dict = {r.get('pregunta_id'): r.get('valor') for r in respuestas_data}
+
+        for p in preguntas:
+            val = respuestas_dict.get(p.id)
+            if p.requerida and (val is None or val == '' or (isinstance(val, list) and len(val) == 0)):
+                errors[p.id] = 'Esta pregunta es obligatoria.'
+
+        if errors:
+            return Response({'error': 'Errores de validación', 'detalles': errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Determinar si la encuesta es anónima
+        usuario_resp = request.user if request.user.is_authenticated else None
+        if survey.anonima:
+            usuario_resp = None
+
+        # Guardar la respuesta principal
+        res_encuesta = RespuestaEncuesta.objects.create(
+            encuesta=survey,
+            usuario_responde=usuario_resp
+        )
+
+        # Guardar las respuestas por pregunta
+        for p in preguntas:
+            val = respuestas_dict.get(p.id)
+            if val is not None and val != '':
+                if isinstance(val, list):
+                    valor_str = json.dumps(val)
+                else:
+                    valor_str = str(val)
+
+                RespuestaPregunta.objects.create(
+                    respuesta_encuesta=res_encuesta,
+                    pregunta=p,
+                    valor_texto=valor_str
+                )
+
+        return Response({'status': 'success', 'respuesta_encuesta_id': res_encuesta.id}, status=status.HTTP_201_CREATED)

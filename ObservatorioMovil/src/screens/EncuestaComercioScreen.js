@@ -5,12 +5,12 @@ import {
 } from 'react-native';
 import { encuestasService } from '../services/encuestasService';
 
-const DORADO = '#FFC300';
-const NARANJA_OBS = '#f39c12';
-const TEXTO_OSCURO = '#212529';
-const FONDO = '#eef1f5';
+const DORADO = '#D6CEAA';
+const NARANJA_OBS = '#c4b897';
+const TEXTO_OSCURO = '#4A4A4A';
+const FONDO = '#EDEBE3';
 const BLANCO = '#ffffff';
-const GRIS_BORDE = '#dee2e6';
+const GRIS_BORDE = '#B3B3B3';
 
 function SelectorEscala({ label, valor, onSeleccionar, max = 5 }) {
     const opciones = Array.from({ length: max }, (_, i) => i + 1);

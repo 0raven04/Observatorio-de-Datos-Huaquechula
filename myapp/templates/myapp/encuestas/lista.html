@@ -1,0 +1,162 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+
+{% block title %}Gestión de Encuestas{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-poll-h me-2"></i>Gestión de Encuestas</h1>
+            <p class="text-muted small mb-0">Crea y administra encuestas personalizadas similares a Google Forms</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="{% url 'crear_encuesta' %}" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: var(--color-gris-oscuro); border-color: var(--color-gris-oscuro);">
+                <i class="fas fa-plus"></i> Nueva Encuesta
+            </a>
+        </div>
+    </div>
+
+    <!-- Encuestas Card List -->
+    <div class="row">
+        {% if encuestas %}
+            {% for encuesta in encuestas %}
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card shadow-sm h-100 border-0" style="border-radius: 12px; border-left: 5px solid {% if encuesta.activa %}#28a745{% else %}#dc3545{% endif %} !important;">
+                        <div class="card-body d-flex flex-column justify-content-between p-4">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title fw-bold text-dark mb-0 text-truncate" style="max-width: 80%;">{{ encuesta.titulo }}</h5>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input toggle-status" type="checkbox" role="switch" 
+                                               data-id="{{ encuesta.id }}" {% if encuesta.activa %}checked{% endif %}
+                                               title="Activar/Desactivar">
+                                    </div>
+                                </div>
+                                <p class="card-text text-muted small mb-3 text-truncate-2" style="height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    {{ encuesta.descripcion|default:"Sin descripción" }}
+                                </p>
+                                
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="badge rounded-pill bg-light text-dark border"><i class="fas fa-clipboard-check me-1"></i>{{ encuesta.total_respuestas }} Respuestas</span>
+                                    {% if encuesta.anonima %}
+                                        <span class="badge rounded-pill bg-info text-white"><i class="fas fa-user-secret me-1"></i>Anónima</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-warning text-dark"><i class="fas fa-user-check me-1"></i>Con Registro</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <hr class="my-3">
+                                <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+                                    <span>Creada: {{ encuesta.fecha_creacion|date:"d/m/Y" }}</span>
+                                    <span>Por: {{ encuesta.creador.nombre_usuario|default:"Admin" }}</span>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'ver_respuestas' encuesta.id %}" class="btn btn-outline-dark btn-sm flex-fill d-flex align-items-center justify-content-center gap-1">
+                                            <i class="fas fa-chart-bar"></i> Respuestas
+                                        </a>
+                                        <a href="{% url 'editar_encuesta' encuesta.id %}" class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-outline-secondary btn-sm copy-link d-flex align-items-center justify-content-center" 
+                                                data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'responder_encuesta' encuesta.id %}"
+                                                title="Copiar enlace de compartir">
+                                            <i class="fas fa-share-alt"></i>
+                                        </button>
+                                        <form action="{% url 'eliminar_encuesta' encuesta.id %}" method="POST" class="delete-form m-0" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta encuesta? Se borrarán todas las preguntas y respuestas asociadas.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" title="Eliminar">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <a href="{% url 'responder_encuesta' encuesta.id %}" target="_blank" class="btn btn-light btn-sm text-center fw-semibold mt-1">
+                                        <i class="fas fa-external-link-alt me-1"></i> Vista Pública
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5 bg-white shadow-sm rounded-3 mt-3">
+                    <i class="fas fa-poll-h fa-4x text-muted mb-3"></i>
+                    <h4 class="text-dark fw-bold">No hay encuestas creadas</h4>
+                    <p class="text-muted">Comienza creando una encuesta personalizada similar a Google Forms para recabar información.</p>
+                    <a href="{% url 'crear_encuesta' %}" class="btn btn-primary mt-2" style="background-color: var(--color-gris-oscuro); border-color: var(--color-gris-oscuro);">
+                        Crear mi primera encuesta
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Copiar enlace al portapapeles
+    document.querySelectorAll('.copy-link').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            navigator.clipboard.writeText(url).then(() => {
+                if (window.showToast) {
+                    window.showToast('Enlace de encuesta copiado al portapapeles', 'success');
+                } else {
+                    alert('Enlace copiado: ' + url);
+                }
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+            });
+        });
+    });
+
+    // Cambiar estado de la encuesta (Activa/Inactiva)
+    document.querySelectorAll('.toggle-status').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const id = this.getAttribute('data-id');
+            const checked = this.checked;
+            
+            fetch(`/encuestas/toggle/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (window.showToast) {
+                        window.showToast(data.activa ? 'Encuesta activada' : 'Encuesta desactivada', 'success');
+                    }
+                    // Actualizar el borde de color de la tarjeta
+                    const card = this.closest('.card');
+                    if (card) {
+                        card.style.borderLeftColor = data.activa ? '#28a745' : '#dc3545';
+                    }
+                } else {
+                    this.checked = !checked;
+                    if (window.showToast) {
+                        window.showToast('Error al cambiar estado', 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                this.checked = !checked;
+                console.error('Error:', error);
+                if (window.showToast) {
+                    window.showToast('Error de conexión', 'error');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

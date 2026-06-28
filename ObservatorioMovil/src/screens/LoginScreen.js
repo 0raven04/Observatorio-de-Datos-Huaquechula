@@ -11,13 +11,13 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 // Paleta del Observatorio (alineada con el sitio web)
-const DORADO = '#FFC300';
-const TEXTO_OSCURO = '#212529';
-const FONDO = '#eef1f5';
+const DORADO = '#D6CEAA'; // Equivale a color-arena-oscuro
+const TEXTO_OSCURO = '#4A4A4A'; // Equivale a color-gris-oscuro
+const FONDO = '#EDEBE3'; // Equivale a color-arena-claro
 const BLANCO = '#ffffff';
-const GRIS_INPUT = '#f5f5f5';
-const GRIS_BORDE = '#dee2e6';
-const AZUL_INSTITUCIONAL = '#1a7abf';
+const GRIS_INPUT = '#f9f9f9';
+const GRIS_BORDE = '#B3B3B3'; // Equivale a color-beige
+const AZUL_INSTITUCIONAL = '#4A4A4A';
 
 export default function LoginScreen() {
     const { login } = useAuth();

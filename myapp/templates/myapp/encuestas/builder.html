@@ -1,0 +1,492 @@
+{% extends "base_usuarios.html" %}
+{% load static %}
+
+{% block title %}
+    {% if survey %}Editar Encuesta{% else %}Crear Encuesta{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-card {
+        border-left: 5px solid transparent;
+        transition: border-left-color 0.2s, box-shadow 0.2s;
+    }
+    .question-card:hover {
+        border-left-color: #6c757d;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    }
+    .question-card.active-builder-card {
+        border-left-color: #007bff;
+    }
+    .btn-floating-add {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .option-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 850px;">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'lista_encuestas' %}" class="text-dark">Encuestas</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if survey %}Editar{% else %}Nueva{% endif %}
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header Config Card -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px; border-top: 8px solid var(--color-gris-oscuro);">
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <label for="survey-title-input" class="form-label fw-bold text-dark fs-5">Título de la Encuesta</label>
+                <input type="text" class="form-control form-control-lg border-0 border-bottom rounded-0 px-0" 
+                       id="survey-title-input" placeholder="Encuesta sin título" style="font-size: 1.8rem; font-weight: 700; focus: none;"
+                       value="{% if survey %}{{ survey.titulo }}{% endif %}">
+            </div>
+            <div class="mb-3">
+                <label for="survey-desc-input" class="form-label fw-semibold text-muted">Descripción</label>
+                <textarea class="form-control border-0 border-bottom rounded-0 px-0" 
+                          id="survey-desc-input" rows="2" placeholder="Describe el propósito de esta encuesta...">{% if survey %}{{ survey.descripcion|default:'' }}{% endif %}</textarea>
+            </div>
+            
+            <div class="row align-items-center mt-3 pt-2 border-top">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="survey-anonima-input"
+                               {% if survey %}{% if survey.anonima %}checked{% endif %}{% else %}checked{% endif %}>
+                        <label class="form-check-label text-dark small" for="survey-anonima-input">
+                            <strong>Permitir respuestas anónimas</strong> (No requiere iniciar sesión)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-outline-secondary me-2 btn-sm" id="btn-cancel">Cancelar</button>
+                    <button class="btn btn-dark btn-sm px-4" id="btn-save-survey" style="background-color: var(--color-gris-oscuro);">
+                        <i class="fas fa-save me-1"></i> Guardar Encuesta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Container -->
+    <div id="questions-list">
+        <!-- Dyn list -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="text-center py-5 bg-white rounded-3 shadow-sm border mb-4 d-none">
+        <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">Aún no hay preguntas en esta encuesta</h5>
+        <p class="text-muted small">Haz clic en el botón de agregar para crear tu primera pregunta.</p>
+        <button class="btn btn-outline-dark btn-sm add-question-btn">
+            <i class="fas fa-plus me-1"></i> Agregar Pregunta
+        </button>
+    </div>
+
+    <div class="text-center mb-5">
+        <button class="btn btn-outline-dark add-question-btn px-4 shadow-sm" style="border-radius: 8px;">
+            <i class="fas fa-plus-circle me-1"></i> Agregar Pregunta
+        </button>
+    </div>
+</div>
+
+<!-- Floating Add Button for Mobile/Convenience -->
+<button class="btn btn-dark btn-floating-add add-question-btn d-md-flex" title="Agregar Pregunta" style="background-color: var(--color-gris-oscuro);">
+    <i class="fas fa-plus fa-lg"></i>
+</button>
+
+<!-- Survey Data Script Block (Initialization) -->
+<script id="survey-data" type="application/json">
+    {% if survey %}
+    {
+        "id": {{ survey.id }},
+        "titulo": "{{ survey.titulo|escapejs }}",
+        "descripcion": "{{ survey.descripcion|default:''|escapejs }}",
+        "anonima": {% if survey.anonima %}true{% else %}false{% endif %},
+        "activa": {% if survey.activa %}true{% else %}false{% endif %},
+        "preguntas": [
+            {% for p in survey.preguntas.all %}
+            {
+                "id": {{ p.id }},
+                "texto": "{{ p.texto|escapejs }}",
+                "tipo_pregunta": "{{ p.tipo_pregunta }}",
+                "requerida": {% if p.requerida %}true{% else %}false{% endif %},
+                "opciones": [
+                    {% for o in p.opciones.all %}
+                    "{{ o.texto|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+    {% else %}
+    null
+    {% endif %}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questionsList = document.getElementById('questions-list');
+    const emptyState = document.getElementById('empty-state');
+    const surveyTitleInput = document.getElementById('survey-title-input');
+    const surveyDescInput = document.getElementById('survey-desc-input');
+    const surveyAnonimaInput = document.getElementById('survey-anonima-input');
+    
+    let questions = [];
+    let surveyId = null;
+
+    // Load initial data if editing
+    try {
+        const rawData = document.getElementById('survey-data').textContent;
+        const initialData = JSON.parse(rawData);
+        if (initialData) {
+            surveyId = initialData.id;
+            questions = initialData.preguntas || [];
+        }
+    } catch (e) {
+        console.error("Error loading initial survey data", e);
+    }
+
+    if (questions.length === 0) {
+        // Add one default text question for new surveys
+        addQuestionData();
+    } else {
+        renderQuestions();
+    }
+
+    // Bind Add Question buttons
+    document.querySelectorAll('.add-question-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            addQuestionData();
+        });
+    });
+
+    // Cancel Button
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+        window.location.href = "{% url 'lista_encuestas' %}";
+    });
+
+    function addQuestionData() {
+        questions.push({
+            texto: '',
+            tipo_pregunta: 'TEXTO',
+            requerida: false,
+            opciones: ['Opción 1']
+        });
+        renderQuestions();
+        // Scroll to bottom
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function renderQuestions() {
+        questionsList.innerHTML = '';
+        
+        if (questions.length === 0) {
+            emptyState.classList.remove('d-none');
+            return;
+        } else {
+            emptyState.classList.add('d-none');
+        }
+
+        questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.className = 'card shadow-sm border-0 mb-4 question-card';
+            card.style.borderRadius = '12px';
+            card.setAttribute('data-index', index);
+            
+            // Question body
+            let optionsHTML = '';
+            if (['OPCION_MULTIPLE', 'CASILLAS', 'DESPLEGABLE'].includes(q.tipo_pregunta)) {
+                optionsHTML = `
+                    <div class="options-container mt-3">
+                        <label class="form-label text-muted small fw-bold">Opciones de Respuesta</label>
+                        <div class="options-list">
+                            ${(q.opciones || []).map((opt, optIndex) => `
+                                <div class="option-row" data-opt-index="${optIndex}">
+                                    <i class="${q.tipo_pregunta === 'OPCION_MULTIPLE' ? 'far fa-circle' : q.tipo_pregunta === 'DESPLEGABLE' ? 'fas fa-chevron-right' : 'far fa-square'} text-muted"></i>
+                                    <input type="text" class="form-control form-control-sm option-input" 
+                                           placeholder="Opción ${optIndex + 1}" value="${opt.replace(/"/g, '&quot;')}">
+                                    <button class="btn btn-link btn-sm text-danger remove-option-btn" title="Eliminar opción">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="btn btn-link btn-sm text-primary add-option-btn p-0 mt-1 d-inline-flex align-items-center gap-1" style="text-decoration:none;">
+                            <i class="fas fa-plus-circle"></i> Añadir opción
+                        </button>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <!-- Texto de la pregunta -->
+                        <div class="col-md-7">
+                            <label class="form-label text-muted small fw-bold">Pregunta ${index + 1}</label>
+                            <input type="text" class="form-control question-text-input" 
+                                   placeholder="Escribe la pregunta..." value="${q.texto.replace(/"/g, '&quot;')}">
+                        </div>
+                        <!-- Tipo de pregunta -->
+                        <div class="col-md-5">
+                            <label class="form-label text-muted small fw-bold">Tipo de Respuesta</label>
+                            <select class="form-select question-type-select">
+                                <option value="TEXTO" ${q.tipo_pregunta === 'TEXTO' ? 'selected' : ''}>Texto Corto</option>
+                                <option value="PARRAFO" ${q.tipo_pregunta === 'PARRAFO' ? 'selected' : ''}>Párrafo / Texto Largo</option>
+                                <option value="OPCION_MULTIPLE" ${q.tipo_pregunta === 'OPCION_MULTIPLE' ? 'selected' : ''}>Opción Múltiple</option>
+                                <option value="CASILLAS" ${q.tipo_pregunta === 'CASILLAS' ? 'selected' : ''}>Casillas de Verificación</option>
+                                <option value="DESPLEGABLE" ${q.tipo_pregunta === 'DESPLEGABLE' ? 'selected' : ''}>Lista Desplegable</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Options -->
+                    ${optionsHTML}
+
+                    <!-- Footer actions inside card -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Reordenar -->
+                            <button class="btn btn-outline-secondary btn-sm move-up-btn" ${index === 0 ? 'disabled' : ''} title="Subir">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm move-down-btn" ${index === questions.length - 1 ? 'disabled' : ''} title="Bajar">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Obligatorio Switch -->
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input required-toggle" type="checkbox" role="switch" 
+                                       id="req-switch-${index}" ${q.requerida ? 'checked' : ''}>
+                                <label class="form-check-label text-dark small" for="req-switch-${index}">Obligatoria</label>
+                            </div>
+                            <div class="vr"></div>
+                            <!-- Eliminar pregunta -->
+                            <button class="btn btn-outline-danger btn-sm delete-question-btn" title="Eliminar pregunta">
+                                <i class="fas fa-trash-alt me-1"></i> Borrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Setup listeners inside this card
+            setupCardListeners(card, index);
+
+            questionsList.appendChild(card);
+        });
+    }
+
+    function setupCardListeners(card, index) {
+        // Question Text Input
+        const textInput = card.querySelector('.question-text-input');
+        textInput.addEventListener('input', (e) => {
+            questions[index].texto = e.target.value;
+        });
+
+        // Question Type Select
+        const typeSelect = card.querySelector('.question-type-select');
+        typeSelect.addEventListener('change', (e) => {
+            const oldType = questions[index].tipo_pregunta;
+            const newType = e.target.value;
+            questions[index].tipo_pregunta = newType;
+            
+            const isOldChoice = ['OPCION_MULTIPLE', 'CASILLAS', 'DESPLEGABLE'].includes(oldType);
+            const isNewChoice = ['OPCION_MULTIPLE', 'CASILLAS', 'DESPLEGABLE'].includes(newType);
+            
+            if (!isOldChoice && isNewChoice) {
+                // Initialize default options if converting from text to choices
+                questions[index].opciones = ['Opción 1'];
+            }
+            renderQuestions();
+        });
+
+        // Toggle required
+        const reqToggle = card.querySelector('.required-toggle');
+        reqToggle.addEventListener('change', (e) => {
+            questions[index].requerida = e.target.checked;
+        });
+
+        // Delete Question
+        card.querySelector('.delete-question-btn').addEventListener('click', () => {
+            questions.splice(index, 1);
+            renderQuestions();
+        });
+
+        // Move Up
+        const moveUpBtn = card.querySelector('.move-up-btn');
+        if (moveUpBtn) {
+            moveUpBtn.addEventListener('click', () => {
+                if (index > 0) {
+                    const temp = questions[index];
+                    questions[index] = questions[index - 1];
+                    questions[index - 1] = temp;
+                    renderQuestions();
+                }
+            });
+        }
+
+        // Move Down
+        const moveDownBtn = card.querySelector('.move-down-btn');
+        if (moveDownBtn) {
+            moveDownBtn.addEventListener('click', () => {
+                if (index < questions.length - 1) {
+                    const temp = questions[index];
+                    questions[index] = questions[index + 1];
+                    questions[index + 1] = temp;
+                    renderQuestions();
+                }
+            });
+        }
+
+        // Options listeners (if choices)
+        const addOptBtn = card.querySelector('.add-option-btn');
+        if (addOptBtn) {
+            addOptBtn.addEventListener('click', () => {
+                questions[index].opciones.push(`Opción ${questions[index].opciones.length + 1}`);
+                renderQuestions();
+            });
+
+            // Option text inputs
+            card.querySelectorAll('.option-input').forEach((optInput, optIdx) => {
+                optInput.addEventListener('input', (e) => {
+                    questions[index].opciones[optIdx] = e.target.value;
+                });
+            });
+
+            // Remove option buttons
+            card.querySelectorAll('.remove-option-btn').forEach((removeBtn, optIdx) => {
+                removeBtn.addEventListener('click', () => {
+                    if (questions[index].opciones.length > 1) {
+                        questions[index].opciones.splice(optIdx, 1);
+                        renderQuestions();
+                    } else {
+                        if (window.showToast) {
+                            window.showToast('Debes tener al menos una opción', 'error');
+                        } else {
+                            alert('Debes tener al menos una opción');
+                        }
+                    }
+                });
+            });
+        }
+    }
+
+    // Save Survey logic
+    document.getElementById('btn-save-survey').addEventListener('click', function() {
+        const titulo = surveyTitleInput.value.trim();
+        const descripcion = surveyDescInput.value.trim();
+        const anonima = surveyAnonimaInput.checked;
+
+        if (!titulo) {
+            if (window.showToast) {
+                window.showToast('El título de la encuesta es obligatorio', 'error');
+            } else {
+                alert('El título de la encuesta es obligatorio');
+            }
+            surveyTitleInput.focus();
+            return;
+        }
+
+        // Check if there are questions
+        if (questions.length === 0) {
+            if (window.showToast) {
+                window.showToast('Debes añadir al menos una pregunta', 'error');
+            } else {
+                alert('Debes añadir al menos una pregunta');
+            }
+            return;
+        }
+
+        // Check for empty question text
+        let emptyQuestion = false;
+        questions.forEach((q, i) => {
+            if (!q.texto.trim()) {
+                emptyQuestion = true;
+            }
+        });
+
+        if (emptyQuestion) {
+            if (window.showToast) {
+                window.showToast('Todas las preguntas deben tener un texto descriptivo', 'error');
+            } else {
+                alert('Todas las preguntas deben tener un texto descriptivo');
+            }
+            return;
+        }
+
+        // Prepare JSON payload
+        const payload = {
+            id: surveyId,
+            titulo: titulo,
+            descripcion: descripcion,
+            anonima: anonima,
+            preguntas: questions
+        };
+
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+
+        fetch("{% url 'guardar_encuesta_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (window.showToast) {
+                    window.showToast('Encuesta guardada con éxito', 'success');
+                }
+                setTimeout(() => {
+                    window.location.href = "{% url 'lista_encuestas' %}";
+                }, 1000);
+            } else {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Encuesta';
+                if (window.showToast) {
+                    window.showToast(data.message || 'Error al guardar la encuesta', 'error');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            }
+        })
+        .catch(error => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Encuesta';
+            console.error('Error:', error);
+            if (window.showToast) {
+                window.showToast('Error de conexión con el servidor', 'error');
+            } else {
+                alert('Error de conexión');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

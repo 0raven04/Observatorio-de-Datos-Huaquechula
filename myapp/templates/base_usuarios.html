@@ -234,6 +234,14 @@
                             </a>
                         </li>
                         {% endif %}
+                        {% if request.user.tipo == 'admin' or request.user.tipo == 'encuestador' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'lista_encuestas' in request.resolver_match.url_name or 'crear_encuesta' in request.resolver_match.url_name or 'editar_encuesta' in request.resolver_match.url_name or 'ver_respuestas' in request.resolver_match.url_name %}active{% endif %}"
+                                href="{% url 'lista_encuestas' %}">
+                                <i class="fas fa-poll-h me-1"></i> Encuestas
+                            </a>
+                        </li>
+                        {% endif %}
 
                         <!-- Dropdown "Gestión" -->
                         {% if request.user.tipo == 'admin' %}
@@ -336,6 +344,14 @@
                     <a class="nav-link {% if 'encuestador_dashboard' in request.resolver_match.url_name %}active{% endif %}"
                         href="{% url 'encuestador_dashboard' %}">
                         <i class="fas fa-chart-line me-2"></i>Mi Tablero
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user.tipo == 'admin' or request.user.tipo == 'encuestador' %}
+                <li class="sidebar-item text-center">
+                    <a class="nav-link {% if 'lista_encuestas' in request.resolver_match.url_name or 'crear_encuesta' in request.resolver_match.url_name or 'editar_encuesta' in request.resolver_match.url_name or 'ver_respuestas' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'lista_encuestas' %}">
+                        <i class="fas fa-poll-h me-2"></i>Encuestas
                     </a>
                 </li>
                 {% endif %}

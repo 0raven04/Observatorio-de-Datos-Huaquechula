@@ -13,6 +13,8 @@ from .api_views import (
     DashboardSummaryView,
     EncuestaResidenteView,
     EncuestaComercioView,
+    EncuestaCreadaListView,
+    ResponderEncuestaView,
 )
 
 urlpatterns = [
@@ -34,4 +36,8 @@ urlpatterns = [
     # ── Encuestas (datos manuales del Observatorio) ──────────────────────────
     path('api/mobile/encuestas/residente/', EncuestaResidenteView.as_view(), name='api_mobile_encuesta_residente'),
     path('api/mobile/encuestas/comercio/', EncuestaComercioView.as_view(), name='api_mobile_encuesta_comercio'),
+
+    # ── Encuestas Creadas / Dinámicas para Móvil ──────────────────────────────
+    path('api/mobile/encuestas-creadas/', EncuestaCreadaListView.as_view(), name='api_mobile_encuestas_creadas'),
+    path('api/mobile/encuestas-creadas/<int:pk>/responder/', ResponderEncuestaView.as_view(), name='api_mobile_encuestas_creadas_responder'),
 ]

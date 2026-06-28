@@ -7,7 +7,8 @@ from .models import (
     Usuario, Encuestador,
     RegistroVisita,
     Eje, CategoriaIndicador, Indicador, Medicion,
-    EncuestaResidente, EncuestaComercio
+    EncuestaResidente, EncuestaComercio,
+    Encuesta, Pregunta, OpcionPregunta
 )
 
 
@@ -114,3 +115,27 @@ class EncuestaComercioSerializer(serializers.ModelSerializer):
 
     def get_encuestador_clave(self, obj):
         return obj.encuestador.clave_encuestador if obj.encuestador else None
+
+
+# ─── Encuestas Creadas / Dinámicas ─────────────────────────────────────────────
+
+class OpcionPreguntaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpcionPregunta
+        fields = ['id', 'texto', 'orden']
+
+
+class PreguntaSerializer(serializers.ModelSerializer):
+    opciones = OpcionPreguntaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Pregunta
+        fields = ['id', 'texto', 'tipo_pregunta', 'requerida', 'orden', 'opciones']
+
+
+class EncuestaCreadaSerializer(serializers.ModelSerializer):
+    preguntas = PreguntaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Encuesta
+        fields = ['id', 'titulo', 'descripcion', 'activa', 'anonima', 'fecha_creacion', 'preguntas']

@@ -707,6 +707,330 @@
         }
     }
 
+    // ── Indicator Info Tooltips ──────────────────────
+    const INDICATOR_DETAILS = {
+        // Bienestar Social / Salud
+        "esperanza de vida al nacer": {
+            desc: "Número promedio de años que se espera que viva un recién nacido si se mantienen las tasas de mortalidad por edad de ese año.",
+            inputs: "Registros de defunciones, actas de nacimiento y proyecciones de población."
+        },
+        "esperanza de vida": {
+            desc: "Número promedio de años que se espera que viva un recién nacido si se mantienen las tasas de mortalidad por edad de ese año.",
+            inputs: "Registros de defunciones, actas de nacimiento y proyecciones de población."
+        },
+        "salud autorreportada": {
+            desc: "Indicador subjetivo que mide cómo perciben los individuos su propio estado de salud (excelente, bueno, regular, malo).",
+            inputs: "Encuestas de hogares o de salud (preguntas de percepción)."
+        },
+        "tasa de obesidad": {
+            desc: "Porcentaje de la población con un Índice de Masa Corporal (IMC >= 30). Mide riesgos de salud pública.",
+            inputs: "Peso y talla de la población muestreada (o autoreportada) y total de población."
+        },
+        "tasa de mortalidad": {
+            desc: "Número de defunciones por cada 1,000 habitantes en un año determinado.",
+            inputs: "Número total de muertes en un año y población total a mitad de año."
+        },
+        "tasa de mortalidad infantil": {
+            desc: "Número de defunciones por cada 1,000 habitantes en un año determinado.",
+            inputs: "Número total de muertes en un año y población total a mitad de año."
+        },
+        "razón de mortalidad materna": {
+            desc: "Número de muertes de mujeres durante el embarazo, parto o puerperio por cada 100,000 nacidos vivos.",
+            inputs: "Registro de muertes maternas y total de nacidos vivos en el mismo periodo."
+        },
+        // Bienestar Social / Accesibilidad a servicios
+        "acceso a servicios de salud": {
+            desc: "Porcentaje de la población que cuenta con adscripción o derecho a recibir servicios médicos (públicos o privados).",
+            inputs: "Encuestas de ingresos/gastos o censos (afiliación a instituciones de salud)."
+        },
+        "acceso a servicios de banda ancha": {
+            desc: "Porcentaje de hogares o contratos de internet de alta velocidad en una región respecto al total.",
+            inputs: "Contratos de telecomunicaciones o encuestas de disponibilidad de TIC en hogares."
+        },
+        "acceso a los servicios de banda ancha": {
+            desc: "Porcentaje de hogares o contratos de internet de alta velocidad en una región respecto al total.",
+            inputs: "Contratos de telecomunicaciones o encuestas de disponibilidad de TIC en hogares."
+        },
+        "vivienda con acceso a servicios básicos": {
+            desc: "Porcentaje de viviendas que cuentan con agua entubada, drenaje, electricidad y eliminación de basura.",
+            inputs: "Censo de vivienda o encuestas de condiciones socioeconómicas."
+        },
+        "vivienda con acceso de servicios básicos": {
+            desc: "Porcentaje de viviendas que cuentan con agua entubada, drenaje, electricidad y eliminación de basura.",
+            inputs: "Censo de vivienda o encuestas de condiciones socioeconómicas."
+        },
+        // Bienestar Social / Educación
+        "niveles de educación": {
+            desc: "Distribución porcentual de la población según el máximo nivel educativo alcanzado (primaria, secundaria, superior, etc.).",
+            inputs: "Censos de población o encuestas de hogares (último grado aprobado)."
+        },
+        "deserción escolar": {
+            desc: "Porcentaje de alumnos que abandonan las aulas de un ciclo escolar a otro, antes de concluir el nivel educativo.",
+            inputs: "Matrícula inicial, matrícula final y egresados por nivel educativo (registros escolares)."
+        },
+        "años promedio de escolaridad": {
+            desc: "Número medio de años de educación formal completados por la población de una determinada edad (ej. mayores de 15 años).",
+            inputs: "Edad de la población y el último año/grado escolar aprobado."
+        },
+        "grado promedio de escolaridad": {
+            desc: "Número medio de años de educación formal completados por la población de una determinada edad (ej. mayores de 15 años).",
+            inputs: "Edad de la población y el último año/grado escolar aprobado."
+        },
+        // Bienestar Social / Vivienda
+        "habitaciones por persona": {
+            desc: "Promedio de cuartos disponibles en la vivienda por cada habitante (mide el nivel de hacinamiento).",
+            inputs: "Número total de habitaciones en la vivienda (excluyendo baños/cocinas según metodología) y número de residentes."
+        },
+        "viviendas con techos de materiales resistentes": {
+            desc: "Porcentaje de viviendas cuyos techos están construidos con materiales durables (losa de concreto, vigueta, etc.) y no precarios.",
+            inputs: "Datos del censo de vivienda sobre características físicas de los materiales de construcción."
+        },
+        // Bienestar Social / Ingresos / Pobreza
+        "gini del ingreso disponible de los hogares per cápita": {
+            desc: "Medida de desigualdad económica (de 0 a 1, donde 1 es desigualdad máxima) basada en los ingresos netos por integrante del hogar.",
+            inputs: "Ingresos de todos los miembros del hogar (salarios, transferencias, remesas) menos impuestos, y tamaño del hogar."
+        },
+        "ingreso equivalente disponible de los hogares": {
+            desc: "Ingreso total del hogar ajustado por el tamaño y composición del hogar (economías de escala) para hacerlos comparables.",
+            inputs: "Ingreso neto del hogar y escala de equivalencia (ej. escala de la OCDE que pondera adultos y niños)."
+        },
+        "población en pobreza": {
+            desc: "Porcentaje de personas cuyos ingresos están por debajo de la línea de pobreza y/o presentan carencias sociales.",
+            inputs: "Ingresos del hogar, líneas de canasta básica y datos de acceso a derechos sociales."
+        },
+        "población en pobreza extrema": {
+            desc: "Porcentaje de personas que no disponen de ingresos suficientes ni para adquirir la canasta alimentaria básica y tienen múltiples carencias.",
+            inputs: "Ingreso del hogar y costo de la canasta alimentaria (línea de pobreza extrema)."
+        },
+        // Bienestar Social / Empleo
+        "tasa de condiciones críticas de ocupación": {
+            desc: "Porcentaje de la población ocupada que trabaja menos de 35 horas por razones de mercado, o gana menos del salario mínimo trabajando mucho.",
+            inputs: "Encuestas de empleo (horas trabajadas e ingresos laborales)."
+        },
+        "informalidad laboral": {
+            desc: "Porcentaje de la población ocupada que carece de seguridad social y cuyas unidades económicas no están registradas.",
+            inputs: "Encuestas de empleo (estatus de contratación y acceso a seguridad social)."
+        },
+        "tasa de desocupación": {
+            desc: "Porcentaje de la Población Económicamente Activa (PEA) que no tiene empleo pero está buscando activamente uno.",
+            inputs: "Número de personas desocupadas y total de la PEA."
+        },
+        "participación económica": {
+            desc: "Porcentaje de la población en edad de trabajar (ej. 15 años o más) que está empleada o buscando empleo (PEA).",
+            inputs: "Población Económicamente Activa y Población en Edad de Trabajar (PET)."
+        },
+        // Bienestar Social / Seguridad
+        "tasa de homicidios": {
+            desc: "Número de muertes por homicidio intencional por cada 100,000 habitantes.",
+            inputs: "Registros forenses, carpetas de investigación judicial y población total."
+        },
+        "confianza policía": {
+            desc: "Porcentaje de la población que manifiesta tener 'mucha' o 'algo' de confianza en los cuerpos policiales locales o estatales.",
+            inputs: "Encuestas de victimización y percepción de seguridad pública."
+        },
+        "confianza en la policía": {
+            desc: "Porcentaje de la población que manifiesta tener 'mucha' o 'algo' de confianza en los cuerpos policiales locales o estatales.",
+            inputs: "Encuestas de victimización y percepción de seguridad pública."
+        },
+        "percepción de inseguridad": {
+            desc: "Porcentaje de la población que se siente insegura viviendo en su ciudad, municipio o colonia.",
+            inputs: "Encuestas de opinión/percepción ciudadana sobre seguridad."
+        },
+        "incidencia delictiva": {
+            desc: "Número de delitos denunciados o estimados ocurridos por cada 100,000 habitantes.",
+            inputs: "Denuncias registradas ante fiscalías y encuestas de victimización (para calcular la cifra negra)."
+        },
+        // Bienestar Social / Medio Ambiente
+        "contaminación del aire": {
+            desc: "Concentración de partículas suspendidas (PM2.5, PM10) y gases del efecto invernadero en la atmósfera local.",
+            inputs: "Datos de estaciones de monitoreo ambiental y sensores de calidad del aire."
+        },
+        "disposición de residuos": {
+            desc: "Porcentaje de residuos sólidos recolectados que son destinados a sitios autorizados (rellenos sanitarios) vs. basureros a cielo abierto.",
+            inputs: "Registros municipales de recolección y pesaje de basura."
+        },
+        "alternativas de gestión comunitaria de medio ambiente": {
+            desc: "Número o porcentaje de iniciativas locales (comunales, ejidales) orientadas al reciclaje, reforestación o conservación de recursos.",
+            inputs: "Registros de proyectos locales, actas ejidales o padrón de ONGs ambientales."
+        },
+        // Bienestar Social / Migración
+        "índice de intensidad migratoria": {
+            desc: "Medida multidimensional que evalúa el flujo de personas que salen o entran a una localidad (remesas, emigrantes, circulares).",
+            inputs: "Datos censales sobre lugar de residencia anterior, recepción de remesas y migración internacional en los hogares."
+        },
+        // Indicadores de Impacto Comunitario y Tradición (PCI)
+        "tensión sobre la población local": {
+            desc: "Nivel de estrés o fricción socioeconómica (gentrificación, encarecimiento, ruido) percibido por los residentes debido al turismo masivo.",
+            inputs: "Encuestas a residentes locales y análisis de precios de rentas/productos."
+        },
+        "acceso de la población a los servicios públicos durante la tradición": {
+            desc: "Evaluación de si la infraestructura pública (agua, transporte, luz) falla o se satura para los locales durante festividades o eventos.",
+            inputs: "Reportes de fallas de servicios públicos y encuestas a vecinos durante fechas festivas."
+        },
+        "tensiones físicas y simbólicas sobre la tradición": {
+            desc: "Grado de alteración, mercantilización o pérdida de significado de una tradición debido a la llegada de externos.",
+            inputs: "Entrevistas cualitativas a portadores de la tradición, líderes comunitarios y observaciones."
+        },
+        "procesos de salvaguardia del patrimonio": {
+            desc: "Existencia y nivel de ejecución de planes y leyes dedicadas a proteger el Patrimonio Cultural Inmaterial (PCI).",
+            inputs: "Documentos jurídicos, presupuestos asignados a cultura y actas de comités de salvaguardia."
+        },
+        "seguimiento de salvaguardia": {
+            desc: "Monitoreo continuo y evaluación del impacto de las acciones aplicadas para proteger el patrimonio.",
+            inputs: "Informes técnicos anuales, auditorías culturales e indicadores de efectividad."
+        },
+        "seguimiento a la salvaguardia": {
+            desc: "Monitoreo continuo y evaluación del impacto de las acciones aplicadas para proteger el patrimonio.",
+            inputs: "Informes técnicos anuales, auditorías culturales e indicadores de efectividad."
+        },
+        "difusión de pci": {
+            desc: "Cantidad de campañas, talleres o medios digitales/impresos enfocados en educar sobre el Patrimonio Cultural Inmaterial.",
+            inputs: "Presupuesto publicitario, número de eventos de difusión y alcance en redes o medios."
+        },
+        "relación comunidad - pci": {
+            desc: "Nivel de apropiación, orgullo e identidad que siente la comunidad local respecto a su patrimonio inmaterial.",
+            inputs: "Encuestas de identidad cultural y conteo de participación local activa en la festividad."
+        },
+        // Indicadores de Gobernanza y Gestión Turística
+        "participación de la comunidad en la toma de decisiones": {
+            desc: "Grado de involucramiento de los ciudadanos locales en los comités u órganos que deciden el rumbo del turismo o la cultura local.",
+            inputs: "Actas de asambleas, listas de asistencia a comités ciudadanos y encuestas de participación."
+        },
+        "capacitación, información y comunicación": {
+            desc: "Número de talleres impartidos y efectividad de los canales de información hacia los prestadores de servicios y comunidad.",
+            inputs: "Registros de asistencia a cursos, encuestas de salida de capacitación y auditorías de comunicación."
+        },
+        "regulación": {
+            desc: "Existencia y aplicación de normativas locales (bandos municipales, reglamentos de turismo) para controlar las actividades.",
+            inputs: "Gacetas oficiales, leyes locales y número de inspecciones/sanciones aplicadas."
+        },
+        "herramientas de gestión": {
+            desc: "Disponibilidad de planes de desarrollo turístico, manuales operativos, atlas de riesgo o software de control de visitantes.",
+            inputs: "Inventario de documentos institucionales vigentes y herramientas tecnológicas en uso."
+        },
+        "proyectos turísticos": {
+            desc: "Número y estado de desarrollo (planeados, en ejecución, terminados) de proyectos de infraestructura o productos turísticos.",
+            inputs: "Carteras de inversión pública/privada y bitácoras de obra."
+        },
+        "integración territorial turística": {
+            desc: "Medida en que los beneficios y rutas del turismo se conectan físicamente con otras zonas de la comunidad, evitando 'islas turísticas'.",
+            inputs: "Mapas de rutas de transporte, dispersión de comercios locales y conectividad vial."
+        },
+        "integración turística territorial": {
+            desc: "Medida en que los beneficios y rutas del turismo se conectan físicamente con otras zonas de la comunidad, evitando 'islas turísticas'.",
+            inputs: "Mapas de rutas de transporte, dispersión de comercios locales y conectividad vial."
+        },
+        // Indicadores de Demanda y Perfil del Visitante
+        "afluencia durante la tradición": {
+            desc: "Número total de personas (turistas y excursionistas) que asisten específicamente a las fechas de la celebración tradicional.",
+            inputs: "Conteo en puntos de acceso, ocupación hotelera en esos días y estimación de protección civil."
+        },
+        "visitantes anuales": {
+            desc: "Volumen total de viajeros que recibe el destino a lo largo de todo un año calendario.",
+            inputs: "Registros hoteleros (Datatur o similar), taquillas de atracciones y peajes."
+        },
+        "índice de satisfacción": {
+            desc: "Evaluación porcentual o en escala del nivel de agrado del visitante respecto a su experiencia general en el destino.",
+            inputs: "Encuestas aplicadas a los visitantes al momento de su salida del destino."
+        },
+        "afluencia por zonas": {
+            desc: "Desglose del número de visitantes que acuden a puntos específicos de interés dentro del territorio (ej. centro histórico vs. periferia).",
+            inputs: "Conteos en atractivos específicos, boletaje o mapas de calor mediante datos móviles."
+        },
+        "visitas por ciudad": {
+            desc: "Registro del volumen de turistas distribuidos según su ciudad o región de origen (nacional o internacional).",
+            inputs: "Libros de registro de hoteles, encuestas de perfil y bases de datos aeroportuarias/centrales de autobuses."
+        },
+        "perfil del visitante": {
+            desc: "Características sociodemográficas del turista: edad, género, nivel de ingresos, ocupación, motivo del viaje.",
+            inputs: "Encuestas de perfil del visitante aplicadas en zonas turísticas clave."
+        },
+        "grupo de visita": {
+            desc: "Composición del grupo con el que viaja el turista (solo, en pareja, familia, amigos, excursión organizada).",
+            inputs: "Encuestas de perfil (pregunta explícita sobre acompañantes y tamaño de grupo)."
+        },
+        "actividades populares": {
+            desc: "Ranking de las actividades más realizadas por los turistas durante su estancia (comer, comprar artesanías, tours guiados).",
+            inputs: "Cuestionarios sobre actividades realizadas durante el viaje."
+        },
+        "reseñas": {
+            desc: "Análisis cualitativo y cuantitativo de los comentarios y calificaciones que dejan los usuarios en plataformas digitales.",
+            inputs: "Raspado de datos (web scraping) o monitoreo de plataformas como TripAdvisor, Google Maps o Booking."
+        }
+    };
+
+    function initIndicatorTooltips() {
+        const names = document.querySelectorAll('.indicator-name');
+        names.forEach(nameEl => {
+            const rawName = nameEl.textContent.trim();
+            const nameLower = rawName.toLowerCase();
+            
+            let details = INDICATOR_DETAILS[nameLower];
+            if (!details) {
+                // intentamos buscar una coincidencia de subcadena
+                const matchingKey = Object.keys(INDICATOR_DETAILS).find(k => nameLower.includes(k) || k.includes(nameLower));
+                if (matchingKey) {
+                    details = INDICATOR_DETAILS[matchingKey];
+                }
+            }
+
+            if (!details) {
+                // Si no se encuentra en el diccionario, generamos una descripción por defecto según su contexto
+                if (nameLower.includes("bienestar")) {
+                    details = {
+                        desc: "Medición del nivel de bienestar social y calidad de vida en el municipio.",
+                        inputs: "Encuestas socioeconómicas municipales y estadísticas de desarrollo social."
+                    };
+                } else if (nameLower.includes("tradicion") || nameLower.includes("tradición") || nameLower.includes("patrimonio") || nameLower.includes("pci")) {
+                    details = {
+                        desc: "Evaluación y seguimiento de las tradiciones culturales y el patrimonio del municipio.",
+                        inputs: "Registros de eventos culturales, encuestas de participación y salvaguardia comunitaria."
+                    };
+                } else if (nameLower.includes("turismo")) {
+                    details = {
+                        desc: "Seguimiento de la actividad y desarrollo del turismo comunitario en la región.",
+                        inputs: "Registros de afluencia de visitantes y encuestas de satisfacción en zonas de interés."
+                    };
+                } else {
+                    details = {
+                        desc: "Indicador de monitoreo del desarrollo local e impacto territorial en el municipio de Huaquechula.",
+                        inputs: "Registros administrativos locales e información estadística complementaria."
+                    };
+                }
+            }
+
+
+            if (details) {
+                const tooltipContainer = document.createElement('div');
+                tooltipContainer.className = 'info-tooltip-container';
+                tooltipContainer.innerHTML = `
+                    <i class="fas fa-info-circle info-tooltip-trigger"></i>
+                    <div class="info-tooltip-box">
+                        <div class="info-tooltip-title">
+                            <i class="fas fa-info-circle me-1"></i> Metadatos
+                        </div>
+                        <div class="info-tooltip-section">
+                            <span class="info-tooltip-label">Descripción</span>
+                            <span class="info-tooltip-content">${details.desc}</span>
+                        </div>
+                        <div class="info-tooltip-section">
+                            <span class="info-tooltip-label">Insumos Requeridos</span>
+                            <span class="info-tooltip-content">${details.inputs}</span>
+                        </div>
+                    </div>
+                `;
+                // Evitamos la propagación del click al contenedor de la tarjeta (que abre el modal del gráfico)
+                tooltipContainer.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+                
+                // Insertar dentro del elemento de nombre para no romper la estructura de grid en vista de lista
+                nameEl.appendChild(tooltipContainer);
+
+            }
+        });
+    }
+
     // ── Init ─────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
         initSidebar();
@@ -714,5 +1038,7 @@
         initSparklines();
         initScrollAnimations();
         initViewToggle();
+        initIndicatorTooltips();
     });
 })();
+

@@ -11,14 +11,14 @@ import { useAuth } from '../context/AuthContext';
 import { visitasService } from '../services/visitasService';
 
 // Paleta del Observatorio (alineada con el sitio web)
-const DORADO = '#FFC300';
-const DORADO_OSCURO = '#D4A200';
-const TEXTO_OSCURO = '#212529';
-const FONDO = '#eef1f5';
+const DORADO = '#D6CEAA';
+const DORADO_OSCURO = '#bda574';
+const TEXTO_OSCURO = '#4A4A4A';
+const FONDO = '#EDEBE3';
 const BLANCO = '#ffffff';
-const GRIS_INPUT = '#f5f5f5';
-const GRIS_BORDE = '#dee2e6';
-const AZUL_ENCABEZADO = '#1a7abf'; // se mantiene para el banner de usuario
+const GRIS_INPUT = '#f9f9f9';
+const GRIS_BORDE = '#B3B3B3';
+const AZUL_ENCABEZADO = '#4A4A4A';
 
 const OPCIONES_TRANSPORTE = ['Automovil', 'Autobus', 'Avion', 'Otro'];
 const OPCIONES_MOTIVO = ['Turismo', 'Trabajo', 'Estudios', 'Evento', 'Otro'];

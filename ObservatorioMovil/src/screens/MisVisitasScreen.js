@@ -9,7 +9,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { visitasService } from '../services/visitasService';
 
-const AZUL = '#1a7abf';
+const AZUL = '#4A4A4A'; // Gris oscuro institucional
 
 function RegistroItem({ item, onEliminar }) {
     return (
@@ -118,7 +118,7 @@ export default function MisVisitasScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f0f4f8' },
+    container: { flex: 1, backgroundColor: '#EDEBE3' },
     centrado: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
     cargandoTexto: { color: '#888', marginTop: 10 },
     vacio: { flex: 1 },
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
         backgroundColor: AZUL, paddingHorizontal: 14, paddingVertical: 10,
     },
     cardId: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
-    cardFecha: { color: '#cce', fontSize: 13 },
+    cardFecha: { color: '#EDEBE3', fontSize: 13 },
     cardBody: { padding: 14, gap: 4 },
     cardDato: { fontSize: 14, color: '#333', lineHeight: 22 },
     cardDatoDestacado: { fontSize: 14, color: AZUL, fontWeight: '600' },

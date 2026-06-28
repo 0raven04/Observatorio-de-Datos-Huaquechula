@@ -11,9 +11,7 @@ import storage from './storage';
 import { Platform } from 'react-native';
 
 // ── Configuración de la URL base ──────────────────────────────────────────────
-// Para web (navegador) usa localhost; para celular usa la IP WiFi de la PC.
-const WIFI_IP = '192.168.1.72';  // ← IP de tu PC en la red WiFi
-
+const WIFI_IP = '10.1.4.231';  // ← IP de tu PC en la red WiFi
 export const BASE_URL = Platform.OS === 'web'
     ? 'http://localhost:8000'       // Navegador en la misma PC
     : `http://${WIFI_IP}:8000`;     // Teléfono físico en la red WiFi
