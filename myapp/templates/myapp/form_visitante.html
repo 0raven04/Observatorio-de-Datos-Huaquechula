@@ -1,0 +1,330 @@
+{% extends 'myapp/base.html' %}
+{% load static %}
+
+{% block title %}Encuesta: Perfil del Visitante{% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4 p-md-5">
+            <div class="mb-4">
+                <a href="{% url 'encuestador_dashboard' %}" class="text-decoration-none text-muted">
+                    <i class="fas fa-arrow-left me-2"></i>Regresar al Portal
+                </a>
+            </div>
+            
+            <form method="POST" id="visitanteForm">
+                {% csrf_token %}
+                
+                <h2 class="mb-4" style="color: #007bff; border-bottom: 2px solid #007bff; pb-2; font-weight: 800;">
+                    <i class="fas fa-user-tag me-2"></i>Encuesta: Perfil del Visitante
+                </h2>
+                
+                <!-- I. Perfil del Visitante -->
+                <h4 class="mb-3 mt-4" style="color: var(--color-gris-oscuro); font-weight: 600;">I. Perfil del Visitante</h4>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">1. ¿Con qué género te identificas?</label>
+                        {{ form.genero }}
+                        {% if form.genero.errors %}
+                            <div class="text-danger small">{{ form.genero.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">2. ¿Cuál es tu edad?</label>
+                        {{ form.edad }}
+                        {% if form.edad.errors %}
+                            <div class="text-danger small">{{ form.edad.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12 mt-3">
+                        <label class="form-label fw-bold">3. ¿Con quién viajas en este viaje?</label>
+                        {{ form.viaja_con }}
+                        {% if form.viaja_con.errors %}
+                            <div class="text-danger small">{{ form.viaja_con.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- II. Origen y Conectividad -->
+                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">II. Origen y Conectividad</h4>
+                <div class="row g-3 mb-4">
+                    <p class="text-muted small">4. ¿Cuál es tu lugar de residencia habitual?</p>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Ciudad</label>
+                        {{ form.residencia_ciudad }}
+                        {% if form.residencia_ciudad.errors %}
+                            <div class="text-danger small">{{ form.residencia_ciudad.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Estado / Provincia</label>
+                        {{ form.residencia_estado }}
+                        {% if form.residencia_estado.errors %}
+                            <div class="text-danger small">{{ form.residencia_estado.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">País</label>
+                        {{ form.residencia_pais }}
+                        {% if form.residencia_pais.errors %}
+                            <div class="text-danger small">{{ form.residencia_pais.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <label class="form-label fw-bold mb-2">5. De las siguientes zonas de nuestro municipio, ¿cuáles visitaste o piensas visitar? <span class="text-muted fw-normal">(Selecciona todas las que apliquen)</span></label>
+                    <div class="zones-grid">
+                        <div class="form-check custom-checkbox-card">
+                            <input class="form-check-input" type="checkbox" name="zonas_visitadas" value="Centro" id="zone_centro">
+                            <label class="form-check-label" for="zone_centro">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i> Centro
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox-card">
+                            <input class="form-check-input" type="checkbox" name="zonas_visitadas" value="Altares monumentales" id="zone_altares">
+                            <label class="form-check-label" for="zone_altares">
+                                <i class="fas fa-holly-berry text-danger me-2"></i> Altares monumentales
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox-card">
+                            <input class="form-check-input" type="checkbox" name="zonas_visitadas" value="Ex Convento Franciscano de San Martín Caballero" id="zone_convento">
+                            <label class="form-check-label" for="zone_convento">
+                                <i class="fas fa-church text-warning me-2"></i> Ex Convento Franciscano
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox-card">
+                            <input class="form-check-input" type="checkbox" name="zonas_visitadas" value="Páramo de los Duendes" id="zone_paramo">
+                            <label class="form-check-label" for="zone_paramo">
+                                <i class="fas fa-mountain text-success me-2"></i> Páramo de los Duendes
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox-card">
+                            <input class="form-check-input" type="checkbox" name="zonas_visitadas" value="Acueducto de Matlala" id="zone_acueducto">
+                            <label class="form-check-label" for="zone_acueducto">
+                                <i class="fas fa-water text-info me-2"></i> Acueducto de Matlala
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox-card">
+                            <input class="form-check-input" type="checkbox" name="zonas_visitadas" value="La Piedra Máscara, La Piedra del Coyote y La Piedra del Sol y la Luna" id="zone_piedras">
+                            <label class="form-check-label" for="zone_piedras">
+                                <i class="fas fa-gem text-secondary me-2"></i> Piedras Arqueológicas/Naturales
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- III. Comportamiento y Actividades -->
+                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">III. Comportamiento y Actividades</h4>
+                <div class="col-12 mb-4">
+                    <label class="form-label fw-bold mb-2">6. ¿Qué actividades realizaste durante tu estancia? <span class="text-muted fw-normal">(Selecciona todas las que apliquen)</span></label>
+                    <div class="activities-list">
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Probar la gastronomía local / ir a restaurantes" id="act_gastronomia">
+                            <label class="form-check-label fw-semibold" for="act_gastronomia">Probar la gastronomía local / ir a restaurantes</label>
+                        </div>
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Visitar museos, iglesias o sitios históricos" id="act_historico">
+                            <label class="form-check-label fw-semibold" for="act_historico">Visitar museos, iglesias o sitios históricos</label>
+                        </div>
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Comprar artesanías o productos locales" id="act_artesanias">
+                            <label class="form-check-label fw-semibold" for="act_artesanias">Comprar artesanías o productos locales</label>
+                        </div>
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Actividades de naturaleza / senderismo / aventura" id="act_naturaleza">
+                            <label class="form-check-label fw-semibold" for="act_naturaleza">Actividades de naturaleza / senderismo / aventura</label>
+                        </div>
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Asistir a un evento, fiesta patronal o festival tradicional" id="act_festival">
+                            <label class="form-check-label fw-semibold" for="act_festival">Asistir a un evento, fiesta patronal o festival tradicional</label>
+                        </div>
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Turismo de negocios / congresos" id="act_negocios">
+                            <label class="form-check-label fw-semibold" for="act_negocios">Turismo de negocios / congresos</label>
+                        </div>
+                        <div class="form-check custom-check-row">
+                            <input class="form-check-input" type="checkbox" name="actividades" value="Descanso / Relajación" id="act_descanso">
+                            <label class="form-check-label fw-semibold" for="act_descanso">Descanso / Relajación</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IV. Satisfacción y Reseñas -->
+                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">IV. Satisfacción y Reseñas</h4>
+                <div class="col-12 mb-4">
+                    <label class="form-label fw-bold d-block mb-3">7. En general, ¿cómo calificarías tu experiencia en nuestro municipio?</label>
+                    
+                    <!-- Premium Star Rating Widget -->
+                    <div class="star-rating-container d-flex align-items-center gap-3">
+                        <div class="star-wrapper">
+                            <input type="hidden" name="satisfaccion" id="id_satisfaccion" value="">
+                            <i class="far fa-star star-btn" data-value="1" title="Muy mala"></i>
+                            <i class="far fa-star star-btn" data-value="2" title="Mala"></i>
+                            <i class="far fa-star star-btn" data-value="3" title="Regular"></i>
+                            <i class="far fa-star star-btn" data-value="4" title="Buena"></i>
+                            <i class="far fa-star star-btn" data-value="5" title="Excelente"></i>
+                        </div>
+                        <span id="star-rating-label" class="fw-bold text-muted" style="min-width: 100px;">Selecciona...</span>
+                    </div>
+                    {% if form.satisfaccion.errors %}
+                        <div class="text-danger small mt-1">{{ form.satisfaccion.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-12 mb-4">
+                    <label class="form-label fw-bold">8. Cuéntanos brevemente, ¿qué fue lo que más te gustó de tu visita?</label>
+                    {{ form.lo_que_mas_gusto }}
+                    {% if form.lo_que_mas_gusto.errors %}
+                        <div class="text-danger small">{{ form.lo_que_mas_gusto.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-5 text-end">
+                    <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" style="background-color: #007bff; border: none;">Guardar Encuesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--color-arena-oscuro);
+            padding: 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+            border-color: #007bff;
+        }
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .custom-checkbox-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .custom-checkbox-card:hover {
+            border-color: #007bff;
+            background-color: rgba(0, 123, 255, 0.02);
+        }
+        .custom-checkbox-card input[type="checkbox"]:checked + label {
+            color: #007bff;
+            font-weight: 700;
+        }
+        .custom-checkbox-card input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .custom-check-row {
+            border-bottom: 1px solid #edf2f7;
+            padding: 10px 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .custom-check-row input[type="checkbox"] {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .custom-check-row label {
+            cursor: pointer;
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            color: var(--color-gris-oscuro);
+        }
+        .custom-check-row input[type="checkbox"]:checked + label {
+            color: #007bff;
+        }
+        /* Star Rating Styles */
+        .star-wrapper {
+            display: flex;
+            gap: 5px;
+            direction: ltr;
+        }
+        .star-btn {
+            font-size: 1.8rem;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.15s ease, transform 0.1s ease;
+        }
+        .star-btn:hover {
+            transform: scale(1.15);
+        }
+        .star-btn.selected, .star-btn.active {
+            color: #ffc107;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.star-btn');
+            const hiddenInput = document.getElementById('id_satisfaccion');
+            const ratingLabel = document.getElementById('star-rating-label');
+            const labels = {
+                1: 'Muy mala',
+                2: 'Mala',
+                3: 'Regular',
+                4: 'Buena',
+                5: 'Excelente'
+            };
+
+            // Setup click events on stars
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.getAttribute('data-value'));
+                    hiddenInput.value = rating;
+                    ratingLabel.textContent = labels[rating];
+                    ratingLabel.classList.remove('text-muted');
+                    ratingLabel.style.color = '#ffc107';
+
+                    // Update visual state
+                    stars.forEach((s, idx) => {
+                        if (idx < rating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas', 'selected');
+                        } else {
+                            s.classList.remove('fas', 'selected');
+                            s.classList.add('far');
+                        }
+                    });
+                });
+
+                // Hover preview effects
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.getAttribute('data-value'));
+                    stars.forEach((s, idx) => {
+                        if (idx < rating) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', function() {
+                    stars.forEach(s => s.classList.remove('active'));
+                });
+            });
+
+            // Form Validation before submit
+            const form = document.getElementById('visitanteForm');
+            form.addEventListener('submit', function(e) {
+                if (!hiddenInput.value) {
+                    e.preventDefault();
+                    alert('Por favor, selecciona una calificación para la experiencia.');
+                }
+            });
+        });
+    </script>
+{% endblock %}

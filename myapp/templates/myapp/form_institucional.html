@@ -1,0 +1,194 @@
+{% extends 'myapp/base.html' %}
+{% load static %}
+
+{% block title %}Encuesta: Autoridades Municipales (Institucional){% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 800px; margin: 0 auto;">
+        <div class="card-body p-4 p-md-5">
+            <div class="mb-4">
+                <a href="{% url 'encuestador_dashboard' %}" class="text-decoration-none text-muted">
+                    <i class="fas fa-arrow-left me-2"></i>Regresar al Portal
+                </a>
+            </div>
+            
+            <form method="POST" id="institucionalForm">
+                {% csrf_token %}
+                
+                <h2 class="mb-4" style="color: #34495e; border-bottom: 2px solid #34495e; pb-2; font-weight: 800;">
+                    <i class="fas fa-building me-2"></i>Nueva Encuesta: Institucional
+                </h2>
+                
+                <p class="text-muted mb-4 small">
+                    <strong>Dirigido a:</strong> Autoridades municipales (Dirección de Turismo, Cultura, Servicios Públicos, Planeación).<br>
+                    <strong>Objetivo:</strong> Monitorear el uso de herramientas normativas, el seguimiento a la salvaguardia del patrimonio y la integración de las comunidades rurales en la estrategia global.
+                </p>
+
+                <!-- Bloque A: Eje de Tradición y Patrimonio -->
+                <div class="card border-0 bg-light p-3 mb-4" style="border-radius: 10px;">
+                    <h5 class="fw-bold mb-3" style="color: #2c3e50;"><i class="fas fa-landmark me-2"></i>Bloque A: Eje de Tradición y Patrimonio</h5>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">1. ¿Cuenta la administración municipal actual con registros, inventarios actualizados o indicadores formales para dar seguimiento periódico al estado de conservación del Patrimonio Cultural Inmaterial (PCI) del municipio?</label>
+                        {{ form.seguimiento_salvaguardia }}
+                        {% if form.seguimiento_salvaguardia.errors %}
+                            <div class="text-danger small">{{ form.seguimiento_salvaguardia.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block">2. ¿Cuáles son los canales oficiales y mecanismos institucionales implementados en el último año para la difusión nacional e internacional del PCI de Huaquechula? <span class="text-muted fw-normal">(Selecciona todos los que apliquen)</span></label>
+                        <div class="checkbox-group p-2 bg-white rounded border">
+                            <div class="form-check custom-check-row">
+                                <input class="form-check-input" type="checkbox" name="canales_difusion" value="Campañas digitales y uso de redes sociales institucionales" id="ch_digital">
+                                <label class="form-check-label fw-semibold" for="ch_digital">Campañas digitales y uso de redes sociales institucionales</label>
+                            </div>
+                            <div class="form-check custom-check-row">
+                                <input class="form-check-input" type="checkbox" name="canales_difusion" value="Vinculación con agencias de viaje o secretarías de turismo estatal/federal" id="ch_agencias">
+                                <label class="form-check-label fw-semibold" for="ch_agencias">Vinculación con agencias de viaje o secretarías de turismo estatal/federal</label>
+                            </div>
+                            <div class="form-check custom-check-row">
+                                <input class="form-check-input" type="checkbox" name="canales_difusion" value="Publicaciones académicas, folletería impresa y guías locales" id="ch_publicaciones">
+                                <label class="form-check-label fw-semibold" for="ch_publicaciones">Publicaciones académicas, folletería impresa y guías locales</label>
+                            </div>
+                            <div class="form-check custom-check-row">
+                                <input class="form-check-input" type="checkbox" name="canales_difusion" value="Eventos, ferias de turismo o intercambios culturales exteriores" id="ch_eventos">
+                                <label class="form-check-label fw-semibold" for="ch_eventos">Eventos, ferias de turismo o intercambios culturales exteriores</label>
+                            </div>
+                            <div class="form-check custom-check-row border-0">
+                                <input class="form-check-input" type="checkbox" name="canales_difusion" value="Ninguno" id="ch_ninguno">
+                                <label class="form-check-label fw-semibold" for="ch_ninguno">Ninguno</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">3. Número de visitantes registrados al municipio durante la tradición (temporada de festividades)</label>
+                        {{ form.visitantes_festividades }}
+                        {% if form.visitantes_festividades.errors %}
+                            <div class="text-danger small">{{ form.visitantes_festividades.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Bloque B: Eje de Turismo de Base Comunitaria (TBC) -->
+                <div class="card border-0 bg-light p-3 mb-4" style="border-radius: 10px;">
+                    <h5 class="fw-bold mb-3" style="color: #2c3e50;"><i class="fas fa-users me-2"></i>Bloque B: Eje de Turismo de Base Comunitaria (TBC)</h5>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">4. ¿Qué mecanismos normativos o reglamentos locales posee el ayuntamiento para regular el flujo turístico, evitar la saturación de los espacios públicos y proteger los derechos de los artesanos y portadores de identidad?</label>
+                        {{ form.regulacion }}
+                        {% if form.regulacion.errors %}
+                            <div class="text-danger small">{{ form.regulacion.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">5. ¿Dispone el municipio de un Plan de Desarrollo Turístico Municipal u otras herramientas de gestión técnica que prioricen la participación social de las comunidades rurales anfitrionas?</label>
+                        {{ form.gestion_tecnica }}
+                        {% if form.gestion_tecnica.errors %}
+                            <div class="text-danger small">{{ form.gestion_tecnica.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">6. ¿Qué porcentaje de las comunidades rurales con vocación turística del municipio (por ejemplo, Cacaloxúchitl o San Diego el Organal) están integradas activamente en los corredores o proyectos turísticos oficiales promovidos por el ayuntamiento?</label>
+                        {{ form.integracion_territorial }}
+                        {% if form.integracion_territorial.errors %}
+                            <div class="text-danger small">{{ form.integracion_territorial.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">7. Número de visitantes registrados al municipio durante el año</label>
+                        {{ form.visitantes_anual }}
+                        {% if form.visitantes_anual.errors %}
+                            <div class="text-danger small">{{ form.visitantes_anual.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-5 text-end">
+                    <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #34495e; border: none;">Guardar Encuesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--color-arena-oscuro);
+            padding: 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(52, 73, 94, 0.25);
+            border-color: #34495e;
+        }
+        .custom-check-row {
+            border-bottom: 1px solid #edf2f7;
+            padding: 10px 15px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .custom-check-row input[type="checkbox"] {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .custom-check-row label {
+            cursor: pointer;
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            color: var(--color-gris-oscuro);
+        }
+        .custom-check-row input[type="checkbox"]:checked + label {
+            color: #34495e;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle the 'Ninguno' checkbox mutual exclusion
+            const ningunoCheckbox = document.getElementById('ch_ninguno');
+            const otherCheckboxes = [
+                document.getElementById('ch_digital'),
+                document.getElementById('ch_agencias'),
+                document.getElementById('ch_publicaciones'),
+                document.getElementById('ch_eventos')
+            ];
+
+            ningunoCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    otherCheckboxes.forEach(cb => {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    });
+                } else {
+                    otherCheckboxes.forEach(cb => {
+                        cb.disabled = false;
+                    });
+                }
+            });
+
+            otherCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        ningunoCheckbox.checked = false;
+                    }
+                });
+            });
+
+            // Form validation before submit
+            const form = document.getElementById('institucionalForm');
+            form.addEventListener('submit', function(e) {
+                const checkedDiff = document.querySelectorAll('input[name="canales_difusion"]:checked');
+                if (checkedDiff.length === 0) {
+                    e.preventDefault();
+                    alert('Por favor, selecciona al menos un canal oficial de difusión (o marca "Ninguno").');
+                }
+            });
+        });
+    </script>
+{% endblock %}

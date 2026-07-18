@@ -203,11 +203,11 @@
     <h2 class="sec-title">Indicadores <span>Clave</span></h2>
     <div class="grid-3" style="margin-bottom:3rem;">
         <div class="cc">
-            <div class="cc-title"><i class="fas fa-chart-pie"></i>Motivo de Visita</div>
+            <div class="cc-title"><i class="fas fa-users"></i>Acompañantes</div>
             <div style="position:relative;height:220px;"><canvas id="chart-motivo"></canvas></div>
         </div>
         <div class="cc">
-            <div class="cc-title"><i class="fas fa-bus"></i>Medio de Transporte</div>
+            <div class="cc-title"><i class="fas fa-globe-americas"></i>Origen de Visitantes</div>
             <div style="position:relative;height:220px;"><canvas id="chart-transporte"></canvas></div>
         </div>
         <div class="cc">
@@ -220,10 +220,10 @@
     <div class="cc" style="margin-bottom:3rem;">
         <div class="cc-title"><i class="fas fa-info-circle"></i>Datos Adicionales</div>
         <div class="mini-grid">
-            <div class="mini-kpi"><div class="mini-val" id="mini-estancia">—</div><div class="mini-lbl">Días promedio de estancia</div></div>
-            <div class="mini-kpi"><div class="mini-val" id="mini-previas">—</div><div class="mini-lbl">Visitas previas promedio</div></div>
+            <div class="mini-kpi"><div class="mini-val" id="mini-estancia">—</div><div class="mini-lbl">Edad promedio de visitantes</div></div>
+            <div class="mini-kpi"><div class="mini-val" id="mini-previas">—</div><div class="mini-lbl">Total de encuestas móviles</div></div>
             <div class="mini-kpi"><div class="mini-val" id="mini-ext">—</div><div class="mini-lbl">% visitantes extranjeros</div></div>
-            <div class="mini-kpi"><div class="mini-val" id="mini-total">—</div><div class="mini-lbl">Total encuestas registradas</div></div>
+            <div class="mini-kpi"><div class="mini-val" id="mini-total">—</div><div class="mini-lbl">Registros históricos totales</div></div>
         </div>
     </div>
 
@@ -263,25 +263,23 @@
 
     /* ── 2a. Afluencia por zonas ── */
     const zonaEl = document.getElementById('zonas-list');
-    const procs = d.top_procedencias;
-    const maxZ = Math.max(...procs.values, 1);
-    if (procs.labels.length) {
-        procs.labels.forEach((lbl, i) => {
-            const pct = Math.round(procs.values[i] / maxZ * 100);
-            const flagMap = { 'mexico':'🇲🇽','estados unidos':'🇺🇸','usa':'🇺🇸','canada':'🇨🇦','españa':'🇪🇸' };
-            const flag = flagMap[lbl.toLowerCase()] || '📍';
+    const zonasData = d.top_zonas;
+    const maxZ = Math.max(...zonasData.values, 1);
+    if (zonasData.labels.length) {
+        zonasData.labels.forEach((lbl, i) => {
+            const pct = Math.round(zonasData.values[i] / maxZ * 100);
             zonaEl.innerHTML += `
             <div class="zona-item">
-                <span class="zona-flag">${flag}</span>
+                <span class="zona-flag">📍</span>
                 <div class="zona-info">
                     <div class="zona-name">${lbl}</div>
                     <div class="zona-bar" style="width:${pct}%"></div>
                 </div>
-                <span class="zona-cnt">${procs.values[i]}</span>
+                <span class="zona-cnt">${zonasData.values[i]}</span>
             </div>`;
         });
     } else {
-        zonaEl.innerHTML = '<p class="no-data">Sin datos de procedencia aún</p>';
+        zonaEl.innerHTML = '<p class="no-data">Sin datos de afluencia por zonas aún</p>';
     }
 
     /* ── 2b. Visitas por ciudad (barras) ── */
@@ -340,19 +338,34 @@
 
     /* ── 4a. Actividades populares (rank) ── */
     const actEl = document.getElementById('act-list');
-    const motMax = Math.max(...d.motivo_visita.values, 1);
-    if (d.motivo_visita.labels.length) {
-        d.motivo_visita.labels.forEach((lbl, i) => {
-            const key = Object.keys(MOTIVO_LABELS).find(k => MOTIVO_LABELS[k] === lbl) || 'otros';
-            const pct = Math.round(d.motivo_visita.values[i] / motMax * 100);
+    const actData = d.top_actividades;
+    const actMax = Math.max(...actData.values, 1);
+    const ACT_ICONS = {
+        'gastronomía': 'fa-utensils',
+        'museos': 'fa-church',
+        'artesanías': 'fa-shopping-bag',
+        'naturaleza': 'fa-leaf',
+        'evento': 'fa-music',
+        'descanso': 'fa-spa'
+    };
+    if (actData.labels.length) {
+        actData.labels.forEach((lbl, i) => {
+            const pct = Math.round(actData.values[i] / actMax * 100);
+            let iconClass = 'fa-tag';
+            for (const [key, icon] of Object.entries(ACT_ICONS)) {
+                if (lbl.toLowerCase().includes(key)) {
+                    iconClass = icon;
+                    break;
+                }
+            }
             actEl.innerHTML += `
             <div class="act-item">
                 <span class="act-rank">#${i+1}</span>
-                <i class="fas ${MOTIVO_ICONS[key] || 'fa-tag'} act-icon"></i>
+                <i class="fas ${iconClass} act-icon"></i>
                 <span class="act-name">${lbl}</span>
-                <div style="width:80px;">
-                    <div class="act-bar" style="width:${pct}%"></div>
-                    <span style="font-size:.7rem;color:var(--gris-m);">${d.motivo_visita.values[i]} visitas</span>
+                <div style="width:105px; text-align:right;">
+                    <div class="act-bar" style="width:${pct}%; margin-left:auto;"></div>
+                    <span style="font-size:.7rem;color:var(--gris-m);">${actData.values[i]} menciones</span>
                 </div>
             </div>`;
         });
@@ -383,22 +396,22 @@
     const chartOpts = { responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ display:true, position:'bottom', labels:{ font:{size:10}, usePointStyle:true, padding:10 }}}};
 
-    // Motivo dona
+    // Acompañantes dona (antes Motivo)
     new Chart(document.getElementById('chart-motivo'), {
         type:'doughnut',
-        data:{ labels:d.motivo_visita.labels, datasets:[{
-            data:d.motivo_visita.values,
+        data:{ labels:d.acompanantes.labels, datasets:[{
+            data:d.acompanantes.values,
             backgroundColor:['#D35400','#E8681A','#4A4A4A','#6B6B6B','#BDBDBD'],
             borderWidth:2, borderColor:'#fff', hoverOffset:8
         }]},
         options:{ ...chartOpts, cutout:'58%' }
     });
 
-    // Transporte dona
+    // Origen Nacionalidad dona (antes Transporte)
     new Chart(document.getElementById('chart-transporte'), {
         type:'doughnut',
-        data:{ labels:d.transporte.labels, datasets:[{
-            data:d.transporte.values,
+        data:{ labels:d.origen_nacionalidad.labels, datasets:[{
+            data:d.origen_nacionalidad.values,
             backgroundColor:['#D35400','#E8681A','#4A4A4A','#8C8C8C','#C5C5C5'],
             borderWidth:2, borderColor:'#fff', hoverOffset:8
         }]},
@@ -426,7 +439,7 @@
     });
 
     /* ── Mini KPIs ── */
-    document.getElementById('mini-estancia').textContent = d.estancia_promedio + ' días';
+    document.getElementById('mini-estancia').textContent = d.estancia_promedio + ' años';
     document.getElementById('mini-previas').textContent  = d.visitas_previas_promedio;
     document.getElementById('mini-ext').textContent      = d.pct_extranjeros + '%';
     document.getElementById('mini-total').textContent    = d.total_registros.toLocaleString('es-MX');

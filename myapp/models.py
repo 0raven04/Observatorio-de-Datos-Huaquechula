@@ -1046,26 +1046,153 @@ class Medicion(models.Model):
 class EncuestaResidente(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     encuestador = models.ForeignKey(Encuestador, on_delete=models.SET_NULL, null=True, blank=True)
-    edad = models.PositiveSmallIntegerField()
+    edad = models.PositiveSmallIntegerField(null=True, blank=True)
     genero_choices = [('Hombre', 'Hombre'), ('Mujer', 'Mujer'), ('Otro', 'Otro')]
-    genero = models.CharField(max_length=15, choices=genero_choices)
-    barrio_colonia = models.CharField(max_length=100)
+    genero = models.CharField(max_length=15, choices=genero_choices, null=True, blank=True)
+    barrio_colonia = models.CharField(max_length=100, null=True, blank=True)
     
-    # Seguridad
-    confianza_policia = models.PositiveSmallIntegerField(choices=[(1,'1 - Nula'), (2,'2 - Poca'), (3,'3 - Regular'), (4,'4 - Mucha'), (5,'5 - Total')], verbose_name='Confianza en la policía (1-5)')
-    percepcion_inseguridad = models.PositiveSmallIntegerField(choices=[(1,'Muy inseguro'), (2,'Inseguro'), (3,'Neutral'), (4,'Seguro'), (5,'Muy seguro')], verbose_name='Percepción de inseguridad')
+    # Seguridad (opcionales por compatibilidad con API/Resumen)
+    confianza_policia = models.PositiveSmallIntegerField(choices=[(1,'1 - Nula'), (2,'2 - Poca'), (3,'3 - Regular'), (4,'4 - Mucha'), (5,'5 - Total')], verbose_name='Confianza en la policía (1-5)', null=True, blank=True)
+    percepcion_inseguridad = models.PositiveSmallIntegerField(choices=[(1,'Muy inseguro'), (2,'Inseguro'), (3,'Neutral'), (4,'Seguro'), (5,'Muy seguro')], verbose_name='Percepción de inseguridad', null=True, blank=True)
     
     # Tradiciones / PCI
-    tension_festividades = models.PositiveSmallIntegerField(choices=[(1,'Siempre'), (2,'Frecuentemente'), (3,'A veces'), (4,'Rara vez'), (5,'Nunca')], verbose_name='¿Siente tensión por exceso de visitantes en festividades?')
-    acceso_servicios_festividades = models.PositiveSmallIntegerField(choices=[(1,'Muy afectado'), (2,'Moderadamente'), (3,'Poco'), (4,'Nada')], verbose_name='¿Se ve afectado su acceso a servicios (agua, tránsito) en festividades?')
-    perdida_tradicion = models.PositiveSmallIntegerField(choices=[(1,'Totalmente de acuerdo'), (2,'De acuerdo'), (3,'Neutral'), (4,'En desacuerdo'), (5,'Totalmente en desacuerdo')], verbose_name='¿Se está perdiendo el respeto a la tradición por el turismo?')
+    tension_festividades = models.PositiveSmallIntegerField(choices=[(1,'1. No altera nada'), (2,'2. Altera poco'), (3,'3. Altera de forma regular'), (4,'4. Altera mucho')], verbose_name='¿Siente tensión por exceso de visitantes en festividades?', null=True, blank=True)
+    acceso_servicios_festividades = models.PositiveSmallIntegerField(choices=[(1,'Excelente'), (2,'Regular'), (3,'Deficiente')], verbose_name='¿Se ve afectado su acceso a servicios (agua, tránsito) en festividades?', null=True, blank=True)
+    perdida_tradicion = models.PositiveSmallIntegerField(choices=[(1,'Sí, se ha comercializado excesivamente'), (2,'Parcialmente'), (3,'No, se mantiene intacta')], verbose_name='¿Se está perdiendo el respeto a la tradición por el turismo?', null=True, blank=True)
     
-    # Medio Ambiente
-    calidad_aire = models.PositiveSmallIntegerField(choices=[(1,'Ha empeorado'), (2,'Se mantiene igual'), (3,'Ha mejorado mucho')], verbose_name='Percepción de la calidad del aire')
-    gestion_residuos = models.PositiveSmallIntegerField(choices=[(1,'Deficiente'), (2,'Regular'), (3,'Excelente')], verbose_name='Percepción de la gestión de residuos')
+    # Medio Ambiente (opcionales por compatibilidad con API/Resumen)
+    calidad_aire = models.PositiveSmallIntegerField(choices=[(1,'Ha empeorado'), (2,'Se mantiene igual'), (3,'Ha mejorado mucho')], verbose_name='Percepción de la calidad del aire', null=True, blank=True)
+    gestion_residuos = models.PositiveSmallIntegerField(choices=[(1,'Deficiente'), (2,'Regular'), (3,'Excelente')], verbose_name='Percepción de la gestión de residuos', null=True, blank=True)
+
+    # Nuevos campos del Formulario Residente
+    participacion_preservacion_choices = [
+        ('activa', 'Sí, participo activamente de manera directa'),
+        ('apoyo', 'No participo directamente, pero apoyo la organización local'),
+        ('ninguna', 'No participo en absoluto')
+    ]
+    participacion_preservacion = models.CharField(max_length=20, choices=participacion_preservacion_choices, null=True, blank=True, verbose_name='Participación en preservación')
+    
+    participacion_decisiones_choices = [
+        ('regular', 'Sí, asisto con regularidad y se toman en cuenta mis opiniones'),
+        ('no_toman_cuenta', 'He sido convocado, pero no asisto o no se toman en cuenta las opiniones comunitarias'),
+        ('nunca', 'Nunca he sido convocado ni informado sobre estas decisiones')
+    ]
+    participacion_decisiones = models.CharField(max_length=20, choices=participacion_decisiones_choices, null=True, blank=True, verbose_name='Participación en toma de decisiones')
+    
+    capacitacion_turistica_choices = [
+        ('continua', 'Sí, he recibido capacitación continua'),
+        ('aislada', 'Recibí información aislada, pero no capacitación formal'),
+        ('ninguna', 'No he recibido ninguna información ni capacitación')
+    ]
+    capacitacion_turistica = models.CharField(max_length=20, choices=capacitacion_turistica_choices, null=True, blank=True, verbose_name='Capacitación turística')
+    
+    beneficio_economico_choices = [
+        ('principal', 'Sí, es nuestra fuente de ingresos principal'),
+        ('complementaria', 'Sí, funciona como una actividad económica complementaria'),
+        ('ninguno', 'No, no percibimos ningún beneficio directo de la actividad turística')
+    ]
+    beneficio_economico = models.CharField(max_length=20, choices=beneficio_economico_choices, null=True, blank=True, verbose_name='Beneficio económico o social')
+    
+    interes_jovenes_choices = [
+        ('activa', 'Sí, de forma activa'),
+        ('parcialmente', 'Parcialmente'),
+        ('perdiendo', 'No, se está perdiendo')
+    ]
+    interes_jovenes = models.CharField(max_length=20, choices=interes_jovenes_choices, null=True, blank=True, verbose_name='Interés de jóvenes en tradiciones')
 
     def __str__(self):
         return f"Encuesta Residente {self.id} - {self.fecha.strftime('%Y-%m-%d')}"
+
+
+class EncuestaVisitante(models.Model):
+    fecha = models.DateTimeField(auto_now_add=True)
+    encuestador = models.ForeignKey(Encuestador, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # I. Perfil
+    genero_choices = [
+        ('Femenino', 'Femenino'),
+        ('Masculino', 'Masculino'),
+        ('No binario / Otro', 'No binario / Otro'),
+        ('Prefiero no decirlo', 'Prefiero no decirlo')
+    ]
+    genero = models.CharField(max_length=30, choices=genero_choices)
+    edad = models.PositiveSmallIntegerField()
+    
+    viaja_con_choices = [
+        ('Solo / Sola', 'Solo / Sola'),
+        ('En pareja', 'En pareja'),
+        ('En familia (con niños)', 'En familia (con niños)'),
+        ('Con amigos / familiares (adultos)', 'Con amigos / familiares (adultos)'),
+        ('Grupo organizado / Excursión', 'Grupo organizado / Excursión')
+    ]
+    viaja_con = models.CharField(max_length=50, choices=viaja_con_choices)
+    
+    # II. Origen y Conectividad
+    residencia_ciudad = models.CharField(max_length=100)
+    residencia_estado = models.CharField(max_length=100)
+    residencia_pais = models.CharField(max_length=100)
+    
+    zonas_visitadas = models.TextField(help_text="Zonas visitadas separadas por comas")
+    
+    # III. Comportamiento y Actividades
+    actividades = models.TextField(help_text="Actividades realizadas separadas por comas")
+    
+    # IV. Satisfacción
+    satisfaccion_choices = [
+        (1, '⭐ Muy mala'),
+        (2, '⭐⭐ Mala'),
+        (3, '⭐⭐⭐ Regular'),
+        (4, '⭐⭐⭐⭐ Buena'),
+        (5, '⭐⭐⭐⭐⭐ Excelente')
+    ]
+    satisfaccion = models.PositiveSmallIntegerField(choices=satisfaccion_choices)
+    lo_que_mas_gusto = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Encuesta Visitante {self.id} - {self.fecha.strftime('%Y-%m-%d')}"
+
+
+class EncuestaInstitucional(models.Model):
+    fecha = models.DateTimeField(auto_now_add=True)
+    encuestador = models.ForeignKey(Encuestador, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Bloque A
+    seguimiento_salvaguardia_choices = [
+        ('si', 'Sí, contamos con herramientas de monitoreo e inventarios sistemáticos'),
+        ('eventual', 'Se realizan registros eventuales (fotografías o bitácoras de eventos), pero sin un sistema formal'),
+        ('no', 'No se cuenta con herramientas institucionales de seguimiento')
+    ]
+    seguimiento_salvaguardia = models.CharField(max_length=20, choices=seguimiento_salvaguardia_choices)
+    
+    canales_difusion = models.TextField(help_text="Canales de difusión separados por comas")
+    visitantes_festividades = models.PositiveIntegerField()
+    
+    # Bloque B
+    regulacion_choices = [
+        ('reglamento', 'Reglamento de turismo vigente que incluye normativas de protección local y ordenamiento comercial'),
+        ('normas_basicas', 'Normas básicas de comercio, pero sin un reglamento específico orientado a la protección cultural'),
+        ('no', 'No existen herramientas de regulación turística vigentes')
+    ]
+    regulacion = models.CharField(max_length=20, choices=regulacion_choices)
+    
+    gestion_tecnica_choices = [
+        ('si', 'Sí, se cuenta con un Plan Sectorial alineado a la gestión comunitaria'),
+        ('general', 'Existe un plan de desarrollo general, pero carece de un enfoque específico en turismo comunitario'),
+        ('no', 'No se cuenta con herramientas de planeación técnica o estratégica en turismo')
+    ]
+    gestion_tecnica = models.CharField(max_length=20, choices=gestion_tecnica_choices)
+    
+    integracion_territorial_choices = [
+        ('menos_25', 'Menos del 25% de las localidades (La actividad se centraliza casi por completo en la cabecera municipal)'),
+        ('entre_25_50', 'Entre el 25% y el 50% de las localidades están integradas'),
+        ('mas_50', 'Más del 50% de las localidades rurales participan activamente en las redes de turismo municipal')
+    ]
+    integracion_territorial = models.CharField(max_length=20, choices=integracion_territorial_choices)
+    
+    visitantes_anual = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"Encuesta Institucional {self.id} - {self.fecha.strftime('%Y-%m-%d')}"
 
 
 class EncuestaComercio(models.Model):
@@ -1081,6 +1208,7 @@ class EncuestaComercio(models.Model):
 
     def __str__(self):
         return f"Encuesta Comercio {self.id} - {self.tipo_comercio} - {self.fecha.strftime('%Y-%m-%d')}"
+
 
 
 # =====================================================

@@ -2,23 +2,50 @@
  * api.js — Instancia base de Axios para el Observatorio API.
  * Configura baseURL, headers por defecto e interceptores para adjuntar el JWT.
  *
- * IMPORTANTE: Cambia BASE_URL a la IP de tu PC en la red local cuando
- * pruebes desde un teléfono físico (ej: "http://192.168.1.X:8000").
- * Para emulador Android usa "http://10.0.2.2:8000".
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  CONFIGURACIÓN DE URL  (ajusta antes de compilar el APK)
+ * ──────────────────────────────────────────────────────────────────────────────
+ *
+ *  RED LOCAL WIFI (pruebas con teléfono físico en la misma red que el servidor):
+ *    → Cambia WIFI_IP a la IP de la PC donde corre el servidor Django.
+ *    → Ejemplo: '192.168.1.45' o '10.1.4.231'
+ *    → Encuentra tu IP con: ipconfig (Windows) | ifconfig (Mac/Linux)
+ *
+ *  EMULADOR ANDROID STUDIO:
+ *    → Usa la IP especial '10.0.2.2' para referirse a localhost de la PC host.
+ *
+ *  PRODUCCIÓN (servidor desplegado con dominio o IP pública):
+ *    → Cambia USE_PRODUCTION a true y escribe la URL completa en PRODUCTION_URL.
+ *    → Ejemplo: 'https://observatorio.tudominio.com'
+ *
+ * ──────────────────────────────────────────────────────────────────────────────
  */
 import axios from 'axios';
 import storage from './storage';
 import { Platform } from 'react-native';
 
-// ── Configuración de la URL base ──────────────────────────────────────────────
-const WIFI_IP = '10.1.4.231';  // ← IP de tu PC en la red WiFi
-export const BASE_URL = Platform.OS === 'web'
-    ? 'http://localhost:8000'       // Navegador en la misma PC
-    : `http://${WIFI_IP}:8000`;     // Teléfono físico en la red WiFi
+// ── Configuración — ajusta estos valores antes de compilar ────────────────────
+
+const WIFI_IP = '10.97.209.148';       // ← IP de tu PC en la red WiFi local
+const PRODUCTION_URL = 'https://envy-backhand-unhearing.ngrok-free.dev';             // ← URL de producción (ej: 'https://observatorio.com')
+const USE_PRODUCTION = true;          // ← Cambia a true cuando el servidor esté desplegado
+
+// ── Resolución automática de la URL base ──────────────────────────────────────
+function resolveBaseURL() {
+    if (USE_PRODUCTION && PRODUCTION_URL) {
+        return PRODUCTION_URL;
+    }
+    if (Platform.OS === 'web') {
+        return 'http://localhost:8000';   // Navegador en la misma PC
+    }
+    return `http://${WIFI_IP}:8000`;      // Teléfono físico en la red WiFi
+}
+
+export const BASE_URL = resolveBaseURL();
 
 const api = axios.create({
     baseURL: BASE_URL,
-    timeout: 10000,
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
     },

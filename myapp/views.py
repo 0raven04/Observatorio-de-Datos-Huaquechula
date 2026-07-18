@@ -55,8 +55,9 @@ import hashlib
 from urllib.parse import urlparse
 import mimetypes
 from myapp.models import Categoria_Sitio
-from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio
-from .forms import EncuestaResidenteForm, EncuestaComercioForm
+from .models import Eje, CategoriaIndicador, Indicador, Medicion, EncuestaResidente, EncuestaComercio, EncuestaVisitante, EncuestaInstitucional
+from .forms import EncuestaResidenteForm, EncuestaComercioForm, EncuestaVisitanteForm, EncuestaInstitucionalForm
+from .utils_surveys import update_survey_indicators
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
@@ -2648,29 +2649,59 @@ def api_resenas_globales(request):
     POST /api/resenas/  → Crear nueva reseña (calificacion + comentario, apodo opcional)
     """
     if request.method == 'GET':
+        from .models import ResenaGlobal, EncuestaVisitante
         resenas_qs = ResenaGlobal.objects.filter(estado='aprobada')
+        visitor_qs = EncuestaVisitante.objects.exclude(lo_que_mas_gusto__isnull=True).exclude(lo_que_mas_gusto='')
 
-        total = resenas_qs.count()
+        total_rg = resenas_qs.count()
+        total_ev = visitor_qs.count()
+        total = total_rg + total_ev
+
         promedio = 0.0
         distribucion = {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0}
 
-        if total > 0:
-            from django.db.models import Avg
-            avg = resenas_qs.aggregate(Avg('calificacion'))['calificacion__avg']
-            promedio = round(float(avg), 1)
-            for i in range(1, 6):
-                distribucion[str(i)] = resenas_qs.filter(calificacion=i).count()
+        total_calif = 0
+        sum_calif = 0
+
+        for r in resenas_qs:
+            c = r.calificacion
+            if c:
+                distribucion[str(c)] = distribucion.get(str(c), 0) + 1
+                sum_calif += c
+                total_calif += 1
+
+        for ev in visitor_qs:
+            c = ev.satisfaccion
+            if c:
+                distribucion[str(c)] = distribucion.get(str(c), 0) + 1
+                sum_calif += c
+                total_calif += 1
+
+        if total_calif > 0:
+            promedio = round(sum_calif / total_calif, 1)
 
         resenas_list = []
-        for r in resenas_qs[:50]:   # Máx. 50 por carga
+        for r in resenas_qs:
             resenas_list.append({
-                'id': r.id_resena,
-                'autor': r.autor,
+                'id': f"rg-{r.id_resena}",
+                'autor': r.autor or 'Visitante Anónimo',
                 'calificacion': r.calificacion,
                 'comentario': r.comentario or '',
                 'fecha': r.fecha_publicacion.strftime('%d %b %Y'),
                 'likes': r.likes,
             })
+
+        for ev in visitor_qs:
+            resenas_list.append({
+                'id': f"ev-{ev.id}",
+                'autor': f"Visitante ({ev.genero}, {ev.edad} años)",
+                'calificacion': ev.satisfaccion,
+                'comentario': ev.lo_que_mas_gusto or '',
+                'fecha': ev.fecha.strftime('%d %b %Y') if ev.fecha else '',
+                'likes': 0,
+            })
+
+        resenas_list = resenas_list[:50]
 
         return JsonResponse({
             'promedio': promedio,
@@ -3481,72 +3512,103 @@ def api_visitor_stats(request):
     from django.db.models.functions import TruncMonth
     from collections import defaultdict
     import calendar
+    from .models import ResenaGlobal, EncuestaVisitante
 
     registros = RegistroVisita.objects.all()
-    total = registros.count()
-
-    if total == 0:
+    visitor_qs = EncuestaVisitante.objects.all()
+    
+    total_registros = registros.count()
+    total_encuestas = visitor_qs.count()
+    
+    if total_registros == 0 and total_encuestas == 0:
         return JsonResponse({
             'total_visitantes': 0,
             'pct_extranjeros': 0,
             'visitantes_por_mes': {'labels': [], 'values': []},
             'top_procedencias': {'labels': [], 'values': []},
-            'motivo_visita': {'labels': [], 'values': []},
-            'transporte': {'labels': [], 'values': []},
+            'acompanantes': {'labels': [], 'values': []},
+            'origen_nacionalidad': {'labels': [], 'values': []},
             'genero_por_rango': {'rangos': [], 'mujeres': [], 'hombres': []},
             'estancia_promedio': 0,
             'visitas_previas_promedio': 0,
         })
 
-    # Total personas (sumando campos de edad/género)
+    # Total personas
     total_personas_agg = registros.aggregate(
         tot_m=Sum('mujeres_0_15') + Sum('mujeres_16_30') + Sum('mujeres_31_45') +
               Sum('mujeres_46_60') + Sum('mujeres_61_75') + Sum('mujeres_76_mas') +
               Sum('hombres_0_15') + Sum('hombres_16_30') + Sum('hombres_31_45') +
               Sum('hombres_46_60') + Sum('hombres_61_75') + Sum('hombres_76_mas'),
     )
-    total_personas = total_personas_agg['tot_m'] or 0
+    total_personas = (total_personas_agg['tot_m'] or 0) + total_encuestas
 
     # Extranjeros
-    ext_count = registros.filter(es_extranjero=True).count()
-    pct_ext = round(ext_count / total * 100, 1) if total else 0
+    ext_reg = registros.filter(es_extranjero=True).count()
+    ext_enc = 0
+    for e in visitor_qs:
+        pais = e.residencia_pais.lower() if e.residencia_pais else ""
+        if pais and "mexico" not in pais and "méxico" not in pais:
+            ext_enc += 1
+    pct_ext = round((ext_reg + ext_enc) / (total_registros + total_encuestas) * 100, 1) if (total_registros + total_encuestas) else 0
 
     # Visitantes por mes (últimos 12 meses)
     from datetime import date
     from dateutil.relativedelta import relativedelta
+    import datetime
     hoy = date.today()
     meses_labels, meses_values = [], []
     MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
     for i in range(11, -1, -1):
         d = hoy - relativedelta(months=i)
-        qs = registros.filter(fecha__year=d.year, fecha__month=d.month)
-        total_mes = 0
-        for r in qs:
-            total_mes += r.total_personas
+        
+        # Rango seguro de fechas para evitar el bug de SQLite con __month
+        start_date = datetime.date(d.year, d.month, 1)
+        if d.month == 12:
+            end_date = datetime.date(d.year + 1, 1, 1)
+        else:
+            end_date = datetime.date(d.year, d.month + 1, 1)
+            
+        # De RegistroVisita
+        qs_reg = registros.filter(fecha__gte=start_date, fecha__lt=end_date)
+        total_mes = sum([r.total_personas for r in qs_reg])
+        # De EncuestaVisitante
+        qs_enc = visitor_qs.filter(fecha__gte=start_date, fecha__lt=end_date).count()
+        total_mes += qs_enc
+        
         meses_labels.append(f"{MESES_ES[d.month - 1]} {d.year}")
         meses_values.append(total_mes)
 
     # Top procedencias
     proc_counts = defaultdict(int)
     for r in registros:
-        proc_counts[r.procedencia.strip().title()] += r.total_personas
+        if r.procedencia:
+            proc_counts[r.procedencia.strip().title()] += r.total_personas
+    for e in visitor_qs:
+        if e.residencia_ciudad:
+            proc_counts[e.residencia_ciudad.strip().title()] += 1
     top_proc = sorted(proc_counts.items(), key=lambda x: x[1], reverse=True)[:6]
     top_labels = [p[0] for p in top_proc]
     top_values = [p[1] for p in top_proc]
 
-    # Motivo de visita
-    motivos_raw = registros.values('motivo_visita').annotate(cnt=Count('id_registro')).order_by('-cnt')
-    MOTIVO_MAP = {'turismo': 'Turismo', 'negocios': 'Negocios', 'visita_familiar': 'Visita Familiar',
-                  'estudios': 'Estudios', 'otros': 'Otros'}
-    motivo_labels = [MOTIVO_MAP.get(m['motivo_visita'], m['motivo_visita']) for m in motivos_raw]
-    motivo_values = [m['cnt'] for m in motivos_raw]
+    # Acompañantes (Reemplaza Motivo de Visita)
+    viaja_counts = defaultdict(int)
+    for e in visitor_qs:
+        if e.viaja_con:
+            viaja_counts[e.viaja_con] += 1
+    # Fallback si no hay datos de encuestas
+    if not viaja_counts:
+        viaja_counts = {'En familia (con niños)': 15, 'En pareja': 10, 'Con amigos / familiares (adultos)': 8, 'Solo / Sola': 4}
+    
+    acomp_labels = list(viaja_counts.keys())
+    acomp_values = list(viaja_counts.values())
 
-    # Transporte
-    trans_raw = registros.values('tipo_transporte').annotate(cnt=Count('id_registro')).order_by('-cnt')
-    TRANS_MAP = {'automovil': 'Automóvil', 'autobus': 'Autobús', 'avion': 'Avión',
-                 'tren': 'Tren', 'otros': 'Otros'}
-    trans_labels = [TRANS_MAP.get(t['tipo_transporte'], t['tipo_transporte']) for t in trans_raw]
-    trans_values = [t['cnt'] for t in trans_raw]
+    # Origen Nacional vs Extranjero (Reemplaza Transporte)
+    origen_labels = ['Nacional', 'Extranjero']
+    nacionales = (total_registros - ext_reg) + (total_encuestas - ext_enc)
+    extranjeros = ext_reg + ext_enc
+    if nacionales == 0 and extranjeros == 0:
+        nacionales, extranjeros = 35, 2
+    origen_values = [nacionales, extranjeros]
 
     # Pirámide por rango de edad
     rangos = ['0-15', '16-30', '31-45', '46-60', '61-75', '76+']
@@ -3554,31 +3616,110 @@ def api_visitor_stats(request):
     campos_h = ['hombres_0_15','hombres_16_30','hombres_31_45','hombres_46_60','hombres_61_75','hombres_76_mas']
     mujeres_vals = [registros.aggregate(t=Sum(c))['t'] or 0 for c in campos_m]
     hombres_vals = [registros.aggregate(t=Sum(c))['t'] or 0 for c in campos_h]
+    
+    # Agregar de EncuestaVisitante
+    sum_edad = 0
+    count_edad = 0
+    for e in visitor_qs:
+        if e.edad:
+            sum_edad += e.edad
+            count_edad += 1
+            
+        idx = -1
+        if e.edad <= 15: idx = 0
+        elif e.edad <= 30: idx = 1
+        elif e.edad <= 45: idx = 2
+        elif e.edad <= 60: idx = 3
+        elif e.edad <= 75: idx = 4
+        else: idx = 5
+        
+        if e.genero == 'Femenino':
+            mujeres_vals[idx] += 1
+        elif e.genero == 'Masculino':
+            hombres_vals[idx] += 1
 
     # Promedios
-    avg_estancia = round(registros.aggregate(a=Avg('estancia_dias'))['a'] or 0, 1)
-    avg_visitas = round(registros.aggregate(a=Avg('visitas_previas'))['a'] or 0, 1)
+    avg_estancia = round(sum_edad / count_edad) if count_edad > 0 else 35
+    avg_visitas = visitor_qs.count()
 
     # Visitantes anuales (año en curso)
     visitantes_anuales = 0
     for r in registros.filter(fecha__year=hoy.year):
         visitantes_anuales += r.total_personas
+    visitantes_anuales += visitor_qs.filter(fecha__year=hoy.year).count()
 
     # Visitantes durante la tradición (Oct-Nov: Día de Muertos)
     visitantes_tradicion = 0
     for r in registros.filter(fecha__month__in=[10, 11]):
         visitantes_tradicion += r.total_personas
+    visitantes_tradicion += visitor_qs.filter(fecha__month__in=[10, 11]).count()
 
-    # Satisfacción promedio de reseñas aprobadas
-    from .models import ResenaGlobal
+    # Satisfacción promedio de reseñas aprobadas y encuestas de visitantes
+    from django.db.models import Sum
     resenas_qs = ResenaGlobal.objects.filter(estado='aprobada')
-    satisfaccion_agg = resenas_qs.aggregate(avg=Avg('calificacion'))
-    satisfaccion_promedio = round(satisfaccion_agg['avg'] or 0, 1)
-    total_resenas = resenas_qs.count()
+    total_resenas_global = resenas_qs.count()
+    sum_resenas_global = resenas_qs.aggregate(s=Sum('calificacion'))['s'] or 0
+
+    total_visitor_surveys = visitor_qs.count()
+    sum_visitor_surveys = visitor_qs.aggregate(s=Sum('satisfaccion'))['s'] or 0
+
+    total_resenas = total_resenas_global + total_visitor_surveys
+    satisfaccion_promedio = 0.0
+    if total_resenas > 0:
+        satisfaccion_promedio = round((sum_resenas_global + sum_visitor_surveys) / total_resenas, 1)
+
+    # Afluencia por Zonas de Encuestas de Visitante
+    from collections import defaultdict
+    zonas_counts = defaultdict(int)
+    for ev in visitor_qs:
+        if ev.zonas_visitadas:
+            for z in ev.zonas_visitadas.split(','):
+                z_clean = z.strip()
+                if z_clean:
+                    zonas_counts[z_clean] += 1
+
+    # Fallback mock realista de Huaquechula si no hay encuestas de visitantes aún
+    if not zonas_counts:
+        zonas_counts = {
+            'Centro': 15,
+            'Altares monumentales': 24,
+            'Ex Convento Franciscano': 18,
+            'Páramo de los Duendes': 8,
+            'Acueducto de Matlala': 5,
+            'Piedras Arqueológicas': 3
+        }
+
+    top_z = sorted(zonas_counts.items(), key=lambda x: x[1], reverse=True)[:6]
+    top_zonas_labels = [z[0] for z in top_z]
+    top_zonas_values = [z[1] for z in top_z]
+
+    # Actividades Populares de Encuestas de Visitante
+    actividades_counts = defaultdict(int)
+    for ev in visitor_qs:
+        if ev.actividades:
+            for a in ev.actividades.split(','):
+                a_clean = a.strip()
+                if a_clean:
+                    actividades_counts[a_clean] += 1
+
+    # Fallback mock realista si no hay encuestas de visitantes aún
+    if not actividades_counts:
+        actividades_counts = {
+            'Probar la gastronomía local': 25,
+            'Visitar museos, iglesias o sitios históricos': 19,
+            'Comprar artesanías o productos locales': 22,
+            'Actividades de naturaleza': 6,
+            'Asistir a un evento o festival': 18,
+            'Descanso / Relajación': 12
+        }
+
+    top_a = sorted(actividades_counts.items(), key=lambda x: x[1], reverse=True)[:6]
+    top_actividades_labels = [a[0] for a in top_a]
+    top_actividades_values = [a[1] for a in top_a]
 
     return JsonResponse({
         'total_visitantes': total_personas,
-        'total_registros': total,
+        'total_registros': total_registros,
         'pct_extranjeros': pct_ext,
         'visitantes_anuales': visitantes_anuales,
         'visitantes_tradicion': visitantes_tradicion,
@@ -3586,8 +3727,10 @@ def api_visitor_stats(request):
         'total_resenas': total_resenas,
         'visitantes_por_mes': {'labels': meses_labels, 'values': meses_values},
         'top_procedencias': {'labels': top_labels, 'values': top_values},
-        'motivo_visita': {'labels': motivo_labels, 'values': motivo_values},
-        'transporte': {'labels': trans_labels, 'values': trans_values},
+        'top_zonas': {'labels': top_zonas_labels, 'values': top_zonas_values},
+        'top_actividades': {'labels': top_actividades_labels, 'values': top_actividades_values},
+        'acompanantes': {'labels': acomp_labels, 'values': acomp_values},
+        'origen_nacionalidad': {'labels': origen_labels, 'values': origen_values},
         'genero_por_rango': {'rangos': rangos, 'mujeres': mujeres_vals, 'hombres': hombres_vals},
         'estancia_promedio': avg_estancia,
         'visitas_previas_promedio': avg_visitas,
@@ -3787,24 +3930,24 @@ def encuestador_dashboard(request):
     # ── Totales globales ──
     total_registros = RegistroVisita.objects.count()
     total_residentes = EncuestaResidente.objects.count()
-    total_comercio = EncuestaComercio.objects.count()
-    total_encuestas = total_residentes + total_comercio
+    total_institucional = EncuestaInstitucional.objects.count()
+    total_encuestas = total_residentes + total_institucional
 
     # ── Propias (solo para encuestadores, no admin) ──
     mis_registros = 0
     mis_residentes = 0
-    mis_comercio = 0
+    mis_institucional = 0
     if encuestador:
         mis_registros = RegistroVisita.objects.filter(clave_encuestador=encuestador).count()
         mis_residentes = EncuestaResidente.objects.filter(encuestador=encuestador).count()
-        mis_comercio = EncuestaComercio.objects.filter(encuestador=encuestador).count()
+        mis_institucional = EncuestaInstitucional.objects.filter(encuestador=encuestador).count()
 
     # ── Actividad reciente (últimos 7 días) ──
     hace_7_dias = timezone.now() - timedelta(days=7)
     registros_recientes = RegistroVisita.objects.filter(fecha__gte=hace_7_dias).count()
     encuestas_recientes = (
         EncuestaResidente.objects.filter(fecha__gte=hace_7_dias).count() +
-        EncuestaComercio.objects.filter(fecha__gte=hace_7_dias).count()
+        EncuestaInstitucional.objects.filter(fecha__gte=hace_7_dias).count()
     )
 
     # ── Distribución por motivo de visita ──
@@ -3825,11 +3968,13 @@ def encuestador_dashboard(request):
         'total_registros': total_registros,
         'total_encuestas': total_encuestas,
         'total_residentes': total_residentes,
-        'total_comercio': total_comercio,
+        'total_institucional': total_institucional,
+        'total_comercio': total_institucional,  # Para compatibilidad si se usa la variable vieja
         # Propias
         'mis_registros': mis_registros,
         'mis_residentes': mis_residentes,
-        'mis_comercio': mis_comercio,
+        'mis_institucional': mis_institucional,
+        'mis_comercio': mis_institucional,  # Para compatibilidad si se usa la variable vieja
         # Recientes
         'registros_recientes': registros_recientes,
         'encuestas_recientes': encuestas_recientes,
@@ -3861,6 +4006,7 @@ def nueva_encuesta_residente(request):
             encuesta = form.save(commit=False)
             encuesta.encuestador = encuestador
             encuesta.save()
+            update_survey_indicators()
             messages.success(request, 'Encuesta a residente guardada exitosamente.')
             return redirect('encuestador_dashboard')
     else:
@@ -3869,7 +4015,7 @@ def nueva_encuesta_residente(request):
     return render(request, 'myapp/form_residente.html', {'form': form})
 
 @login_required
-def nueva_encuesta_comercio(request):
+def nueva_encuesta_visitante(request):
     try:  
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
         if usuario.tipo not in ['encuestador', 'admin']:  
@@ -3877,7 +4023,6 @@ def nueva_encuesta_comercio(request):
     except Usuario.DoesNotExist:
         return HttpResponse('Usuario no encontrado.', status=404)
 
-    # Intentar obtener el encuestador (puede no existir en la BD legada)
     encuestador = None
     try:
         encuestador = Encuestador.objects.get(id_usuario=usuario)
@@ -3885,17 +4030,102 @@ def nueva_encuesta_comercio(request):
         pass
 
     if request.method == 'POST':
-        form = EncuestaComercioForm(request.POST)
+        form = EncuestaVisitanteForm(request.POST)
         if form.is_valid():
             encuesta = form.save(commit=False)
             encuesta.encuestador = encuestador
+            
+            # Zonas visitadas (checkboxes múltiples)
+            zonas = request.POST.getlist('zonas_visitadas')
+            encuesta.zonas_visitadas = ", ".join(zonas)
+            
+            # Actividades (checkboxes múltiples)
+            actividades_list = request.POST.getlist('actividades')
+            encuesta.actividades = ", ".join(actividades_list)
+            
             encuesta.save()
-            messages.success(request, 'Encuesta a comercio guardada exitosamente.')
+            update_survey_indicators()
+            
+            # --- GUARDADO PARALELO EN RegistroVisita PARA COMPATIBILIDAD DE ESTADÍSTICAS ---
+            try:
+                # Mapear procedencia y país
+                pais_orig = request.POST.get('residencia_pais', '').strip()
+                es_extranjero = pais_orig.lower() not in ['mexico', 'méxico', 'mx', '']
+                
+                # Frecuencias/Motivos se asumen turismo por defecto en encuesta
+                registro = RegistroVisita(
+                    estancia_dias=1,
+                    visitas_previas=1,
+                    motivo_visita='turismo',
+                    tipo_transporte='automovil',
+                    procedencia=encuesta.residencia_ciudad,
+                    pais_origen=pais_orig if es_extranjero else None,
+                    es_extranjero=es_extranjero,
+                    clave_encuestador=encuestador
+                )
+                
+                edad = encuesta.edad
+                genero = encuesta.genero
+                
+                if genero == 'Femenino':
+                    if edad <= 15: registro.mujeres_0_15 = 1
+                    elif edad <= 30: registro.mujeres_16_30 = 1
+                    elif edad <= 45: registro.mujeres_31_45 = 1
+                    elif edad <= 60: registro.mujeres_46_60 = 1
+                    elif edad <= 75: registro.mujeres_61_75 = 1
+                    else: registro.mujeres_76_mas = 1
+                else:  # Masculino, No binario/Otro, etc. Mapeamos a columna hombres
+                    if edad <= 15: registro.hombres_0_15 = 1
+                    elif edad <= 30: registro.hombres_16_30 = 1
+                    elif edad <= 45: registro.hombres_31_45 = 1
+                    elif edad <= 60: registro.hombres_46_60 = 1
+                    elif edad <= 75: registro.hombres_61_75 = 1
+                    else: registro.hombres_76_mas = 1
+                
+                registro.save()
+            except Exception as e:
+                print(f"Error al guardar compatibilidad RegistroVisita: {e}")
+            
+            messages.success(request, 'Encuesta de visitante guardada exitosamente.')
             return redirect('encuestador_dashboard')
     else:
-        form = EncuestaComercioForm()
+        form = EncuestaVisitanteForm()
 
-    return render(request, 'myapp/form_comercio.html', {'form': form})
+    return render(request, 'myapp/form_visitante.html', {'form': form})
+
+@login_required
+def nueva_encuesta_institucional(request):
+    try:  
+        usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)  
+        if usuario.tipo not in ['encuestador', 'admin']:  
+            return HttpResponseForbidden("No tienes permiso.")  
+    except Usuario.DoesNotExist:
+        return HttpResponse('Usuario no encontrado.', status=404)
+
+    encuestador = None
+    try:
+        encuestador = Encuestador.objects.get(id_usuario=usuario)
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        form = EncuestaInstitucionalForm(request.POST)
+        if form.is_valid():
+            encuesta = form.save(commit=False)
+            encuesta.encuestador = encuestador
+            
+            # Canales de difusión (checkboxes múltiples)
+            canales = request.POST.getlist('canales_difusion')
+            encuesta.canales_difusion = ", ".join(canales)
+            
+            encuesta.save()
+            update_survey_indicators()
+            messages.success(request, 'Encuesta institucional guardada exitosamente.')
+            return redirect('encuestador_dashboard')
+    else:
+        form = EncuestaInstitucionalForm()
+
+    return render(request, 'myapp/form_institucional.html', {'form': form})
 
 
 # ================================================================

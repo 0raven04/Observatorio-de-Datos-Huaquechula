@@ -12,66 +12,91 @@
                 </a>
             </div>
             
-            <form method="POST">
+            <form method="POST" id="residenteForm">
                 {% csrf_token %}
                 
                 <h2 class="mb-4" style="color: #27ae60; border-bottom: 2px solid #27ae60; pb-2; font-weight: 800;">
-                    <i class="fas fa-home me-2"></i>Nueva Encuesta: Residente
+                    <i class="fas fa-home me-2"></i>Encuesta: Residente Local
                 </h2>
                 
-                <h4 class="mb-3 mt-4" style="color: var(--color-gris-oscuro); font-weight: 600;">Datos Demográficos</h4>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Edad</label>
-                        {{ form.edad }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Género</label>
-                        {{ form.genero }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Barrio / Colonia</label>
-                        {{ form.barrio_colonia }}
-                    </div>
-                </div>
+                <p class="text-muted mb-4 small">
+                    <strong>Dirigido a:</strong> Residentes de la cabecera municipal y localidades de Huaquechula.<br>
+                    <strong>Objetivo:</strong> Evaluar el impacto de las festividades tradicionales en la población, así como su nivel de inclusión en el desarrollo del Turismo de Base Comunitaria (TBC).
+                </p>
 
-                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">Seguridad</h4>
-                <div class="row g-3 mb-4">
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.confianza_policia.label }}</label>
-                        {{ form.confianza_policia }}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.percepcion_inseguridad.label }}</label>
-                        {{ form.percepcion_inseguridad }}
-                    </div>
-                </div>
-
-                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">Tradiciones y Patrimonio</h4>
-                <div class="row g-3 mb-4">
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.tension_festividades.label }}</label>
+                <!-- Bloque A: Eje de Tradición y Patrimonio -->
+                <div class="card border-0 bg-light p-3 mb-4" style="border-radius: 10px;">
+                    <h5 class="fw-bold mb-3" style="color: #27ae60;"><i class="fas fa-landmark me-2"></i>Bloque A: Eje de Tradición y Patrimonio</h5>
+                    <p class="text-muted small">Este bloque mide las tensiones y los esfuerzos de preservación de festividades como los Altares Monumentales de Día de Muertos o la Santa Cruz.</p>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">1. Durante las principales festividades tradicionales del municipio, ¿qué tanto considera que la afluencia de visitantes altera negativamente su rutina diaria (tráfico, ruido, aglomeraciones)?</label>
                         {{ form.tension_festividades }}
+                        {% if form.tension_festividades.errors %}
+                            <div class="text-danger small">{{ form.tension_festividades.errors }}</div>
+                        {% endif %}
                     </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.acceso_servicios_festividades.label }}</label>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">2. Durante las temporadas festivas, ¿cómo califica el acceso y la disponibilidad de los servicios públicos (agua potable, recolección de basura, seguridad, estacionamiento) para los que viven aquí?</label>
                         {{ form.acceso_servicios_festividades }}
+                        {% if form.acceso_servicios_festividades.errors %}
+                            <div class="text-danger small">{{ form.acceso_servicios_festividades.errors }}</div>
+                        {% endif %}
                     </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.perdida_tradicion.label }}</label>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">3. ¿Considera que la llegada del turismo ha provocado cambios que desvirtúan u alteran el significado religioso, cultural o simbólico original de nuestras tradiciones?</label>
                         {{ form.perdida_tradicion }}
+                        {% if form.perdida_tradicion.errors %}
+                            <div class="text-danger small">{{ form.perdida_tradicion.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">4. ¿Participa usted de forma activa en actividades familiares o comunitarias de preservación, como la elaboración de artesanías, herencia de saberes de cocina tradicional o la instalación de los altares monumentales?</label>
+                        {{ form.participacion_preservacion }}
+                        {% if form.participacion_preservacion.errors %}
+                            <div class="text-danger small">{{ form.participacion_preservacion.errors }}</div>
+                        {% endif %}
                     </div>
                 </div>
 
-                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">Medio Ambiente</h4>
-                <div class="row g-3 mb-4">
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.calidad_aire.label }}</label>
-                        {{ form.calidad_aire }}
+                <!-- Bloque B: Eje de Turismo de Base Comunitaria (TBC) -->
+                <div class="card border-0 bg-light p-3 mb-4" style="border-radius: 10px;">
+                    <h5 class="fw-bold mb-3" style="color: #27ae60;"><i class="fas fa-users me-2"></i>Bloque B: Eje de Turismo de Base Comunitaria (TBC)</h5>
+                    <p class="text-muted small">Este bloque evalúa si la comunidad tiene el protagonismo real en la planificación y los beneficios de la actividad.</p>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">5. ¿Ha participado o ha sido convocado a reuniones ejidales, vecinales o comités locales para decidir cómo debe gestionarse el turismo en su localidad?</label>
+                        {{ form.participacion_decisiones }}
+                        {% if form.participacion_decisiones.errors %}
+                            <div class="text-danger small">{{ form.participacion_decisiones.errors }}</div>
+                        {% endif %}
                     </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">{{ form.gestion_residuos.label }}</label>
-                        {{ form.gestion_residuos }}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">6. ¿Ha recibido capacitación, talleres o información clara por parte de instituciones locales acerca de cómo emprender o atender al turismo de manera responsable?</label>
+                        {{ form.capacitacion_turistica }}
+                        {% if form.capacitacion_turistica.errors %}
+                            <div class="text-danger small">{{ form.capacitacion_turistica.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">7. ¿Su hogar percibe un beneficio económico o social directo derivado de algún proyecto o emprendimiento turístico local (venta de alimentos tradicionales, artesanías de barro policromado, ceras, etc.)?</label>
+                        {{ form.beneficio_economico }}
+                        {% if form.beneficio_economico.errors %}
+                            <div class="text-danger small">{{ form.beneficio_economico.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">8. En su hogar o entorno cercano, ¿las generaciones más jóvenes (niños y jóvenes) muestran interés y están aprendiendo activamente los saberes, técnicas y significados de nuestras tradiciones (como la elaboración de altares, artesanías o cocina tradicional)?</label>
+                        {{ form.interes_jovenes }}
+                        {% if form.interes_jovenes.errors %}
+                            <div class="text-danger small">{{ form.interes_jovenes.errors }}</div>
+                        {% endif %}
                     </div>
                 </div>
 

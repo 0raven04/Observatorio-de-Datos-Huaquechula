@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "ObservatorioMovil",
-    "slug": "ObservatorioMovil",
+    "name": "Observatorio Huaquechula",
+    "slug": "observatorio-huaquechula",
+    "version": "1.0.0",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,24 +10,34 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#EDEBE3"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.observatorio.huaquechula"
     },
     "android": {
+      "package": "com.observatorio.huaquechula",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#EDEBE3",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": []
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fb32f6d0-9e97-4f81-9fd9-915b35df01b8"
+      }
+    },
+    "owner": "aetherexpo4060"
   }
 }

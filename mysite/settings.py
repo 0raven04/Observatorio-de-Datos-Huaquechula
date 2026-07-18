@@ -48,7 +48,7 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 # Hosts: locales + el dominio de Azure inyectado por variable de entorno
 _allowed_env = os.environ.get('ALLOWED_HOSTS', '')
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2'] + \
+ALLOWED_HOSTS = ['*'] + \
     [h.strip() for h in _allowed_env.split(',') if h.strip()]
 
 # CSRF: necesario para que los formularios funcionen desde el dominio de Azure

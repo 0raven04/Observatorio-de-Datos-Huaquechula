@@ -278,9 +278,9 @@
         <div class="kpi-label">Encuestas a residentes</div>
     </div>
     <div class="kpi-card">
-        <div class="kpi-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;"><i class="fas fa-store"></i></div>
-        <div class="kpi-value">{{ total_comercio }}</div>
-        <div class="kpi-label">Encuestas a comercios</div>
+        <div class="kpi-icon" style="background:rgba(52,73,94,0.1); color:#34495e;"><i class="fas fa-university"></i></div>
+        <div class="kpi-value">{{ total_institucional }}</div>
+        <div class="kpi-label">Encuestas institucionales</div>
     </div>
 </div>
 
@@ -298,10 +298,10 @@
         <div class="kpi-value" style="color:#28a745;">{{ mis_residentes }}</div>
         <div class="kpi-label">Encuestas a residentes hechas por mí</div>
     </div>
-    <div class="kpi-card" style="border-color:rgba(255,193,7,0.3);">
-        <div class="kpi-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;"><i class="fas fa-store"></i></div>
-        <div class="kpi-value" style="color:#ffc107;">{{ mis_comercio }}</div>
-        <div class="kpi-label">Encuestas a comercios hechas por mí</div>
+    <div class="kpi-card" style="border-color:rgba(52,73,94,0.3);">
+        <div class="kpi-icon" style="background:rgba(52,73,94,0.1); color:#34495e;"><i class="fas fa-university"></i></div>
+        <div class="kpi-value" style="color:#34495e;">{{ mis_institucional }}</div>
+        <div class="kpi-label">Encuestas institucionales hechas por mí</div>
     </div>
 </div>
 {% endif %}
@@ -333,7 +333,7 @@
     <!-- Acciones rápidas -->
     <div class="panel">
         <div class="panel-title"><i class="fas fa-bolt" style="color:#ffc107;"></i>Acciones Rápidas</div>
-        <a href="{% url 'formulario' %}" class="action-btn">
+        <a href="{% url 'nueva_encuesta_visitante' %}" class="action-btn">
             <div class="ab-icon" style="background:rgba(0,123,255,0.1); color:#007bff;"><i class="fas fa-plus"></i></div>
             <span>Nueva Encuesta de Visita</span>
         </a>
@@ -341,9 +341,9 @@
             <div class="ab-icon" style="background:rgba(40,167,69,0.1); color:#28a745;"><i class="fas fa-house-user"></i></div>
             <span>Nueva Encuesta Residente</span>
         </a>
-        <a href="{% url 'nueva_encuesta_comercio' %}" class="action-btn">
-            <div class="ab-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;"><i class="fas fa-store"></i></div>
-            <span>Nueva Encuesta Comercio</span>
+        <a href="{% url 'nueva_encuesta_institucional' %}" class="action-btn">
+            <div class="ab-icon" style="background:rgba(52,73,94,0.1); color:#34495e;"><i class="fas fa-university"></i></div>
+            <span>Nueva Encuesta Institucional</span>
         </a>
         <a href="{% url 'lista_encuestas' %}" class="action-btn">
             <div class="ab-icon" style="background:rgba(139,92,246,0.1); color:#8b5cf6;"><i class="fas fa-poll-h"></i></div>

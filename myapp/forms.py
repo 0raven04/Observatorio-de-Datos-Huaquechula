@@ -1,5 +1,5 @@
 from django import forms
-from .models import RegistroVisita, EncuestaResidente, EncuestaComercio 
+from .models import RegistroVisita, EncuestaResidente, EncuestaComercio, EncuestaVisitante, EncuestaInstitucional
 from django.forms import inlineformset_factory
 
 class RegistroVisitaForm(forms.ModelForm):
@@ -212,6 +212,39 @@ class EncuestaResidenteForm(forms.ModelForm):
             'perdida_tradicion': forms.Select(attrs={'class': 'form-select'}),
             'calidad_aire': forms.Select(attrs={'class': 'form-select'}),
             'gestion_residuos': forms.Select(attrs={'class': 'form-select'}),
+            'participacion_preservacion': forms.Select(attrs={'class': 'form-select'}),
+            'participacion_decisiones': forms.Select(attrs={'class': 'form-select'}),
+            'capacitacion_turistica': forms.Select(attrs={'class': 'form-select'}),
+            'beneficio_economico': forms.Select(attrs={'class': 'form-select'}),
+            'interes_jovenes': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+class EncuestaVisitanteForm(forms.ModelForm):
+    class Meta:
+        model = EncuestaVisitante
+        exclude = ['encuestador', 'fecha', 'zonas_visitadas', 'actividades']
+        widgets = {
+            'genero': forms.Select(attrs={'class': 'form-select'}),
+            'edad': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 120}),
+            'viaja_con': forms.Select(attrs={'class': 'form-select'}),
+            'residencia_ciudad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ciudad'}),
+            'residencia_estado': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Estado'}),
+            'residencia_pais': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'País'}),
+            'satisfaccion': forms.Select(attrs={'class': 'form-select'}),
+            'lo_que_mas_gusto': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Cuéntanos qué fue lo que más te gustó de tu visita...'}),
+        }
+
+class EncuestaInstitucionalForm(forms.ModelForm):
+    class Meta:
+        model = EncuestaInstitucional
+        exclude = ['encuestador', 'fecha', 'canales_difusion']
+        widgets = {
+            'seguimiento_salvaguardia': forms.Select(attrs={'class': 'form-select'}),
+            'visitantes_festividades': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej. 5000'}),
+            'regulacion': forms.Select(attrs={'class': 'form-select'}),
+            'gestion_tecnica': forms.Select(attrs={'class': 'form-select'}),
+            'integracion_territorial': forms.Select(attrs={'class': 'form-select'}),
+            'visitantes_anual': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej. 25000'}),
         }
 
 class EncuestaComercioForm(forms.ModelForm):
