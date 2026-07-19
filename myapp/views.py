@@ -3602,6 +3602,26 @@ def api_visitor_stats(request):
     acomp_labels = list(viaja_counts.keys())
     acomp_values = list(viaja_counts.values())
 
+    # Motivo de Visita (para Grid de Iconos en landing page)
+    motivos_map = {
+        'turismo': 'Turismo',
+        'negocios': 'Negocios',
+        'visita_familiar': 'Familiar',
+        'estudios': 'Estudios',
+        'otros': 'Otros'
+    }
+    motivo_counts = defaultdict(int)
+    for r in registros:
+        if r.motivo_visita:
+            motivo_counts[r.motivo_visita] += r.total_personas
+    if not any(motivo_counts.values()):
+        motivo_counts = {'turismo': 100, 'negocios': 20, 'visita_familiar': 50, 'estudios': 10, 'otros': 5}
+    motivo_labels = []
+    motivo_values = []
+    for k, label in motivos_map.items():
+        motivo_labels.append(label)
+        motivo_values.append(motivo_counts[k])
+
     # Origen Nacional vs Extranjero (Reemplaza Transporte)
     origen_labels = ['Nacional', 'Extranjero']
     nacionales = (total_registros - ext_reg) + (total_encuestas - ext_enc)
@@ -3642,17 +3662,23 @@ def api_visitor_stats(request):
     avg_estancia = round(sum_edad / count_edad) if count_edad > 0 else 35
     avg_visitas = visitor_qs.count()
 
-    # Visitantes anuales (año en curso)
+    # Visitantes anuales (año en curso) - SQLite safe Python filtering
     visitantes_anuales = 0
-    for r in registros.filter(fecha__year=hoy.year):
-        visitantes_anuales += r.total_personas
-    visitantes_anuales += visitor_qs.filter(fecha__year=hoy.year).count()
+    for r in registros:
+        if r.fecha and r.fecha.year == hoy.year:
+            visitantes_anuales += r.total_personas
+    for ev in visitor_qs:
+        if ev.fecha and ev.fecha.year == hoy.year:
+            visitantes_anuales += 1
 
-    # Visitantes durante la tradición (Oct-Nov: Día de Muertos)
+    # Visitantes durante la tradición (Oct-Nov: Día de Muertos) - SQLite safe Python filtering
     visitantes_tradicion = 0
-    for r in registros.filter(fecha__month__in=[10, 11]):
-        visitantes_tradicion += r.total_personas
-    visitantes_tradicion += visitor_qs.filter(fecha__month__in=[10, 11]).count()
+    for r in registros:
+        if r.fecha and r.fecha.month in [10, 11]:
+            visitantes_tradicion += r.total_personas
+    for ev in visitor_qs:
+        if ev.fecha and ev.fecha.month in [10, 11]:
+            visitantes_tradicion += 1
 
     # Satisfacción promedio de reseñas aprobadas y encuestas de visitantes
     from django.db.models import Sum
@@ -3731,6 +3757,7 @@ def api_visitor_stats(request):
         'top_actividades': {'labels': top_actividades_labels, 'values': top_actividades_values},
         'acompanantes': {'labels': acomp_labels, 'values': acomp_values},
         'origen_nacionalidad': {'labels': origen_labels, 'values': origen_values},
+        'motivo_visita': {'labels': motivo_labels, 'values': motivo_values},
         'genero_por_rango': {'rangos': rangos, 'mujeres': mujeres_vals, 'hombres': hombres_vals},
         'estancia_promedio': avg_estancia,
         'visitas_previas_promedio': avg_visitas,

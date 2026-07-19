@@ -376,3 +376,8 @@ body{
         padding: 15px;
         margin-bottom: 20px;
     }
+
+    /* Resetear el gap de flexbox incorrecto de base.css para que funcione la grilla de Bootstrap */
+    .row {
+        gap: 0 !important;
+    }

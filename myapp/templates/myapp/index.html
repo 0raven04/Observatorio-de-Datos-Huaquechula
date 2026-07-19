@@ -284,6 +284,7 @@
 
     /* ── 2b. Visitas por ciudad (barras) ── */
     const procEl = document.getElementById('proc-bars');
+    const procs = d.top_procedencias;
     if (procs.labels.length) {
         procs.labels.forEach((lbl, i) => {
             const pct = Math.round(procs.values[i] / maxZ * 100);
