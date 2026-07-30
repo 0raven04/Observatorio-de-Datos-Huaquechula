@@ -16,14 +16,16 @@ from .models import (
     Usuario, Encuestador,
     RegistroVisita,
     Eje,
-    EncuestaResidente, EncuestaComercio,
+    EncuestaVisitante, EncuestaResidente, EncuestaInstitucional, EncuestaComercio,
     Encuesta, Pregunta, OpcionPregunta, RespuestaEncuesta, RespuestaPregunta
 )
 from .serializers import (
     UsuarioSerializer,
     RegistroVisitaSerializer,
     EjeSerializer,
+    EncuestaVisitanteSerializer,
     EncuestaResidenteSerializer,
+    EncuestaInstitucionalSerializer,
     EncuestaComercioSerializer,
     EncuestaCreadaSerializer,
 )
@@ -51,18 +53,18 @@ class LoginMobileView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Autenticar contra la tabla Usuario personalizada
+        # Autenticar contra la tabla Usuario personalizada (búsqueda insensible a mayúsculas)
         try:
-            usuario = Usuario.objects.get(nombre_usuario=username)
+            usuario = Usuario.objects.get(nombre_usuario__iexact=username)
         except Usuario.DoesNotExist:
             return Response(
-                {'error': 'Credenciales incorrectas'},
+                {'error': 'Credenciales incorrectas (Usuario no encontrado)'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
         if not check_password(password, usuario.password):
             return Response(
-                {'error': 'Credenciales incorrectas'},
+                {'error': 'Credenciales incorrectas (Contraseña no válida)'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -102,13 +104,7 @@ def _get_encuestador(request):
     if usuario.tipo not in ['encuestador', 'admin']:
         raise PermissionDenied("Solo encuestadores y administradores pueden gestionar visitas.")
 
-    if usuario.tipo == 'encuestador':
-        encuestador = Encuestador.objects.get(id_usuario=usuario)
-    else:
-        encuestador, _ = Encuestador.objects.get_or_create(
-            clave_encuestador=f'ADMIN_{usuario.id_usuario}',
-            defaults={'id_usuario': usuario}
-        )
+    encuestador, _ = Encuestador.objects.get_or_create(id_usuario=usuario)
     return encuestador
 
 
@@ -162,6 +158,48 @@ class VisitasListCreateView(APIView):
 
         data = request.data.copy()
         data['clave_encuestador'] = encuestador.clave_encuestador
+
+        # Mapear motivos y transportes a los choices válidos del modelo
+        motivo_map = {
+            'turismo': 'turismo', 'trabajo': 'negocios', 'negocios': 'negocios',
+            'estudios': 'estudios', 'visita familiar': 'visita_familiar',
+            'visita_familiar': 'visita_familiar', 'evento': 'otros', 'otro': 'otros',
+            'otros': 'otros', 'cultura / tradición': 'turismo',
+        }
+        transporte_map = {
+            'automovil': 'automovil', 'automóvil': 'automovil', 'autobus': 'autobus',
+            'autobús': 'autobus', 'avion': 'avion', 'avión': 'avion', 'tren': 'tren',
+            'otro': 'otros', 'otros': 'otros',
+        }
+
+        motivo_raw = str(data.get('motivo_visita', '')).lower().strip()
+        data['motivo_visita'] = motivo_map.get(motivo_raw, 'turismo')
+
+        transporte_raw = str(data.get('tipo_transporte', '')).lower().strip()
+        data['tipo_transporte'] = transporte_map.get(transporte_raw, 'automovil')
+
+        if 'visitas_previas' not in data and 'numero_visitas' in data:
+            data['visitas_previas'] = data['numero_visitas']
+
+        personas_input = data.get('personas_input', [])
+        if personas_input:
+            for p in personas_input:
+                edad = p.get('edad', 0)
+                sexo = str(p.get('sexo', '')).lower()
+                prefix = 'mujeres' if sexo in ['femenino', 'f', 'mujer', 'mujeres'] else 'hombres'
+                if edad <= 15:
+                    key = f'{prefix}_0_15'
+                elif edad <= 30:
+                    key = f'{prefix}_16_30'
+                elif edad <= 45:
+                    key = f'{prefix}_31_45'
+                elif edad <= 60:
+                    key = f'{prefix}_46_60'
+                elif edad <= 75:
+                    key = f'{prefix}_61_75'
+                else:
+                    key = f'{prefix}_76_mas'
+                data[key] = data.get(key, 0) + 1
 
         serializer = RegistroVisitaSerializer(data=data)
         if serializer.is_valid():
@@ -274,37 +312,50 @@ class DashboardSummaryView(APIView):
 # ─── Encuestas ───────────────────────────────────────────────────────────────
 
 def _get_encuestador_safe(request):
-    """Helper que retorna el Encuestador o None si no existe en la BD legáda."""
+    """Helper que retorna el Encuestador o None si no existe en la BD legada."""
     try:
         usuario = Usuario.objects.get(nombre_usuario=request.user.nombre_usuario)
         if usuario.tipo not in ['encuestador', 'admin']:
             raise PermissionDenied('Solo encuestadores y administradores pueden enviar encuestas.')
-        try:
-            return Encuestador.objects.get(id_usuario=usuario)
-        except Exception:
-            return None
+        encuestador, _ = Encuestador.objects.get_or_create(id_usuario=usuario)
+        return encuestador
     except Usuario.DoesNotExist:
         raise PermissionDenied('Usuario no encontrado.')
+
+
+class EncuestaVisitanteView(APIView):
+    """
+    GET  /api/mobile/encuestas/visitante/  → Lista encuestas de visitante
+    POST /api/mobile/encuestas/visitante/  → Registra Encuesta: Perfil del Visitante
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        encuestas = EncuestaVisitante.objects.all().order_by('-fecha')
+        serializer = EncuestaVisitanteSerializer(encuestas, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        encuestador = _get_encuestador_safe(request)
+        data = request.data.copy()
+
+        # Si zonas_visitadas o actividades vienen como listas, unirlas por comas
+        if isinstance(data.get('zonas_visitadas'), list):
+            data['zonas_visitadas'] = ', '.join(data['zonas_visitadas'])
+        if isinstance(data.get('actividades'), list):
+            data['actividades'] = ', '.join(data['actividades'])
+
+        serializer = EncuestaVisitanteSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(encuestador=encuestador)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EncuestaResidenteView(APIView):
     """
     GET  /api/mobile/encuestas/residente/  → Lista las encuestas capturadas
     POST /api/mobile/encuestas/residente/  → Crea una nueva encuesta de residente
-
-    Cuerpo POST esperado:
-    {
-        "edad": 35,
-        "genero": "Mujer",
-        "barrio_colonia": "Centro",
-        "confianza_policia": 3,
-        "percepcion_inseguridad": 4,
-        "tension_festividades": 2,
-        "acceso_servicios_festividades": 3,
-        "perdida_tradicion": 2,
-        "calidad_aire": 2,
-        "gestion_residuos": 2
-    }
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -320,6 +371,124 @@ class EncuestaResidenteView(APIView):
             serializer.save(encuestador=encuestador)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EncuestaInstitucionalView(APIView):
+    """
+    GET  /api/mobile/encuestas/institucional/  → Lista encuestas institucionales
+    POST /api/mobile/encuestas/institucional/  → Registra Encuesta: Institucional
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        encuestas = EncuestaInstitucional.objects.all().order_by('-fecha')
+        serializer = EncuestaInstitucionalSerializer(encuestas, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        encuestador = _get_encuestador_safe(request)
+        data = request.data.copy()
+
+        # Si canales_difusion viene como lista, unirlos por comas
+        if isinstance(data.get('canales_difusion'), list):
+            data['canales_difusion'] = ', '.join(data['canales_difusion'])
+
+        serializer = EncuestaInstitucionalSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(encuestador=encuestador)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MisEncuestasView(APIView):
+    """
+    GET /api/mobile/mis-encuestas/
+    Retorna la lista unificada de todas las encuestas capturadas por el usuario:
+    - Encuestas de Visitante
+    - Encuestas de Residente
+    - Encuestas Institucionales
+    - Encuestas de Comercio
+    - Respuestas a Encuestas Dinámicas
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        encuestador = _get_encuestador_safe(request)
+        usuario = request.user
+
+        resultado = []
+
+        # 1. Visitante
+        visitantes = EncuestaVisitante.objects.filter(encuestador=encuestador).order_by('-fecha') if encuestador else EncuestaVisitante.objects.all().order_by('-fecha')
+        for v in visitantes:
+            resultado.append({
+                'id': f"visitante_{v.id}",
+                'tipo': "Encuesta: Perfil del Visitante",
+                'tipo_codigo': 'visitante',
+                'icono': '🗺️',
+                'fecha': v.fecha.isoformat(),
+                'cargado_bd': True,
+                'resumen': f"Origen: {v.residencia_ciudad}, {v.residencia_estado} | Edad: {v.edad}"
+            })
+
+        # 2. Residente
+        residentes = EncuestaResidente.objects.filter(encuestador=encuestador).order_by('-fecha') if encuestador else EncuestaResidente.objects.all().order_by('-fecha')
+        for r in residentes:
+            resultado.append({
+                'id': f"residente_{r.id}",
+                'tipo': "Encuesta: Residente Local",
+                'tipo_codigo': 'residente',
+                'icono': '🏠',
+                'fecha': r.fecha.isoformat(),
+                'cargado_bd': True,
+                'resumen': f"Barrio: {r.barrio_colonia} | Edad: {r.edad}"
+            })
+
+        # 3. Institucional
+        institucionales = EncuestaInstitucional.objects.filter(encuestador=encuestador).order_by('-fecha') if encuestador else EncuestaInstitucional.objects.all().order_by('-fecha')
+        for i in institucionales:
+            resultado.append({
+                'id': f"institucional_{i.id}",
+                'tipo': "Encuesta: Institucional",
+                'tipo_codigo': 'institucional',
+                'icono': '🏛️',
+                'fecha': i.fecha.isoformat(),
+                'cargado_bd': True,
+                'resumen': f"Visitantes Festividades: {i.visitantes_festividades:,} | Anual: {i.visitantes_anual:,}"
+            })
+
+        # 4. Comercio
+        comercios = EncuestaComercio.objects.filter(encuestador=encuestador).order_by('-fecha') if encuestador else EncuestaComercio.objects.all().order_by('-fecha')
+        for c in comercios:
+            resultado.append({
+                'id': f"comercio_{c.id}",
+                'tipo': "Encuesta: Comercio",
+                'tipo_codigo': 'comercio',
+                'icono': '🏪',
+                'fecha': c.fecha.isoformat(),
+                'cargado_bd': True,
+                'resumen': f"Tipo de comercio: {c.tipo_comercio}"
+            })
+
+        # 5. Respuestas dinámicas
+        try:
+            respuestas_din = RespuestaEncuesta.objects.filter(usuario_responde=usuario).order_by('-fecha_envio')
+            for rd in respuestas_din:
+                resultado.append({
+                    'id': f"dinamica_{rd.id}",
+                    'tipo': f"Encuesta: {rd.encuesta.titulo}",
+                    'tipo_codigo': 'dinamica',
+                    'icono': '📋',
+                    'fecha': rd.fecha_envio.isoformat(),
+                    'cargado_bd': True,
+                    'resumen': f"Encuesta personalizada #{rd.encuesta.id}"
+                })
+        except Exception:
+            pass
+
+        # Ordenar por fecha descendente
+        resultado.sort(key=lambda x: x['fecha'], reverse=True)
+        return Response(resultado)
 
 
 class EncuestaComercioView(APIView):

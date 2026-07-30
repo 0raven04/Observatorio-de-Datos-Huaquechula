@@ -4,9 +4,27 @@
 import api from './api';
 
 export const encuestasService = {
+    /** GET /api/mobile/mis-encuestas/ — Lista unificada de encuestas realizadas por el usuario */
+    async getMisEncuestas() {
+        const response = await api.get('/api/mobile/mis-encuestas/');
+        return response.data;
+    },
+
+    /** POST /api/mobile/encuestas/visitante/ — Guarda encuesta de visitante */
+    async crearEncuestaVisitante(datos) {
+        const response = await api.post('/api/mobile/encuestas/visitante/', datos);
+        return response.data;
+    },
+
     /** POST /api/mobile/encuestas/residente/ — Guarda encuesta de residente */
     async crearEncuestaResidente(datos) {
         const response = await api.post('/api/mobile/encuestas/residente/', datos);
+        return response.data;
+    },
+
+    /** POST /api/mobile/encuestas/institucional/ — Guarda encuesta institucional */
+    async crearEncuestaInstitucional(datos) {
+        const response = await api.post('/api/mobile/encuestas/institucional/', datos);
         return response.data;
     },
 

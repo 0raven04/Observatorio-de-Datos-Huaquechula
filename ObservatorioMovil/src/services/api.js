@@ -26,9 +26,9 @@ import { Platform } from 'react-native';
 
 // ── Configuración — ajusta estos valores antes de compilar ────────────────────
 
-const WIFI_IP = '10.97.209.148';       // ← IP de tu PC en la red WiFi local
-const PRODUCTION_URL = 'https://envy-backhand-unhearing.ngrok-free.dev';             // ← URL de producción (ej: 'https://observatorio.com')
-const USE_PRODUCTION = true;          // ← Cambia a true cuando el servidor esté desplegado
+const WIFI_IP = '192.168.1.71';       // ← IP de tu PC en la red local
+const PRODUCTION_URL = 'https://observatorio-huaquechula.loca.lt';                   // ← URL de túnel público localtunnel
+const USE_PRODUCTION = true;          // ← Habilitado túnel público localtunnel
 
 // ── Resolución automática de la URL base ──────────────────────────────────────
 function resolveBaseURL() {
@@ -45,9 +45,12 @@ export const BASE_URL = resolveBaseURL();
 
 const api = axios.create({
     baseURL: BASE_URL,
-    timeout: 15000,
+    timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'bypass-tunnel-reminder': 'true',
+        'ngrok-skip-browser-warning': 'true',
     },
 });
 
@@ -77,6 +80,8 @@ api.interceptors.response.use(
 
                 const res = await axios.post(`${BASE_URL}/api/mobile/token/refresh/`, {
                     refresh,
+                }, {
+                    headers: { 'ngrok-skip-browser-warning': 'true', 'Accept': 'application/json' }
                 });
                 const newAccess = res.data.access;
                 await storage.setItem('access_token', newAccess);

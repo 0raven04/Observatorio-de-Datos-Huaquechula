@@ -18,6 +18,7 @@
     },
     "android": {
       "package": "com.observatorio.huaquechula",
+      "usesCleartextTraffic": true,
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#EDEBE3",

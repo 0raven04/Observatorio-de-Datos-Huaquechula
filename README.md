@@ -2,6 +2,11 @@
 
 Este repositorio contiene la aplicación del Observatorio Turístico de Huaquechula. El proyecto está contenerizado usando **Docker** y **Docker Compose** para facilitar su desarrollo, distribución e implementación.
 
+## Características Principales
+- **Dashboard Web (Django):** Visualización de datos, panel de administración y gestión de encuestas.
+- **API RESTful:** Endpoints para la sincronización segura de datos.
+- **Aplicación Móvil (React Native):** Herramienta de campo para encuestadores. Permite la recolección de tres tipos de encuestas: **Visitante, Residente e Institucional**.
+
 ## Requisitos Previos
 
 Asegúrate de tener instalados los siguientes programas en tu sistema:

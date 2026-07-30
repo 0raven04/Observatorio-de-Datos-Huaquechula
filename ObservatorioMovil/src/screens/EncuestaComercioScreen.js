@@ -84,7 +84,7 @@ export default function EncuestaComercioScreen({ navigation }) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.titulo}>Encuesta a Comercio / Artesano</Text>
+            <Text style={styles.titulo}>Encuesta Institucional / Comercio</Text>
             
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Giro Comercial</Text>

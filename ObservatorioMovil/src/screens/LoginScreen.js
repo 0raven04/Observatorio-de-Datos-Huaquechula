@@ -33,11 +33,12 @@ export default function LoginScreen() {
 
         setCargando(true);
         try {
-            await login(username.trim(), password);
+            await login(username.trim(), password.trim());
             // La navegación ocurre automáticamente via AuthContext → AppNavigator
         } catch (error) {
-            const msg = error.response?.data?.error || 'Error de conexión. Verifica el servidor.';
-            Alert.alert('Error al iniciar sesión', msg);
+            const serverMsg = error.response?.data?.error || error.response?.data?.detail;
+            const msg = serverMsg || error.message || 'Error de conexión. Verifica el servidor.';
+            Alert.alert('Error al iniciar sesión', `${msg}\n\n(Servidor: ${error.config?.baseURL || 'Desconocido'})`);
         } finally {
             setCargando(false);
         }

@@ -7,7 +7,7 @@ from .models import (
     Usuario, Encuestador,
     RegistroVisita,
     Eje, CategoriaIndicador, Indicador, Medicion,
-    EncuestaResidente, EncuestaComercio,
+    EncuestaVisitante, EncuestaResidente, EncuestaInstitucional, EncuestaComercio,
     Encuesta, Pregunta, OpcionPregunta
 )
 
@@ -75,11 +75,30 @@ class EjeSerializer(serializers.ModelSerializer):
 
 # ─── Encuestas (alimentación manual del Observatorio) ─────────────────────────
 
+class EncuestaVisitanteSerializer(serializers.ModelSerializer):
+    """
+    Serializer para Encuesta: Perfil del Visitante.
+    """
+    encuestador_clave = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = EncuestaVisitante
+        fields = [
+            'id', 'fecha', 'encuestador_clave',
+            'genero', 'edad', 'viaja_con',
+            'residencia_ciudad', 'residencia_estado', 'residencia_pais',
+            'zonas_visitadas', 'actividades',
+            'satisfaccion', 'lo_que_mas_gusto',
+        ]
+        read_only_fields = ['id', 'fecha', 'encuestador_clave']
+
+    def get_encuestador_clave(self, obj):
+        return obj.encuestador.clave_encuestador if obj.encuestador else None
+
+
 class EncuestaResidenteSerializer(serializers.ModelSerializer):
     """
     Serializer para encuestas de Residentes Locales.
-    - GET: incluye fecha y encuestador (clave).
-    - POST: acepta las respuestas; encuestador se asigna en la vista.
     """
     encuestador_clave = serializers.SerializerMethodField(read_only=True)
 
@@ -90,7 +109,27 @@ class EncuestaResidenteSerializer(serializers.ModelSerializer):
             'edad', 'genero', 'barrio_colonia',
             'confianza_policia', 'percepcion_inseguridad',
             'tension_festividades', 'acceso_servicios_festividades', 'perdida_tradicion',
-            'calidad_aire', 'gestion_residuos',
+            'participacion_preservacion', 'participacion_decisiones', 'capacitacion_turistica',
+            'beneficio_economico', 'interes_jovenes',
+        ]
+        read_only_fields = ['id', 'fecha', 'encuestador_clave']
+
+    def get_encuestador_clave(self, obj):
+        return obj.encuestador.clave_encuestador if obj.encuestador else None
+
+
+class EncuestaInstitucionalSerializer(serializers.ModelSerializer):
+    """
+    Serializer para Encuesta: Institucional / Gobernanza.
+    """
+    encuestador_clave = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = EncuestaInstitucional
+        fields = [
+            'id', 'fecha', 'encuestador_clave',
+            'seguimiento_salvaguardia', 'canales_difusion', 'visitantes_festividades',
+            'regulacion', 'gestion_tecnica', 'integracion_territorial', 'visitantes_anual',
         ]
         read_only_fields = ['id', 'fecha', 'encuestador_clave']
 

@@ -38,20 +38,20 @@ export default function SelectorEncuestasScreen({ navigation }) {
                 <Text style={styles.subtitulo}>Seleccione una opción de la lista para iniciar el levantamiento en campo.</Text>
             </View>
 
-            {/* Sección 1: Acciones Rápidas */}
-            <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+            {/* Sección 1: Encuestas Oficiales del Observatorio */}
+            <Text style={styles.sectionTitle}>Encuestas Oficiales</Text>
             <View style={styles.grid}>
-                {/* Opción Turistas */}
+                {/* Opción Visitantes */}
                 <TouchableOpacity
                     style={[styles.card, { borderLeftColor: AZUL }]}
-                    onPress={() => navigation.navigate('NuevaVisita')}
+                    onPress={() => navigation.navigate('EncuestaVisitante')}
                 >
                     <View style={[styles.iconCircle, { backgroundColor: AZUL + '22' }]}>
                         <Text style={styles.iconEmoji}>🗺️</Text>
                     </View>
                     <View style={styles.cardInfo}>
-                        <Text style={styles.cardTitle}>Turista / Visitante</Text>
-                        <Text style={styles.cardDesc}>Registro de flujo turístico y procedencia.</Text>
+                        <Text style={styles.cardTitle}>Encuesta: Perfil del Visitante</Text>
+                        <Text style={styles.cardDesc}>Origen, actividades, zonas visitadas y nivel de satisfacción.</Text>
                     </View>
                     <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
@@ -65,23 +65,23 @@ export default function SelectorEncuestasScreen({ navigation }) {
                         <Text style={styles.iconEmoji}>🏠</Text>
                     </View>
                     <View style={styles.cardInfo}>
-                        <Text style={styles.cardTitle}>Residente Local</Text>
-                        <Text style={styles.cardDesc}>Percepción de seguridad, tradiciones y ambiente.</Text>
+                        <Text style={styles.cardTitle}>Encuesta: Residente Local</Text>
+                        <Text style={styles.cardDesc}>Eje de tradición, servicios públicos y turismo comunitario (TBC).</Text>
                     </View>
                     <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
 
-                {/* Opción Comercio */}
+                {/* Opción Institucional */}
                 <TouchableOpacity
                     style={[styles.card, { borderLeftColor: NARANJA }]}
-                    onPress={() => navigation.navigate('EncuestaComercio')}
+                    onPress={() => navigation.navigate('EncuestaInstitucional')}
                 >
                     <View style={[styles.iconCircle, { backgroundColor: NARANJA + '22' }]}>
-                        <Text style={styles.iconEmoji}>🏪</Text>
+                        <Text style={styles.iconEmoji}>🏛️</Text>
                     </View>
                     <View style={styles.cardInfo}>
-                        <Text style={styles.cardTitle}>Comercio / Taller</Text>
-                        <Text style={styles.cardDesc}>Gobernanza y gestión del turismo local.</Text>
+                        <Text style={styles.cardTitle}>Encuesta: Institucional</Text>
+                        <Text style={styles.cardDesc}>Gobernanza municipal, salvaguardia del PCI y regulación.</Text>
                     </View>
                     <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
