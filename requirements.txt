@@ -35,3 +35,6 @@ drf-spectacular==0.27.2
 django-extensions
 django-storages[azure]
 python-dotenv>=1.0.0
+psycopg2-binary>=2.9.9
+dj-database-url>=2.1.0
+logtail-python>=0.3.0

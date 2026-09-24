@@ -30,6 +30,37 @@ from .serializers import (
     EncuestaCreadaSerializer,
 )
 
+import json
+import time
+import logging 
+from django.utils import timezone
+from .utils_surveys import update_survey_indicators
+
+logger = logging.getLogger(__name__)
+
+def _log_survey_telemetry(survey_type, survey_id, encuestador, indicators_recalculated, elapsed_ms, success=True, error_msg=None):
+    """Emite log estructurado en JSON para auditoría y observabilidad en Fly.io."""
+    username = "anonimo"
+    if encuestador:
+        try:
+            username = encuestador.id_usuario.nombre_usuario
+        except Exception:
+            pass
+
+    telemetry = {
+        "event": "SURVEY_INGESTION",
+        "survey_type": survey_type,
+        "survey_id": survey_id,
+        "encuestador": username,
+        "indicators_recalculated": indicators_recalculated,
+        "latency_ms": elapsed_ms,
+        "success": success,
+        "timestamp": timezone.now().isoformat()
+    }
+    if error_msg:
+        telemetry["error"] = error_msg
+    logger.info("AUDIT_TELEMETRY: %s", json.dumps(telemetry))
+
 
 # ─── Autenticación ────────────────────────────────────────────────────────────
 
@@ -336,6 +367,7 @@ class EncuestaVisitanteView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        t0 = time.time()
         encuestador = _get_encuestador_safe(request)
         data = request.data.copy()
 
@@ -347,8 +379,18 @@ class EncuestaVisitanteView(APIView):
 
         serializer = EncuestaVisitanteSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(encuestador=encuestador)
+            encuesta = serializer.save(encuestador=encuestador)
+            updated = False
+            try:
+                update_survey_indicators()
+                updated = True
+            except Exception as e:
+                logger.error(f"Error recalculando indicadores tras encuesta visitante: {e}")
+            elapsed = round((time.time() - t0) * 1000, 2)
+            _log_survey_telemetry('visitante', encuesta.id, encuestador, updated, elapsed)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elapsed = round((time.time() - t0) * 1000, 2)
+        _log_survey_telemetry('visitante', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -365,11 +407,22 @@ class EncuestaResidenteView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        t0 = time.time()
         encuestador = _get_encuestador_safe(request)
         serializer = EncuestaResidenteSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(encuestador=encuestador)
+            encuesta = serializer.save(encuestador=encuestador)
+            updated = False
+            try:
+                update_survey_indicators()
+                updated = True
+            except Exception as e:
+                logger.error(f"Error recalculando indicadores tras encuesta residente: {e}")
+            elapsed = round((time.time() - t0) * 1000, 2)
+            _log_survey_telemetry('residente', encuesta.id, encuestador, updated, elapsed)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elapsed = round((time.time() - t0) * 1000, 2)
+        _log_survey_telemetry('residente', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -386,6 +439,7 @@ class EncuestaInstitucionalView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        t0 = time.time()
         encuestador = _get_encuestador_safe(request)
         data = request.data.copy()
 
@@ -395,11 +449,20 @@ class EncuestaInstitucionalView(APIView):
 
         serializer = EncuestaInstitucionalSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(encuestador=encuestador)
+            encuesta = serializer.save(encuestador=encuestador)
+            updated = False
+            try:
+                update_survey_indicators()
+                updated = True
+            except Exception as e:
+                logger.error(f"Error recalculando indicadores tras encuesta institucional: {e}")
+            elapsed = round((time.time() - t0) * 1000, 2)
+            _log_survey_telemetry('institucional', encuesta.id, encuestador, updated, elapsed)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elapsed = round((time.time() - t0) * 1000, 2)
+        _log_survey_telemetry('institucional', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+    
 class MisEncuestasView(APIView):
     """
     GET /api/mobile/mis-encuestas/

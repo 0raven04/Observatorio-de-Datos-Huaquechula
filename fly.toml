@@ -1,0 +1,50 @@
+# fly.toml app configuration file for observatorio-huaquechula
+# Conexión a Base de Datos MySQL externa (Opción A)
+
+app = "observatorio-huaquechula"
+primary_region = "dfw"
+
+[build]
+  dockerfile = "Dockerfile.prod"
+
+[deploy]
+  # Aplica las migraciones de Django en la base de datos MySQL externa antes de activar la máquina
+  release_command = "python manage.py migrate --noinput"
+
+[env]
+  PORT = "8000"
+  PYTHONUNBUFFERED = "1"
+  # Desactiva la carga pesada del modelo local de Hugging Face en memoria para optimizar consumo en producción
+  ML_MODEL_PATH = "disabled"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+# Montaje de almacenamiento persistente para archivos generados (KMZ, fotos, documentos)
+[[mounts]]
+  source = "observatorio_media"
+  destination = "/vol/web/media"
+  initial_size = "5gb"
+
+# Health check para monitoreo y verificación de arranque
+[[http_service.checks]]
+  grace_period = "30s"
+  interval = "15s"
+  method = "GET"
+  path = "/login/"
+  timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1024mb"

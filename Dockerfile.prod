@@ -9,11 +9,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema necesarias para compilar mysqlclient
+# Dependencias del sistema necesarias para compilar mysqlclient y psycopg2
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     pkg-config \
     default-libmysqlclient-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar e instalar dependencias Python en una carpeta aislada
@@ -33,10 +34,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Instalar solo las librerías de sistema en tiempo de ejecución (no el compilador)
+# Instalar librerías de sistema en tiempo de ejecución
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-libmysqlclient-dev \
     default-mysql-client \
+    libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar los paquetes Python instalados desde el builder

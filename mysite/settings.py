@@ -130,24 +130,40 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'observatorio'),
-        'USER': os.environ.get('DB_USER', 'observatorio_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', '123456'),
-        'HOST': os.environ.get('DB_HOST', 'db'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
-        'TEST': {
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_general_ci',
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL and dj_database_url:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'observatorio'),
+            'USER': os.environ.get('DB_USER', 'observatorio_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', '123456'),
+            'HOST': os.environ.get('DB_HOST', 'db'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+            'TEST': {
+                'CHARSET': 'utf8mb4',
+                'COLLATION': 'utf8mb4_general_ci',
+            }
         }
     }
-}
+
 
 
 
@@ -349,3 +365,56 @@ DEFAULT_FROM_EMAIL  = os.environ.get(
 
 # El enlace de reseteo expira en 1 hora (3600 segundos)
 PASSWORD_RESET_TIMEOUT = 3600
+
+# =====================================================
+# LOGGING Y OBSERVABILIDAD (Consola + Better Stack Logtail)
+# =====================================================
+LOGTAIL_SOURCE_TOKEN = os.environ.get('LOGTAIL_SOURCE_TOKEN', '').strip()
+
+_handlers_list = ['console']
+_logging_handlers = {
+    'console': {
+        'class': 'logging.StreamHandler',
+        'formatter': 'standard',
+    },
+}
+
+if LOGTAIL_SOURCE_TOKEN:
+    try:
+        from logtail import LogtailHandler
+        _logging_handlers['logtail'] = {
+            'class': 'logtail.LogtailHandler',
+            'source_token': LOGTAIL_SOURCE_TOKEN,
+        }
+        _handlers_list.append('logtail')
+    except ImportError:
+        pass
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': _logging_handlers,
+    'root': {
+        'handlers': _handlers_list,
+        'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+    },
+    'loggers': {
+        'myapp': {
+            'handlers': _handlers_list,
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': _handlers_list,
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
+

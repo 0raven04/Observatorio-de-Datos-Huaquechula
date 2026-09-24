@@ -257,6 +257,29 @@
     </div>
 </div>
 
+<!-- ── Widget: Semáforo de Observabilidad y Flujo de Datos ── -->
+<div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; background: #ffffff; border: 1px solid var(--enc-border) !important;">
+    <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <span id="flow-pulse" class="spinner-grow text-success" style="width: 1.25rem; height: 1.25rem;" role="status"></span>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <h6 class="mb-0 fw-bold" id="flow-title" style="color: #333;">Canal de Datos Móvil: Sincronizado</h6>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" id="flow-badge">SALUDABLE</span>
+                </div>
+                <small class="text-muted" id="flow-detail">Comprobando última encuesta recibida...</small>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border px-3 py-2 fw-semibold" id="flow-counter">-- encuestas en PostgreSQL</span>
+            <span class="badge bg-light text-muted border px-2 py-2" id="flow-latency" title="Latencia de BD"><i class="fas fa-server me-1"></i>-- ms</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="checkSurveyFlow()" title="Verificar ahora" style="border-radius: 8px;">
+                <i class="fas fa-sync-alt" id="flow-refresh-icon"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ── Totales globales ── -->
 <p class="section-label"><i class="fas fa-globe me-1"></i>Actividad Global del Observatorio</p>
 <div class="kpi-grid">
@@ -387,5 +410,58 @@
         <p style="color:var(--enc-muted); font-size:0.85rem;">No hay registros aún.</p>
     {% endif %}
 </div>
+
+<script>
+async function checkSurveyFlow() {
+    const pulse = document.getElementById('flow-pulse');
+    const title = document.getElementById('flow-title');
+    const badge = document.getElementById('flow-badge');
+    const detail = document.getElementById('flow-detail');
+    const counter = document.getElementById('flow-counter');
+    const latency = document.getElementById('flow-latency');
+    const icon = document.getElementById('flow-refresh-icon');
+
+    if (icon) icon.classList.add('fa-spin');
+
+    try {
+        const res = await fetch('/api/monitoring/survey-flow/');
+        const data = await res.json();
+
+        counter.textContent = `${data.summary.total_encuestas} encuestas en PostgreSQL`;
+        latency.innerHTML = `<i class="fas fa-server me-1"></i>${data.database_latency_ms} ms`;
+
+        if (data.pipeline_status === 'healthy') {
+            pulse.className = 'spinner-grow text-success';
+            title.textContent = 'Canal de Datos Móvil: Sincronizado';
+            badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
+            badge.textContent = 'SALUDABLE';
+        } else {
+            pulse.className = 'spinner-grow text-warning';
+            title.textContent = 'Canal de Datos Móvil: Desfase Detectado';
+            badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle';
+            badge.textContent = 'ATENCIÓN';
+        }
+
+        if (data.latest_survey) {
+            detail.textContent = `Última encuesta: ${data.latest_survey.type} (#${data.latest_survey.id}) hace ${data.latest_survey.minutes_ago} min.`;
+        } else {
+            detail.textContent = 'Sin encuestas recientes.';
+        }
+    } catch (e) {
+        pulse.className = 'spinner-grow text-danger';
+        title.textContent = 'Canal de Datos Móvil: Sin Conexión';
+        badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+        badge.textContent = 'DESCONECTADO';
+        detail.textContent = 'No se pudo conectar con el endpoint de auditoría.';
+    } finally {
+        if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 600);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkSurveyFlow();
+    setInterval(checkSurveyFlow, 30000); // Polling ligero cada 30 segundos
+});
+</script>
 
 {% endblock %}

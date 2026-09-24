@@ -3,6 +3,7 @@ from .views import registro_visita
 from myapp.views import backup_database
 from . import views
 from . import views_encuestas
+from . import views_monitoring
 from .views import obtener_registro, editar_registro, eliminar_seleccionados
 from django.conf import settings
 from django.conf.urls.static import static
@@ -146,5 +147,12 @@ urlpatterns = [
     path('encuestas/responder/<int:id_encuesta>/', views_encuestas.responder_encuesta, name='responder_encuesta'),
     path('encuestas/<int:id_encuesta>/respuestas/', views_encuestas.ver_respuestas, name='ver_respuestas'),
     path('encuestas/respuestas/eliminar/<int:id_respuesta>/', views_encuestas.eliminar_respuesta, name='eliminar_respuesta'),
+
+    # =====================================================
+    # Observabilidad y Auditoría de Flujo de Datos
+    # =====================================================
+    path('api/health/', views_monitoring.api_health, name='api_health'),
+    path('api/monitoring/survey-flow/', views_monitoring.api_survey_flow_status, name='api_survey_flow_status'),
+    path('api/monitoring/test-alert/', views_monitoring.test_whatsapp_alert, name='api_test_whatsapp_alert'),
 ]
 

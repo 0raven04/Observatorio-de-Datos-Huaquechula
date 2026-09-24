@@ -27,8 +27,8 @@ import { Platform } from 'react-native';
 // ── Configuración — ajusta estos valores antes de compilar ────────────────────
 
 const WIFI_IP = '192.168.1.71';       // ← IP de tu PC en la red local
-const PRODUCTION_URL = 'https://observatorio-huaquechula.loca.lt';                   // ← URL de túnel público localtunnel
-const USE_PRODUCTION = true;          // ← Habilitado túnel público localtunnel
+const PRODUCTION_URL = 'https://observatorio-huaquechula.fly.dev';                   // ← URL de producción Fly.io
+const USE_PRODUCTION = true;
 
 // ── Resolución automática de la URL base ──────────────────────────────────────
 function resolveBaseURL() {

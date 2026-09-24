@@ -180,9 +180,34 @@ def update_survey_indicators():
 def _update_medicion(indicator_id, period, value):
     """
     Función auxiliar para crear o actualizar la medición de un indicador.
+    Si el indicador no existe, se aprovisiona con metadatos base para garantizar
+    la resiliencia del cálculo estadístico.
     """
     try:
-        indicador = Indicador.objects.get(id=indicator_id)
+        indicador = Indicador.objects.filter(id=indicator_id).first()
+        if not indicador:
+            meta_fallbacks = {
+                57: ("Índice de satisfacción de visitantes", "Escala 1 a 5", 4),
+                55: ("Afluencia durante la tradición", "Visitantes", 3),
+                56: ("Visitantes anuales", "Personas", 3),
+                34: ("Tensión sobre la población local", "Escala 1 a 3", 13),
+            }
+            if indicator_id in meta_fallbacks:
+                nom, uni, cid = meta_fallbacks[indicator_id]
+                from .models import CategoriaIndicador
+                cat = CategoriaIndicador.objects.filter(id=cid).first() or CategoriaIndicador.objects.first()
+                indicador = Indicador.objects.create(
+                    id=indicator_id,
+                    categoria=cat,
+                    nombre=nom,
+                    unidad_medida=uni,
+                    descripcion=f"Indicador derivado de encuestas ({nom})"
+                )
+
+        if not indicador:
+            print(f"Aviso: Indicador ID {indicator_id} no encontrado ni configurable.")
+            return
+
         medicion, created = Medicion.objects.update_or_create(
             indicador=indicador,
             periodo=period,
@@ -190,7 +215,6 @@ def _update_medicion(indicator_id, period, value):
         )
         status = "creada" if created else "actualizada"
         print(f"Medición {status} para Indicador ID {indicator_id} ({period}): {value}")
-    except Indicador.DoesNotExist:
-        print(f"Error: No se encontró el indicador con ID {indicator_id}")
     except Exception as e:
         print(f"Error al actualizar medición para Indicador {indicator_id}: {e}")
+
