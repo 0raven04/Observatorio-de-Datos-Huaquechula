@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { encuestasService } from '../services/encuestasService';
+import { useAuth } from '../context/AuthContext';
 
 const AZUL = '#3a6073'; // Azul pizarra (apagado)
 const VERDE = '#7d8c77'; // Verde musgo/sage (apagado)
@@ -9,8 +10,30 @@ const NARANJA = '#c4b897'; // Ocre/arena oscuro (apagado)
 const MORADO = '#4A4A4A'; // Gris oscuro institucional
 
 export default function SelectorEncuestasScreen({ navigation }) {
+    const { usuario, logout } = useAuth();
     const [encuestas, setEncuestas] = useState([]);
     const [cargando, setCargando] = useState(true);
+
+    const handleCerrarSesion = () => {
+        Alert.alert(
+            'Cerrar sesión',
+            '¿Estás seguro de que deseas salir de tu cuenta?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Cerrar sesión',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await logout();
+                        } catch (e) {
+                            console.error('Error cerrando sesión:', e);
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
     const cargarEncuestas = useCallback(async () => {
         try {
@@ -33,6 +56,26 @@ export default function SelectorEncuestasScreen({ navigation }) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            {/* Barra de usuario y cierre de sesión */}
+            <View style={styles.userCard}>
+                <View style={styles.userCardLeft}>
+                    <View style={styles.userAvatar}>
+                        <Text style={{ fontSize: 18 }}>👤</Text>
+                    </View>
+                    <View>
+                        <Text style={styles.userCardName}>
+                            {usuario?.nombre ? `${usuario.nombre} ${usuario.ap || ''}` : usuario?.nombre_usuario || 'Encuestador'}
+                        </Text>
+                        <Text style={styles.userCardSub}>
+                            Usuario: @{usuario?.nombre_usuario || 'encuestador'}
+                        </Text>
+                    </View>
+                </View>
+                <TouchableOpacity style={styles.btnLogoutSmall} onPress={handleCerrarSesion}>
+                    <Text style={styles.btnLogoutSmallText}>Cerrar sesión</Text>
+                </TouchableOpacity>
+            </View>
+
             <View style={styles.header}>
                 <Text style={styles.titulo}>Portal del Encuestador</Text>
                 <Text style={styles.subtitulo}>Seleccione una opción de la lista para iniciar el levantamiento en campo.</Text>
@@ -177,5 +220,53 @@ const styles = StyleSheet.create({
         color: '#7f8c8d',
         textAlign: 'center',
         lineHeight: 20,
+    },
+    userCard: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        elevation: 1,
+    },
+    userCardLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    userAvatar: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: '#edf2f7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    userCardName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#2d3748',
+    },
+    userCardSub: {
+        fontSize: 11,
+        color: '#718096',
+    },
+    btnLogoutSmall: {
+        backgroundColor: '#fff5f5',
+        borderWidth: 1,
+        borderColor: '#feb2b2',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    btnLogoutSmallText: {
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#e53e3e',
     },
 });

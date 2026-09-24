@@ -1047,8 +1047,16 @@ class EncuestaResidente(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     encuestador = models.ForeignKey(Encuestador, on_delete=models.SET_NULL, null=True, blank=True)
     edad = models.PositiveSmallIntegerField(null=True, blank=True)
-    genero_choices = [('Hombre', 'Hombre'), ('Mujer', 'Mujer'), ('Otro', 'Otro')]
-    genero = models.CharField(max_length=15, choices=genero_choices, null=True, blank=True)
+    genero_choices = [
+        ('Hombre', 'Hombre'), 
+        ('Mujer', 'Mujer'), 
+        ('Otro', 'Otro'),
+        ('Femenino', 'Femenino'),
+        ('Masculino', 'Masculino'),
+        ('No binario / Otro', 'No binario / Otro'),
+        ('Prefiero no decirlo', 'Prefiero no decirlo')
+    ]
+    genero = models.CharField(max_length=30, choices=genero_choices, null=True, blank=True)
     barrio_colonia = models.CharField(max_length=100, null=True, blank=True)
     
     # Seguridad (opcionales por compatibilidad con API/Resumen)

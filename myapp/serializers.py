@@ -98,7 +98,8 @@ class EncuestaVisitanteSerializer(serializers.ModelSerializer):
 
 class EncuestaResidenteSerializer(serializers.ModelSerializer):
     """
-    Serializer para encuestas de Residentes Locales.
+    Serializer para encuestas de Residentes Locales con normalización resiliente
+    de opciones enviadas desde clientes móviles y web.
     """
     encuestador_clave = serializers.SerializerMethodField(read_only=True)
 
@@ -114,8 +115,72 @@ class EncuestaResidenteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'fecha', 'encuestador_clave']
 
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+
+        # Normalizar género
+        g = str(data.get('genero', '')).strip().capitalize()
+        if g in ['Femenino', 'Mujer']:
+            data['genero'] = 'Mujer'
+        elif g in ['Masculino', 'Hombre']:
+            data['genero'] = 'Hombre'
+        elif g in ['Otro', 'No binario / otro']:
+            data['genero'] = 'Otro'
+
+        # Normalizar enteros
+        for int_field in ['tension_festividades', 'acceso_servicios_festividades', 'perdida_tradicion', 'confianza_policia', 'percepcion_inseguridad', 'edad']:
+            if int_field in data and data[int_field] not in [None, '']:
+                try:
+                    data[int_field] = int(data[int_field])
+                except (ValueError, TypeError):
+                    pass
+
+        # Mapeos de compatibilidad si vienen opciones alternativas desde la app móvil
+        pres_map = {
+            'si': 'activa', 'activa': 'activa',
+            'eventual': 'apoyo', 'apoyo': 'apoyo',
+            'no': 'ninguna', 'ninguna': 'ninguna'
+        }
+        if 'participacion_preservacion' in data and data['participacion_preservacion'] in pres_map:
+            data['participacion_preservacion'] = pres_map[data['participacion_preservacion']]
+
+        dec_map = {
+            'si': 'regular', 'regular': 'regular',
+            'interesado': 'no_toman_cuenta', 'no_toman_cuenta': 'no_toman_cuenta',
+            'no': 'nunca', 'nunca': 'nunca'
+        }
+        if 'participacion_decisiones' in data and data['participacion_decisiones'] in dec_map:
+            data['participacion_decisiones'] = dec_map[data['participacion_decisiones']]
+
+        cap_map = {
+            'si': 'continua', 'continua': 'continua',
+            'proceso': 'aislada', 'aislada': 'aislada',
+            'no': 'ninguna', 'ninguna': 'ninguna'
+        }
+        if 'capacitacion_turistica' in data and data['capacitacion_turistica'] in cap_map:
+            data['capacitacion_turistica'] = cap_map[data['capacitacion_turistica']]
+
+        ben_map = {
+            'si': 'principal', 'principal': 'principal',
+            'indirecto': 'complementaria', 'complementaria': 'complementaria',
+            'no': 'ninguno', 'ninguno': 'ninguno'
+        }
+        if 'beneficio_economico' in data and data['beneficio_economico'] in ben_map:
+            data['beneficio_economico'] = ben_map[data['beneficio_economico']]
+
+        jov_map = {
+            'alto': 'activa', 'activa': 'activa',
+            'medio': 'parcialmente', 'parcialmente': 'parcialmente',
+            'bajo': 'perdiendo', 'perdiendo': 'perdiendo'
+        }
+        if 'interes_jovenes' in data and data['interes_jovenes'] in jov_map:
+            data['interes_jovenes'] = jov_map[data['interes_jovenes']]
+
+        return super().to_internal_value(data)
+
     def get_encuestador_clave(self, obj):
         return obj.encuestador.clave_encuestador if obj.encuestador else None
+
 
 
 class EncuestaInstitucionalSerializer(serializers.ModelSerializer):

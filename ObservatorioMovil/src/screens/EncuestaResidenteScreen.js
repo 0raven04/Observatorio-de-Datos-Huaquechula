@@ -44,18 +44,18 @@ export default function EncuestaResidenteScreen({ navigation }) {
     const [enviando, setEnviando] = useState(false);
     const [form, setForm] = useState({
         edad: '35',
-        genero: 'Femenino',
+        genero: 'Mujer',
         barrio_colonia: 'Centro',
         confianza_policia: 3,
         percepcion_inseguridad: 2,
-        tension_festividades: '2',
-        acceso_servicios_festividades: '3',
-        perdida_tradicion: '2',
-        participacion_preservacion: 'si',
-        participacion_decisiones: 'no',
-        capacitacion_turistica: 'no',
-        beneficio_economico: 'indirecto',
-        interes_jovenes: 'medio',
+        tension_festividades: 1,
+        acceso_servicios_festividades: 1,
+        perdida_tradicion: 3,
+        participacion_preservacion: 'activa',
+        participacion_decisiones: 'regular',
+        capacitacion_turistica: 'continua',
+        beneficio_economico: 'principal',
+        interes_jovenes: 'activa',
     });
 
     const enviarFormulario = async () => {
@@ -66,6 +66,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 edad: parseInt(form.edad) || 30,
                 confianza_policia: parseInt(form.confianza_policia) || 3,
                 percepcion_inseguridad: parseInt(form.percepcion_inseguridad) || 2,
+                tension_festividades: parseInt(form.tension_festividades) || 1,
+                acceso_servicios_festividades: parseInt(form.acceso_servicios_festividades) || 1,
+                perdida_tradicion: parseInt(form.perdida_tradicion) || 3,
             };
             await encuestasService.crearEncuestaResidente(payload);
             Alert.alert('✅ Encuesta Guardada', 'La Encuesta de Residente Local fue registrada exitosamente.');
@@ -102,14 +105,18 @@ export default function EncuestaResidenteScreen({ navigation }) {
                     value={form.edad}
                     onChangeText={(v) => setForm({ ...form, edad: v })}
                 />
-                <Text style={styles.label}>Género</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Femenino / Masculino / Otro"
-                    placeholderTextColor="#aaa"
-                    value={form.genero}
-                    onChangeText={(v) => setForm({ ...form, genero: v })}
+                
+                <SelectorSelect
+                    label="Género"
+                    opciones={[
+                        { val: 'Mujer', label: 'Mujer' },
+                        { val: 'Hombre', label: 'Hombre' },
+                        { val: 'Otro', label: 'Otro' }
+                    ]}
+                    seleccionado={form.genero}
+                    onSeleccionar={(v) => setForm({ ...form, genero: v })}
                 />
+
                 <Text style={styles.label}>Barrio / Colonia / Localidad</Text>
                 <TextInput
                     style={styles.input}
@@ -130,10 +137,10 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="1. ¿Durante las festividades, qué tanto considera que la afluencia de visitantes altera negativamente su rutina diaria?"
                     opciones={[
-                        { val: '1', label: '1 - Nada / Muy poco' },
-                        { val: '2', label: '2 - Moderado' },
-                        { val: '3', label: '3 - Bastante' },
-                        { val: '4', label: '4 - Mucho / Severo' }
+                        { val: 1, label: '1. No altera nada' },
+                        { val: 2, label: '2. Altera poco' },
+                        { val: 3, label: '3. Altera regular' },
+                        { val: 4, label: '4. Altera mucho' }
                     ]}
                     seleccionado={form.tension_festividades}
                     onSeleccionar={(v) => setForm({ ...form, tension_festividades: v })}
@@ -142,10 +149,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="2. Durante las temporadas festivas, ¿cómo califica el acceso y disponibilidad de servicios públicos (agua, basura, seguridad)?"
                     opciones={[
-                        { val: '1', label: '1 - Muy deficiente' },
-                        { val: '2', label: '2 - Regular' },
-                        { val: '3', label: '3 - Bueno' },
-                        { val: '4', label: '4 - Excelente' }
+                        { val: 1, label: '1 - Excelente' },
+                        { val: 2, label: '2 - Regular' },
+                        { val: 3, label: '3 - Deficiente' }
                     ]}
                     seleccionado={form.acceso_servicios_festividades}
                     onSeleccionar={(v) => setForm({ ...form, acceso_servicios_festividades: v })}
@@ -154,10 +160,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="3. ¿Considera que la llegada del turismo ha provocado cambios que desvirtúan el significado original de nuestras tradiciones?"
                     opciones={[
-                        { val: '1', label: '1 - Sin alteración' },
-                        { val: '2', label: '2 - Poco impacto' },
-                        { val: '3', label: '3 - Alteración moderada' },
-                        { val: '4', label: '4 - Alta desvirtuación' }
+                        { val: 1, label: '1 - Comercialización excesiva' },
+                        { val: 2, label: '2 - Parcialmente' },
+                        { val: 3, label: '3 - No, se mantiene intacta' }
                     ]}
                     seleccionado={form.perdida_tradicion}
                     onSeleccionar={(v) => setForm({ ...form, perdida_tradicion: v })}
@@ -166,9 +171,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="4. ¿Participa de forma activa en actividades comunitarias de preservación (altares, artesanías, cocina tradicional)?"
                     opciones={[
-                        { val: 'si', label: 'Sí, activamente' },
-                        { val: 'eventual', label: 'Eventualmente' },
-                        { val: 'no', label: 'No participo' }
+                        { val: 'activa', label: 'Sí, activamente' },
+                        { val: 'apoyo', label: 'Apoyo la organización local' },
+                        { val: 'ninguna', label: 'No participo' }
                     ]}
                     seleccionado={form.participacion_preservacion}
                     onSeleccionar={(v) => setForm({ ...form, participacion_preservacion: v })}
@@ -185,9 +190,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="5. ¿Ha participado o ha sido convocado a reuniones comunitarias para decidir cómo gestionar el turismo?"
                     opciones={[
-                        { val: 'si', label: 'Sí, he participado' },
-                        { val: 'interesado', label: 'Interesado, pero no convocado' },
-                        { val: 'no', label: 'No me interesa / No participo' }
+                        { val: 'regular', label: 'Sí, asisto y toman en cuenta mi opinión' },
+                        { val: 'no_toman_cuenta', label: 'Convocado, pero no toman en cuenta' },
+                        { val: 'nunca', label: 'Nunca he sido convocado' }
                     ]}
                     seleccionado={form.participacion_decisiones}
                     onSeleccionar={(v) => setForm({ ...form, participacion_decisiones: v })}
@@ -196,9 +201,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="6. ¿Ha recibido capacitación o información clara sobre cómo atender al turismo de manera responsable?"
                     opciones={[
-                        { val: 'si', label: 'Sí, útil y suficiente' },
-                        { val: 'proceso', label: 'En proceso / Insuficiente' },
-                        { val: 'no', label: 'No he recibido' }
+                        { val: 'continua', label: 'Sí, capacitación continua' },
+                        { val: 'aislada', label: 'Información aislada, no formal' },
+                        { val: 'ninguna', label: 'No he recibido capacitación' }
                     ]}
                     seleccionado={form.capacitacion_turistica}
                     onSeleccionar={(v) => setForm({ ...form, capacitacion_turistica: v })}
@@ -207,9 +212,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="7. ¿Su hogar percibe un beneficio económico o social directo derivado de proyectos turísticos locales?"
                     opciones={[
-                        { val: 'si', label: 'Sí, directo' },
-                        { val: 'indirecto', label: 'Beneficio indirecto' },
-                        { val: 'no', label: 'Sin beneficio' }
+                        { val: 'principal', label: 'Sí, fuente principal' },
+                        { val: 'complementaria', label: 'Sí, complementaria' },
+                        { val: 'ninguno', label: 'Sin beneficio directo' }
                     ]}
                     seleccionado={form.beneficio_economico}
                     onSeleccionar={(v) => setForm({ ...form, beneficio_economico: v })}
@@ -218,9 +223,9 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 <SelectorSelect
                     label="8. En su hogar, ¿las generaciones más jóvenes muestran interés y aprenden los saberes de nuestras tradiciones?"
                     opciones={[
-                        { val: 'alto', label: 'Alto interés' },
-                        { val: 'medio', label: 'Interés moderado' },
-                        { val: 'bajo', label: 'Bajo / Nulo interés' }
+                        { val: 'activa', label: 'Sí, de forma activa' },
+                        { val: 'parcialmente', label: 'Parcialmente' },
+                        { val: 'perdiendo', label: 'No, se está perdiendo' }
                     ]}
                     seleccionado={form.interes_jovenes}
                     onSeleccionar={(v) => setForm({ ...form, interes_jovenes: v })}

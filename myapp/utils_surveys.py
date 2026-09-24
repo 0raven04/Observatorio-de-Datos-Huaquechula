@@ -43,8 +43,8 @@ def update_survey_indicators():
             _update_medicion(36, year_str, val)
             
         # ID 37: Procesos de salvaguardia del Patrimonio (Participación en preservación de Residentes)
-        # 1 (Directa) -> 3.0, 2 (Apoyo) -> 2.0, 3 (Ninguna) -> 1.0
-        pres_mapping = {1: 3.0, 2: 2.0, 3: 1.0}
+        # activa -> 3.0, apoyo -> 2.0, ninguna -> 1.0
+        pres_mapping = {'activa': 3.0, 'apoyo': 2.0, 'ninguna': 1.0, 1: 3.0, 2: 2.0, 3: 1.0}
         pres_vals = [pres_mapping[r.participacion_preservacion] 
                      for r in resident_qs 
                      if r.participacion_preservacion in pres_mapping]
