@@ -150,8 +150,12 @@ export default function EncuestaVisitanteScreen({ navigation }) {
                 lo_que_mas_gusto: form.lo_que_mas_gusto,
             };
 
-            await encuestasService.crearEncuestaVisitante(payload);
-            Alert.alert('✅ Encuesta Guardada', 'La Encuesta de Perfil del Visitante fue registrada con éxito.');
+            const res = await encuestasService.crearEncuestaVisitante(payload);
+            if (res && res.offline) {
+                Alert.alert('💾 Guardada en Modo Offline', 'Sin cobertura celular en este punto. La encuesta quedó guardada en el dispositivo y se sincronizará al recuperar señal.');
+            } else {
+                Alert.alert('✅ Encuesta Guardada', 'La Encuesta de Perfil del Visitante fue registrada con éxito.');
+            }
             navigation.goBack();
         } catch (error) {
             const msg = error.response?.data ? JSON.stringify(error.response.data) : error.message;

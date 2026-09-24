@@ -38,12 +38,33 @@ from .utils_surveys import update_survey_indicators
 
 logger = logging.getLogger(__name__)
 
-def _log_survey_telemetry(survey_type, survey_id, encuestador, indicators_recalculated, elapsed_ms, success=True, error_msg=None):
-    """Emite log estructurado en JSON para auditoría y observabilidad en Fly.io."""
+def _log_survey_telemetry(survey_type, survey_id, encuestador, indicators_recalculated, elapsed_ms, success=True, error_msg=None, fecha_captura_local_str=None, barrio_localidad=''):
+    """
+    Emite log estructurado en JSON para auditoría y persiste el evento en
+    RegistroIngestaEncuesta para observabilidad en tiempo real y resiliencia de red.
+    """
     username = "anonimo"
     if encuestador:
         try:
             username = encuestador.id_usuario.nombre_usuario
+        except Exception:
+            pass
+
+    lag_sec = 0.0
+    es_offline = False
+    fecha_captura_dt = None
+
+    if fecha_captura_local_str:
+        try:
+            from django.utils.dateparse import parse_datetime
+            fecha_captura_dt = parse_datetime(str(fecha_captura_local_str))
+            if fecha_captura_dt:
+                if timezone.is_naive(fecha_captura_dt):
+                    fecha_captura_dt = timezone.make_aware(fecha_captura_dt)
+                delta = (timezone.now() - fecha_captura_dt).total_seconds()
+                lag_sec = max(0.0, round(delta, 1))
+                if lag_sec >= 15.0:
+                    es_offline = True
         except Exception:
             pass
 
@@ -52,6 +73,9 @@ def _log_survey_telemetry(survey_type, survey_id, encuestador, indicators_recalc
         "survey_type": survey_type,
         "survey_id": survey_id,
         "encuestador": username,
+        "barrio_localidad": barrio_localidad or '',
+        "lag_segundos": lag_sec,
+        "es_offline": es_offline,
         "indicators_recalculated": indicators_recalculated,
         "latency_ms": elapsed_ms,
         "success": success,
@@ -60,6 +84,23 @@ def _log_survey_telemetry(survey_type, survey_id, encuestador, indicators_recalc
     if error_msg:
         telemetry["error"] = error_msg
     logger.info("AUDIT_TELEMETRY: %s", json.dumps(telemetry))
+
+    # Guardar en la tabla de auditoría para el dashboard en tiempo real y Grafana
+    try:
+        from .models import RegistroIngestaEncuesta
+        RegistroIngestaEncuesta.objects.create(
+            tipo_encuesta=survey_type,
+            id_encuesta=survey_id,
+            encuestador_username=username,
+            barrio_localidad=barrio_localidad or '',
+            fecha_captura_local=fecha_captura_dt,
+            lag_segundos=lag_sec,
+            es_offline=es_offline,
+            latencia_db_ms=elapsed_ms,
+            estado='EXITOSO' if success else 'ERROR'
+        )
+    except Exception as e:
+        logger.warning("No se pudo guardar RegistroIngestaEncuesta: %s", e)
 
 
 # ─── Autenticación ────────────────────────────────────────────────────────────
@@ -377,6 +418,9 @@ class EncuestaVisitanteView(APIView):
         if isinstance(data.get('actividades'), list):
             data['actividades'] = ', '.join(data['actividades'])
 
+        fecha_local = request.data.get('fecha_captura_local')
+        barrio = request.data.get('residencia_ciudad') or request.data.get('zonas_visitadas') or ''
+
         serializer = EncuestaVisitanteSerializer(data=data)
         if serializer.is_valid():
             encuesta = serializer.save(encuestador=encuestador)
@@ -387,7 +431,7 @@ class EncuestaVisitanteView(APIView):
             except Exception as e:
                 logger.error(f"Error recalculando indicadores tras encuesta visitante: {e}")
             elapsed = round((time.time() - t0) * 1000, 2)
-            _log_survey_telemetry('visitante', encuesta.id, encuestador, updated, elapsed)
+            _log_survey_telemetry('visitante', encuesta.id, encuestador, updated, elapsed, fecha_captura_local_str=fecha_local, barrio_localidad=str(barrio)[:150])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elapsed = round((time.time() - t0) * 1000, 2)
         _log_survey_telemetry('visitante', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
@@ -409,6 +453,9 @@ class EncuestaResidenteView(APIView):
     def post(self, request):
         t0 = time.time()
         encuestador = _get_encuestador_safe(request)
+        fecha_local = request.data.get('fecha_captura_local')
+        barrio = request.data.get('barrio_colonia') or ''
+
         serializer = EncuestaResidenteSerializer(data=request.data)
         if serializer.is_valid():
             encuesta = serializer.save(encuestador=encuestador)
@@ -419,7 +466,7 @@ class EncuestaResidenteView(APIView):
             except Exception as e:
                 logger.error(f"Error recalculando indicadores tras encuesta residente: {e}")
             elapsed = round((time.time() - t0) * 1000, 2)
-            _log_survey_telemetry('residente', encuesta.id, encuestador, updated, elapsed)
+            _log_survey_telemetry('residente', encuesta.id, encuestador, updated, elapsed, fecha_captura_local_str=fecha_local, barrio_localidad=str(barrio)[:150])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elapsed = round((time.time() - t0) * 1000, 2)
         _log_survey_telemetry('residente', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
@@ -447,6 +494,8 @@ class EncuestaInstitucionalView(APIView):
         if isinstance(data.get('canales_difusion'), list):
             data['canales_difusion'] = ', '.join(data['canales_difusion'])
 
+        fecha_local = request.data.get('fecha_captura_local')
+
         serializer = EncuestaInstitucionalSerializer(data=data)
         if serializer.is_valid():
             encuesta = serializer.save(encuestador=encuestador)
@@ -457,7 +506,7 @@ class EncuestaInstitucionalView(APIView):
             except Exception as e:
                 logger.error(f"Error recalculando indicadores tras encuesta institucional: {e}")
             elapsed = round((time.time() - t0) * 1000, 2)
-            _log_survey_telemetry('institucional', encuesta.id, encuestador, updated, elapsed)
+            _log_survey_telemetry('institucional', encuesta.id, encuestador, updated, elapsed, fecha_captura_local_str=fecha_local, barrio_localidad='Cabecera Municipal')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elapsed = round((time.time() - t0) * 1000, 2)
         _log_survey_telemetry('institucional', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
@@ -575,11 +624,18 @@ class EncuestaComercioView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        t0 = time.time()
         encuestador = _get_encuestador_safe(request)
         serializer = EncuestaComercioSerializer(data=request.data)
+        fecha_local = request.data.get('fecha_captura_local')
+        barrio = request.data.get('tipo_comercio') or ''
         if serializer.is_valid():
-            serializer.save(encuestador=encuestador)
+            encuesta = serializer.save(encuestador=encuestador)
+            elapsed = round((time.time() - t0) * 1000, 2)
+            _log_survey_telemetry('comercio', encuesta.id, encuestador, False, elapsed, fecha_captura_local_str=fecha_local, barrio_localidad=str(barrio)[:150])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elapsed = round((time.time() - t0) * 1000, 2)
+        _log_survey_telemetry('comercio', None, encuestador, False, elapsed, success=False, error_msg=str(serializer.errors))
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -72,11 +72,15 @@ export default function EncuestaComercioScreen({ navigation }) {
 
         setEnviando(true);
         try {
-            await encuestasService.crearEncuestaComercio(form);
-            Alert.alert('✅ Éxito', 'La encuesta de comercio ha sido guardada correctamente.');
+            const res = await encuestasService.crearEncuestaComercio(form);
+            if (res && res.offline) {
+                Alert.alert('💾 Guardada en Modo Offline', 'Sin cobertura celular en este punto. La encuesta quedó guardada en el dispositivo y se sincronizará al recuperar señal.');
+            } else {
+                Alert.alert('✅ Éxito', 'La encuesta de comercio ha sido guardada correctamente.');
+            }
             navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar la encuesta. Revisa tu conexión.');
+            Alert.alert('Error', 'No se pudo guardar la encuesta. Revisa los datos.');
         } finally {
             setEnviando(false);
         }

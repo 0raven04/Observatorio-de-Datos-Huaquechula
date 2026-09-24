@@ -151,6 +151,9 @@ urlpatterns = [
     # =====================================================
     # Observabilidad y Auditoría de Flujo de Datos
     # =====================================================
+    path('monitoreo/en-vivo/', views_monitoring.monitoreo_en_vivo_view, name='monitoreo_en_vivo'),
+    path('api/monitoring/live-stream/', views_monitoring.api_monitoring_live_stream, name='api_monitoring_live_stream'),
+    path('api/metrics/', views_monitoring.api_prometheus_metrics, name='api_prometheus_metrics'),
     path('api/health/', views_monitoring.api_health, name='api_health'),
     path('api/monitoring/survey-flow/', views_monitoring.api_survey_flow_status, name='api_survey_flow_status'),
     path('api/monitoring/test-alert/', views_monitoring.test_whatsapp_alert, name='api_test_whatsapp_alert'),

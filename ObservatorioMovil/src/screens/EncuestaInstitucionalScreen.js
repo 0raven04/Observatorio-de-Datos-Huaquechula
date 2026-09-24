@@ -105,8 +105,12 @@ export default function EncuestaInstitucionalScreen({ navigation }) {
                 visitantes_anual: parseInt(form.visitantes_anual) || 0,
             };
 
-            await encuestasService.crearEncuestaInstitucional(payload);
-            Alert.alert('✅ Encuesta Guardada', 'La Encuesta Institucional fue registrada con éxito.');
+            const res = await encuestasService.crearEncuestaInstitucional(payload);
+            if (res && res.offline) {
+                Alert.alert('💾 Guardada en Modo Offline', 'Sin cobertura celular en este punto. La encuesta quedó guardada en el dispositivo y se sincronizará al recuperar señal.');
+            } else {
+                Alert.alert('✅ Encuesta Guardada', 'La Encuesta Institucional fue registrada con éxito.');
+            }
             navigation.goBack();
         } catch (error) {
             const msg = error.response?.data ? JSON.stringify(error.response.data) : error.message;

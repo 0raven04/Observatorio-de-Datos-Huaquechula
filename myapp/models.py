@@ -1340,3 +1340,39 @@ class RespuestaPregunta(models.Model):
 
     def __str__(self):
         return f"Pregunta: {self.pregunta.texto} -> Respuesta: {self.valor_texto}"
+
+
+# =====================================================
+# AUDITORÍA DE INGESTA Y OBSERVABILIDAD DE RED (FIELD TESTING)
+# =====================================================
+class RegistroIngestaEncuesta(models.Model):
+    """
+    Registra cada evento de ingesta de encuestas para observabilidad en tiempo real,
+    evaluando la resiliencia ante pérdida de cobertura móvil en Huaquechula.
+    """
+    fecha_ingesta = models.DateTimeField(auto_now_add=True, db_index=True)
+    fecha_captura_local = models.DateTimeField(null=True, blank=True, help_text="Timestamp local del dispositivo móvil")
+    tipo_encuesta = models.CharField(max_length=30, choices=[
+        ('visitante', 'Perfil del Visitante'),
+        ('residente', 'Residente Local'),
+        ('institucional', 'Institucional'),
+        ('comercio', 'Comercio Local'),
+        ('dinamica', 'Encuesta Personalizada'),
+    ], db_index=True)
+    id_encuesta = models.PositiveIntegerField(null=True, blank=True)
+    encuestador_username = models.CharField(max_length=100, default='anonimo')
+    barrio_localidad = models.CharField(max_length=150, blank=True, default='')
+    lag_segundos = models.FloatField(default=0.0, help_text="Diferencia en segundos entre captura y recepción en la nube")
+    es_offline = models.BooleanField(default=False, help_text="True si fue transmitida con rezago por falta de red")
+    latencia_db_ms = models.FloatField(default=0.0)
+    estado = models.CharField(max_length=20, default='EXITOSO')
+
+    class Meta:
+        db_table = 'RegistroIngestaEncuesta'
+        verbose_name = 'Registro de Ingesta de Encuesta'
+        verbose_name_plural = 'Registros de Ingesta de Encuestas'
+        ordering = ['-fecha_ingesta']
+
+    def __str__(self):
+        return f"{self.tipo_encuesta.capitalize()} #{self.id_encuesta} por @{self.encuestador_username} (Lag: {self.lag_segundos:.1f}s)"
+

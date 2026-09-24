@@ -70,8 +70,12 @@ export default function EncuestaResidenteScreen({ navigation }) {
                 acceso_servicios_festividades: parseInt(form.acceso_servicios_festividades) || 1,
                 perdida_tradicion: parseInt(form.perdida_tradicion) || 3,
             };
-            await encuestasService.crearEncuestaResidente(payload);
-            Alert.alert('✅ Encuesta Guardada', 'La Encuesta de Residente Local fue registrada exitosamente.');
+            const res = await encuestasService.crearEncuestaResidente(payload);
+            if (res && res.offline) {
+                Alert.alert('💾 Guardada en Modo Offline', 'Sin cobertura celular en este punto. La encuesta quedó guardada en el dispositivo y se sincronizará al recuperar señal.');
+            } else {
+                Alert.alert('✅ Encuesta Guardada', 'La Encuesta de Residente Local fue registrada exitosamente.');
+            }
             navigation.goBack();
         } catch (error) {
             const msg = error.response?.data ? JSON.stringify(error.response.data) : error.message;

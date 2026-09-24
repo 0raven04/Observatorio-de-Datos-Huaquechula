@@ -13,6 +13,8 @@ export default function SelectorEncuestasScreen({ navigation }) {
     const { usuario, logout } = useAuth();
     const [encuestas, setEncuestas] = useState([]);
     const [cargando, setCargando] = useState(true);
+    const [pendientesOffline, setPendientesOffline] = useState(0);
+    const [sincronizando, setSincronizando] = useState(false);
 
     const handleCerrarSesion = () => {
         Alert.alert(
@@ -35,6 +37,51 @@ export default function SelectorEncuestasScreen({ navigation }) {
         );
     };
 
+    const verificarColaOffline = useCallback(async () => {
+        try {
+            const count = await encuestasService.obtenerPendientesOffline();
+            setPendientesOffline(count);
+            // Si hay encuestas pendientes, intentar sincronizarlas silenciosamente
+            if (count > 0 && !sincronizando) {
+                encuestasService.sincronizarColaOffline().then(async (res) => {
+                    if (res && res.synced > 0) {
+                        const rest = await encuestasService.obtenerPendientesOffline();
+                        setPendientesOffline(rest);
+                    }
+                }).catch(() => {});
+            }
+        } catch (e) {
+            console.log('Error verificando cola offline:', e);
+        }
+    }, [sincronizando]);
+
+    const ejecutarSincronizacionManual = async () => {
+        setSincronizando(true);
+        try {
+            const res = await encuestasService.sincronizarColaOffline();
+            const rest = await encuestasService.obtenerPendientesOffline();
+            setPendientesOffline(rest);
+
+            if (res.synced > 0) {
+                Alert.alert(
+                    '✅ Sincronización Exitosa',
+                    `Se enviaron ${res.synced} encuesta(s) guardadas sin conexión al servidor del Observatorio.`
+                );
+            } else if (res.remaining > 0) {
+                Alert.alert(
+                    '📡 Sin Conexión Aún',
+                    'No fue posible contactar al servidor central. Las encuestas continúan guardadas de forma segura en el dispositivo.'
+                );
+            } else {
+                Alert.alert('Al día', 'No hay encuestas pendientes de sincronizar.');
+            }
+        } catch (e) {
+            Alert.alert('Aviso', 'No se pudo completar la sincronización. Revisa tu cobertura celular.');
+        } finally {
+            setSincronizando(false);
+        }
+    };
+
     const cargarEncuestas = useCallback(async () => {
         try {
             setCargando(true);
@@ -51,7 +98,8 @@ export default function SelectorEncuestasScreen({ navigation }) {
     useFocusEffect(
         useCallback(() => {
             cargarEncuestas();
-        }, [cargarEncuestas])
+            verificarColaOffline();
+        }, [cargarEncuestas, verificarColaOffline])
     );
 
     return (
@@ -75,6 +123,34 @@ export default function SelectorEncuestasScreen({ navigation }) {
                     <Text style={styles.btnLogoutSmallText}>Cerrar sesión</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Banner de Sincronización Offline Resiliente */}
+            {pendientesOffline > 0 && (
+                <View style={styles.offlineBanner}>
+                    <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                            <Text style={{ fontSize: 16, marginRight: 6 }}>📦</Text>
+                            <Text style={styles.offlineBannerTitle}>
+                                {pendientesOffline} encuesta{pendientesOffline > 1 ? 's' : ''} pendiente{pendientesOffline > 1 ? 's' : ''}
+                            </Text>
+                        </View>
+                        <Text style={styles.offlineBannerDesc}>
+                            Guardada{pendientesOffline > 1 ? 's' : ''} localmente por sombra de red en Huaquechula.
+                        </Text>
+                    </View>
+                    <TouchableOpacity
+                        style={[styles.btnSyncOffline, sincronizando && { opacity: 0.6 }]}
+                        onPress={ejecutarSincronizacionManual}
+                        disabled={sincronizando}
+                    >
+                        {sincronizando ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.btnSyncOfflineText}>Sincronizar ⚡</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <View style={styles.header}>
                 <Text style={styles.titulo}>Portal del Encuestador</Text>
@@ -268,5 +344,41 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: 'bold',
         color: '#e53e3e',
+    },
+    offlineBanner: {
+        backgroundColor: '#fffbeb',
+        borderWidth: 1.5,
+        borderColor: '#f59e0b',
+        borderRadius: 12,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+        elevation: 2,
+    },
+    offlineBannerTitle: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#92400e',
+    },
+    offlineBannerDesc: {
+        fontSize: 11,
+        color: '#b45309',
+        marginTop: 1,
+    },
+    btnSyncOffline: {
+        backgroundColor: '#f59e0b',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minWidth: 100,
+    },
+    btnSyncOfflineText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
 });
