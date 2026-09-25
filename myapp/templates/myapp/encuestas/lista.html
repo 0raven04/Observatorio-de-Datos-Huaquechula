@@ -55,13 +55,40 @@
                                     {{ encuesta.descripcion|default:"Sin descripción" }}
                                 </p>
                                 
-                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                <div class="d-flex flex-wrap gap-2 mb-2">
                                     <span class="badge rounded-pill bg-light text-dark border"><i class="fas fa-clipboard-check me-1"></i>{{ encuesta.total_respuestas }} Respuestas</span>
                                     {% if encuesta.anonima %}
                                         <span class="badge rounded-pill bg-info text-white"><i class="fas fa-user-secret me-1"></i>Anónima</span>
                                     {% else %}
                                         <span class="badge rounded-pill bg-warning text-dark"><i class="fas fa-user-check me-1"></i>Con Registro</span>
                                     {% endif %}
+                                    {% with rep=encuesta.documentos_reporte.first %}
+                                        {% if rep %}
+                                            <a href="{% url 'repositorio' %}" class="badge rounded-pill bg-success text-white text-decoration-none" title="Ver reporte en repositorio">
+                                                <i class="fas fa-book me-1"></i>En Repositorio ({% if rep.es_publico %}Público{% else %}Privado{% endif %})
+                                            </a>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+
+                                <!-- Canales Promovidos (Web y Móvil) -->
+                                <div class="p-2 mb-2 rounded bg-light border">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-semibold"><i class="fas fa-globe text-primary me-1"></i> Portal Web</span>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input toggle-canal" type="checkbox" role="switch" 
+                                                   data-id="{{ encuesta.id }}" data-canal="web" {% if encuesta.disponible_web %}checked{% endif %}
+                                                   title="Habilitar/Deshabilitar en Portal Web">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small fw-semibold"><i class="fas fa-mobile-alt text-success me-1"></i> App Móvil</span>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input toggle-canal" type="checkbox" role="switch" 
+                                                   data-id="{{ encuesta.id }}" data-canal="movil" {% if encuesta.disponible_movil %}checked{% endif %}
+                                                   title="Habilitar/Deshabilitar en App Móvil">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -172,6 +199,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error:', error);
                 if (window.showToast) {
                     window.showToast('Error de conexión', 'error');
+                }
+            });
+        });
+    });
+
+    // Alternar canales específicos (Web o Móvil)
+    document.querySelectorAll('.toggle-canal').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const id = this.getAttribute('data-id');
+            const canal = this.getAttribute('data-canal');
+            const checked = this.checked;
+            const canalNombre = canal === 'web' ? 'Portal Web' : 'App Móvil';
+
+            fetch(`/encuestas/toggle-canal/${id}/${canal}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (window.showToast) {
+                        window.showToast(`${canalNombre}: ${data.valor ? 'Habilitado' : 'Deshabilitado'}`, 'success');
+                    }
+                } else {
+                    this.checked = !checked;
+                    alert(data.message || 'Error al cambiar canal');
+                }
+            })
+            .catch(err => {
+                this.checked = !checked;
+                console.error('Error:', err);
+                if (window.showToast) {
+                    window.showToast('Error al comunicar con el servidor', 'error');
                 }
             });
         });

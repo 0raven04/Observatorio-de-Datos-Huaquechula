@@ -23,7 +23,16 @@
             <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ survey.titulo }}</h1>
             <p class="text-muted small mb-0">{{ survey.descripcion|default:"Sin descripción" }}</p>
         </div>
-        <div class="mt-2 mt-md-0 d-flex gap-2">
+        <div class="mt-2 mt-md-0 d-flex flex-wrap gap-2">
+            <a href="{% url 'exportar_encuesta_csv' survey.id %}" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1 shadow-sm">
+                <i class="fas fa-file-csv"></i> Descargar CSV
+            </a>
+            <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalApiDatos">
+                <i class="fas fa-code"></i> API de Datos
+            </button>
+            <button class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" style="background-color: var(--color-gris-oscuro); border-color: var(--color-gris-oscuro);" data-bs-toggle="modal" data-bs-target="#modalPublicarRepositorio">
+                <i class="fas fa-file-pdf"></i> {% if documento_publicado %}Actualizar Ficha PDF en Repositorio{% else %}Publicar Ficha PDF en Repositorio{% endif %}
+            </button>
             <a href="{% url 'responder_encuesta' survey.id %}" target="_blank" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1">
                 <i class="fas fa-external-link-alt"></i> Ver Formulario
             </a>
@@ -76,17 +85,54 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" style="font-size: 0.75rem;">Privacidad</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% if survey.anonima %}
-                                    Anónima
-                                {% else %}
-                                    Nominal (Con Cuenta)
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" style="font-size: 0.75rem;">Canales Promovidos</div>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                {% if survey.disponible_web %}
+                                    <span class="badge bg-primary text-white" title="Habilitada en Web"><i class="fas fa-globe me-1"></i>Web</span>
+                                {% endif %}
+                                {% if survey.disponible_movil %}
+                                    <span class="badge bg-success text-white" title="Habilitada en App Móvil"><i class="fas fa-mobile-alt me-1"></i>Móvil</span>
+                                {% endif %}
+                                {% if not survey.disponible_web and not survey.disponible_movil %}
+                                    <span class="badge bg-secondary text-white">Ninguno</span>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-user-secret fa-2x text-gray-300"></i>
+                            <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 py-2" style="border-radius: 10px; border-left: 4px solid {% if documento_publicado %}#059669{% else %}#94a3b8{% endif %};">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Ficha en Repositorio</div>
+                            {% if documento_publicado %}
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Publicada</span>
+                                    <span class="badge bg-light text-dark border">{{ documento_publicado.get_clasificacion_display }}</span>
+                                </div>
+                                <div class="mt-1">
+                                    {% if documento_publicado.archivo %}
+                                        <a href="{{ documento_publicado.archivo.url }}" target="_blank" class="small fw-semibold text-primary text-decoration-none me-2">
+                                            <i class="fas fa-file-pdf text-danger me-1"></i>Ver PDF
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'repositorio' %}" class="small text-secondary text-decoration-none">
+                                        <i class="fas fa-external-link-alt me-1"></i>Catálogo
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div><span class="badge bg-secondary">Sin Publicar</span></div>
+                                <small class="text-muted" style="font-size: 0.7rem;">Usa el botón superior para publicar</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book-reader fa-2x {% if documento_publicado %}text-success{% else %}text-gray-300{% endif %}"></i>
                         </div>
                     </div>
                 </div>
@@ -303,6 +349,97 @@
             <div class="modal-footer border-top-0 pt-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: API de Datos REST -->
+<div class="modal fade" id="modalApiDatos" tabindex="-1" aria-labelledby="modalApiDatosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 14px;">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark" id="modalApiDatosLabel"><i class="fas fa-code text-primary me-2"></i>API REST de Datos — {{ survey.titulo }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">
+                    El Observatorio expone endpoints REST estructurados para consumir las respuestas y metadatos de esta encuesta de manera automatizada en sistemas externos, pipelines de datos, R o Python.
+                </p>
+
+                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-link me-1"></i> 1. Endpoint JSON Estructurado</h6>
+                <div class="p-3 bg-dark text-light rounded font-monospace small mb-3 position-relative">
+                    <code>GET {{ request.scheme }}://{{ request.get_host }}{% url 'api_encuesta_datos' survey.id %}</code>
+                </div>
+
+                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-file-csv me-1"></i> 2. Descarga Tabular CSV (Excel / Pandas)</h6>
+                <div class="p-3 bg-dark text-light rounded font-monospace small mb-4">
+                    <code>GET {{ request.scheme }}://{{ request.get_host }}{% url 'exportar_encuesta_csv' survey.id %}</code>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <span class="small text-muted">Autenticación por sesión o consumo público según configuración</span>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'api_encuesta_datos' survey.id %}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i> Abrir JSON
+                        </a>
+                        <a href="{% url 'exportar_encuesta_csv' survey.id %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-download me-1"></i> Descargar CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Publicar Ficha PDF en Repositorio -->
+<div class="modal fade" id="modalPublicarRepositorio" tabindex="-1" aria-labelledby="modalPublicarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 14px;">
+            <form action="{% url 'publicar_reporte_repositorio' survey.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold text-dark" id="modalPublicarLabel">
+                        <i class="fas fa-file-pdf text-danger me-2"></i>Ficha Resumen PDF en Repositorio
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        Se generará automáticamente una <strong>Ficha Técnica Ejecutiva en PDF</strong> con el membrete institucional del Observatorio, gráficos tabulares y desglose de frecuencias de las <strong>{{ total_respuestas }}</strong> respuestas recopiladas.
+                    </p>
+
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <label class="form-label fw-bold text-dark small mb-2">Clasificación de visibilidad en el Repositorio:</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="clasificacion" id="clasif_publico" value="publico" 
+                                   {% if not documento_publicado or documento_publicado.es_publico %}checked{% endif %}>
+                            <label class="form-check-label text-dark small" for="clasif_publico">
+                                <strong>Público</strong> — Visible para investigadores, visitantes y ciudadanía en general en <span class="badge bg-secondary-subtle text-secondary">/repositorio/</span>.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="clasificacion" id="clasif_privado" value="privado"
+                                   {% if documento_publicado and not documento_publicado.es_publico %}checked{% endif %}>
+                            <label class="form-check-label text-dark small" for="clasif_privado">
+                                <strong>Privado</strong> — Catalogado en el repositorio pero reservado exclusivamente para personal administrativo.
+                            </label>
+                        </div>
+                    </div>
+
+                    {% if documento_publicado %}
+                        <div class="alert alert-info py-2 px-3 small mb-0">
+                            <i class="fas fa-info-circle me-1"></i> Ya existe una versión en el repositorio. Al confirmar se regenerará el PDF con los datos más recientes.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: var(--color-gris-oscuro); border-color: var(--color-gris-oscuro);">
+                        <i class="fas fa-file-pdf me-1"></i> Generar y Publicar Ficha PDF
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

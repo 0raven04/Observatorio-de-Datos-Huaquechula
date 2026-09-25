@@ -591,7 +591,7 @@
             <div class="doc-cover-grad"></div>
 
             <!-- Badge tipo -->
-            <span class="doc-badge">{{ doc.get_tipo_display|default:doc.tipo }}</span>
+            <span class="doc-badge">{% if doc.encuesta %}<i class="fas fa-poll me-1"></i>Ficha Encuesta{% else %}{{ doc.get_tipo_display|default:doc.tipo }}{% endif %}</span>
 
             <!-- Info siempre visible: nombre + fecha -->
             <div class="doc-info-static">
@@ -604,7 +604,10 @@
                 <p class="doc-hover-title">{{ doc.titulo }}</p>
                 <div class="doc-hover-meta">
                     <span><i class="far fa-calendar-alt"></i> {{ doc.fecha_subida|date:"d M Y" }}</span>
-                    <span><i class="fas fa-globe-americas"></i> Público</span>
+                    <span><i class="fas fa-shield-alt"></i> {{ doc.get_clasificacion_display|default:'Público' }}</span>
+                    {% if doc.encuesta %}
+                        <span style="color:#d6ceaa;"><i class="fas fa-poll me-1"></i>Encuesta de Campo</span>
+                    {% endif %}
                 </div>
                 <p class="doc-hover-desc">{% if doc.descripcion %}{{ doc.descripcion }}{% else %}Archivo disponible en
                     el repositorio cultural.{% endif %}</p>

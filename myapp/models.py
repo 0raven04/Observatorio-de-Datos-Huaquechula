@@ -919,6 +919,14 @@ class Documento(models.Model):
         blank=True, 
         related_name='documentos_creados'
     )
+    encuesta = models.ForeignKey(
+        'Encuesta',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='documentos_reporte',
+        verbose_name="Encuesta asociada"
+    )
     
     fecha_subida = models.DateTimeField(default=timezone.now)
     tamaño = models.IntegerField(default=0)  # en bytes
@@ -1267,6 +1275,8 @@ class Encuesta(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     activa = models.BooleanField(default=True, verbose_name="Activa / Recibiendo Respuestas")
     anonima = models.BooleanField(default=True, verbose_name="Permitir respuestas anónimas")
+    disponible_web = models.BooleanField(default=True, verbose_name="Habilitada en Portal Web")
+    disponible_movil = models.BooleanField(default=True, verbose_name="Habilitada en App Móvil")
 
     class Meta:
         db_table = 'Encuesta'

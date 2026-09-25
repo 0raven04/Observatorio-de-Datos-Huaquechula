@@ -644,12 +644,14 @@ class EncuestaComercioView(APIView):
 class EncuestaCreadaListView(generics.ListAPIView):
     """
     GET /api/mobile/encuestas-creadas/
-    Retorna la lista de encuestas dinámicas creadas que están activas.
+    Retorna la lista de encuestas dinámicas creadas que están activas y habilitadas para Móvil.
     Incluye sus preguntas y opciones respectivas.
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = EncuestaCreadaSerializer
-    queryset = Encuesta.objects.filter(activa=True)
+
+    def get_queryset(self):
+        return Encuesta.objects.filter(activa=True, disponible_movil=True)
 
 
 class ResponderEncuestaView(APIView):
@@ -665,6 +667,8 @@ class ResponderEncuestaView(APIView):
         survey = generics.get_object_or_404(Encuesta, pk=pk)
         if not survey.activa:
             return Response({'error': 'La encuesta está desactivada.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not survey.disponible_movil:
+            return Response({'error': 'Esta encuesta no está habilitada para levantamiento móvil.'}, status=status.HTTP_400_BAD_REQUEST)
 
         respuestas_data = request.data.get('respuestas', [])
         

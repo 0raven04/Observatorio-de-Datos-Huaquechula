@@ -182,34 +182,40 @@ export default function SelectorEncuestasScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            {/* Sección 2: Encuestas Personalizadas */}
-            <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Encuestas Personalizadas</Text>
+            {/* Sección 2: Encuestas Promovidas en Campo */}
+            <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Encuestas Promovidas en Campo</Text>
             {cargando ? (
                 <ActivityIndicator size="large" color={MORADO} style={{ marginTop: 20 }} />
             ) : encuestas.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No hay encuestas personalizadas activas en este momento.</Text>
+                    <Text style={styles.emptyText}>No hay encuestas adicionales habilitadas para móvil actualmente.</Text>
                 </View>
             ) : (
                 <View style={styles.grid}>
-                    {encuestas.map((encuesta) => (
-                        <TouchableOpacity
-                            key={encuesta.id}
-                            style={[styles.card, { borderLeftColor: MORADO }]}
-                            onPress={() => navigation.navigate('CompletarEncuesta', { encuesta })}
-                        >
-                            <View style={[styles.iconCircle, { backgroundColor: MORADO + '22' }]}>
-                                <Text style={styles.iconEmoji}>📋</Text>
-                            </View>
-                            <View style={styles.cardInfo}>
-                                <Text style={styles.cardTitle}>{encuesta.titulo}</Text>
-                                <Text style={styles.cardDesc} numberOfLines={2}>
-                                    {encuesta.descripcion || 'Sin descripción disponible.'}
-                                </Text>
-                            </View>
-                            <Text style={styles.chevron}>›</Text>
-                        </TouchableOpacity>
-                    ))}
+                    {encuestas.map((encuesta, idx) => {
+                        const PALETA = [AZUL, VERDE, NARANJA, MORADO, '#5c6bc0'];
+                        const EMOJIS = ['📋', '📝', '📊', '🌾', '📍'];
+                        const colorTema = PALETA[idx % PALETA.length];
+                        const emojiTema = EMOJIS[idx % EMOJIS.length];
+                        return (
+                            <TouchableOpacity
+                                key={encuesta.id}
+                                style={[styles.card, { borderLeftColor: colorTema }]}
+                                onPress={() => navigation.navigate('CompletarEncuesta', { encuesta })}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: colorTema + '22' }]}>
+                                    <Text style={styles.iconEmoji}>{emojiTema}</Text>
+                                </View>
+                                <View style={styles.cardInfo}>
+                                    <Text style={styles.cardTitle}>{encuesta.titulo}</Text>
+                                    <Text style={styles.cardDesc} numberOfLines={2}>
+                                        {encuesta.descripcion || 'Sin descripción disponible.'}
+                                    </Text>
+                                </View>
+                                <Text style={styles.chevron}>›</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
             )}
         </ScrollView>

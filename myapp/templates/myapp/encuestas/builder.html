@@ -68,16 +68,32 @@
             </div>
             
             <div class="row align-items-center mt-3 pt-2 border-top">
-                <div class="col-md-6 mb-2 mb-md-0">
-                    <div class="form-check form-switch">
+                <div class="col-md-7 mb-2 mb-md-0">
+                    <div class="form-check form-switch mb-1">
                         <input class="form-check-input" type="checkbox" role="switch" id="survey-anonima-input"
                                {% if survey %}{% if survey.anonima %}checked{% endif %}{% else %}checked{% endif %}>
                         <label class="form-check-label text-dark small" for="survey-anonima-input">
-                            <strong>Permitir respuestas anónimas</strong> (No requiere iniciar sesión)
+                            <strong>Respuestas anónimas</strong> (No requiere iniciar sesión)
                         </label>
                     </div>
+                    <div class="d-flex gap-3 mt-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="survey-web-input"
+                                   {% if survey %}{% if survey.disponible_web %}checked{% endif %}{% else %}checked{% endif %}>
+                            <label class="form-check-label text-dark small fw-semibold" for="survey-web-input">
+                                <i class="fas fa-globe text-primary me-1"></i> Habilitar en Web
+                            </label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="survey-movil-input"
+                                   {% if survey %}{% if survey.disponible_movil %}checked{% endif %}{% else %}checked{% endif %}>
+                            <label class="form-check-label text-dark small fw-semibold" for="survey-movil-input">
+                                <i class="fas fa-mobile-alt text-success me-1"></i> Habilitar en App Móvil
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 text-md-end">
+                <div class="col-md-5 text-md-end">
                     <button class="btn btn-outline-secondary me-2 btn-sm" id="btn-cancel">Cancelar</button>
                     <button class="btn btn-dark btn-sm px-4" id="btn-save-survey" style="background-color: var(--color-gris-oscuro);">
                         <i class="fas fa-save me-1"></i> Guardar Encuesta
@@ -438,11 +454,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Prepare JSON payload
+        const disponible_web = document.getElementById('survey-web-input') ? document.getElementById('survey-web-input').checked : true;
+        const disponible_movil = document.getElementById('survey-movil-input') ? document.getElementById('survey-movil-input').checked : true;
+
         const payload = {
             id: surveyId,
             titulo: titulo,
             descripcion: descripcion,
             anonima: anonima,
+            disponible_web: disponible_web,
+            disponible_movil: disponible_movil,
             preguntas: questions
         };
 

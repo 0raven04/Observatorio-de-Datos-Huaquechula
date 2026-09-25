@@ -147,6 +147,10 @@ urlpatterns = [
     path('encuestas/responder/<int:id_encuesta>/', views_encuestas.responder_encuesta, name='responder_encuesta'),
     path('encuestas/<int:id_encuesta>/respuestas/', views_encuestas.ver_respuestas, name='ver_respuestas'),
     path('encuestas/respuestas/eliminar/<int:id_respuesta>/', views_encuestas.eliminar_respuesta, name='eliminar_respuesta'),
+    path('encuestas/toggle-canal/<int:id_encuesta>/<str:canal>/', views_encuestas.toggle_canal_encuesta, name='toggle_canal_encuesta'),
+    path('encuestas/<int:id_encuesta>/publicar-repositorio/', views_encuestas.publicar_reporte_repositorio, name='publicar_reporte_repositorio'),
+    path('api/encuestas/<int:id_encuesta>/datos/', views_encuestas.api_encuesta_datos, name='api_encuesta_datos'),
+    path('api/encuestas/<int:id_encuesta>/exportar-csv/', views_encuestas.exportar_encuesta_csv, name='exportar_encuesta_csv'),
 
     # =====================================================
     # Observabilidad y Auditoría de Flujo de Datos
