@@ -9,27 +9,51 @@
 <meta name="description"
     content="Dashboard de indicadores estratégicos del Observatorio Territorial de Huaquechula. Datos de Bienestar Social, Tradición, Patrimonio y Turismo Comunitario.">
 <!-- Dashboard CSS -->
-<link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'myapp/CSS/dashboard.css' %}?v=2.2">
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- jsPDF for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-    /* Ajustes para integrar con base.html */
+    /* Ajustes para integrar con base.html y evitar desbordes */
     .dashboard-layout {
         margin-top: 0;
         min-height: auto;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .dashboard-sidebar {
         top: 75px;
         height: calc(100vh - 75px);
+        width: 280px;
+        min-width: 280px;
         background: #fff;
         z-index: 900;
     }
 
     .dashboard-main {
         padding-top: 60px !important;
+        margin-left: 280px !important;
+        width: calc(100% - 280px) !important;
+        max-width: calc(100% - 280px) !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-sidebar {
+            width: 240px !important;
+            min-width: 240px !important;
+        }
+        .dashboard-main {
+            margin-left: 240px !important;
+            width: calc(100% - 240px) !important;
+            max-width: calc(100% - 240px) !important;
+            padding: var(--space-lg) !important;
+            padding-top: 60px !important;
+        }
     }
 
     @media (max-width: 768px) {
@@ -37,10 +61,15 @@
             top: 0;
             position: relative;
             height: auto;
+            width: 100% !important;
+            min-width: 100% !important;
         }
 
         .dashboard-main {
-            margin-left: 0;
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-top: 20px !important;
         }
     }
 

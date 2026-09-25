@@ -244,10 +244,13 @@
 
 /* ── Main Content ────────────────────────────── */
 .dashboard-main {
-    flex: 1;
+    flex: 1 1 auto;
     margin-left: 280px;
     padding: var(--space-xl) var(--space-2xl);
-    max-width: 100%;
+    width: calc(100% - 280px);
+    max-width: calc(100% - 280px);
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 /* ── Page Header ─────────────────────────────── */
@@ -273,9 +276,10 @@
 /* ── KPI Cards Row ───────────────────────────── */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--space-lg);
     margin-bottom: var(--space-2xl);
+    width: 100%;
 }
 
 .kpi-card {
@@ -424,8 +428,16 @@
 /* ── Indicator Cards Grid ────────────────────── */
 .indicators-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: var(--space-md);
+    width: 100%;
+    min-width: 0;
+}
+
+@media (min-width: 1600px) {
+    .indicators-grid {
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    }
 }
 
 .indicator-card {
@@ -434,11 +446,13 @@
     padding: var(--space-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(0,0,0,0.04);
-    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
     cursor: pointer;
     position: relative;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .indicator-card:hover {
@@ -449,22 +463,27 @@
 .indicator-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: var(--space-sm);
-    gap: var(--space-sm);
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .indicator-badges {
-    display: flex;
+    display: inline-flex;
     gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .indicator-name {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--color-gris-oscuro);
-    line-height: 1.3;
-    flex: 1;
+    line-height: 1.35;
+    flex: 1 1 140px;
+    min-width: 0;
 }
 
 .indicator-source-badge {
@@ -475,6 +494,7 @@
     padding: 2px 6px;
     border-radius: 4px;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .indicator-source-badge.inegi {
@@ -726,8 +746,8 @@
 
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 1200px) {
-    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
-    .indicators-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .indicators-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 }
 
 @media (max-width: 992px) {
@@ -735,7 +755,12 @@
         width: 240px;
         min-width: 240px;
     }
-    .dashboard-main { margin-left: 240px; padding: var(--space-lg); }
+    .dashboard-main {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        max-width: calc(100% - 240px);
+        padding: var(--space-lg);
+    }
     .dashboard-footer { margin-left: 240px; }
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .chart-metadata-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
@@ -776,6 +801,8 @@
     
     .dashboard-main {
         margin-left: 0;
+        width: 100%;
+        max-width: 100%;
         padding: var(--space-md);
     }
     
@@ -845,89 +872,185 @@
     color: var(--color-gris-oscuro);
 }
 
-/* List View Overrides */
+/* ── List View Overrides ─────────────────── */
 .indicators-grid.list-view {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
+    width: 100%;
 }
 
 .indicators-grid.list-view .indicator-card {
     display: grid;
-    grid-template-columns: 2fr 70px 80px 90px 100px 80px 120px;
+    grid-template-columns: minmax(280px, 2.5fr) minmax(130px, 1fr) minmax(95px, 0.8fr) minmax(190px, 1.2fr);
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
+    gap: 16px;
+    padding: 12px 20px;
     width: 100%;
+    min-height: 64px;
+    border-radius: var(--radius-sm);
+    flex-direction: row;
+    box-sizing: border-box;
 }
 
-@media (min-width: 992px) {
-    .indicators-grid.list-view .indicator-card-header,
-    .indicators-grid.list-view .indicator-value-row,
-    .indicators-grid.list-view .indicator-trend-row {
-        display: contents;
-    }
+.indicators-grid.list-view .indicator-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(230, 126, 34, 0.3);
+    transform: none;
+}
+
+/* Columna 1: Título y Badges (juntos en el header, nunca se solapan con la cifra) */
+.indicators-grid.list-view .indicator-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0;
+    min-width: 0;
+    width: 100%;
+    flex-wrap: nowrap;
 }
 
 .indicators-grid.list-view .indicator-name {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 600;
+    color: var(--color-gris-oscuro);
+    line-height: 1.35;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 0;
+    word-break: break-word;
+}
+
+.indicators-grid.list-view .indicator-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .indicators-grid.list-view .indicator-source-badge {
-    justify-self: start;
-}
-
-.indicators-grid.list-view .indicator-main-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    text-align: left;
-    justify-self: start;
-}
-
-.indicators-grid.list-view .indicator-main-unit {
-    font-size: 0.8rem;
-    color: var(--color-gris-claro);
-}
-
-.indicators-grid.list-view .indicator-period {
-    font-size: 0.8rem;
-    color: var(--color-gris-claro);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    justify-content: start;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 4px;
     white-space: nowrap;
 }
 
+/* Columna 2: Cifra y Unidad con columna propia garantizada */
+.indicators-grid.list-view .indicator-value-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 0;
+    text-align: right;
+    min-width: 0;
+    width: 100%;
+}
+
+.indicators-grid.list-view .indicator-main-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-gris-oscuro);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.indicators-grid.list-view .indicator-main-unit {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-gris-medio);
+    white-space: nowrap;
+}
+
+/* Columna 3: Periodo */
+.indicators-grid.list-view .indicator-period {
+    font-size: 0.8rem;
+    color: var(--color-gris-medio);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    width: 100%;
+}
+
+/* Ocultar sparklines en vista de lista para un aspecto tabular consistente */
+.indicators-grid.list-view .indicator-sparkline {
+    display: none !important;
+}
+
+/* Columna 4: Tendencia y Botón */
+.indicators-grid.list-view .indicator-trend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    min-width: 0;
+    width: 100%;
+}
+
 .indicators-grid.list-view .indicator-trend {
-    justify-self: start;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .indicators-grid.list-view .indicator-view-btn {
-    justify-self: end;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--color-naranja);
+    background: rgba(230, 126, 34, 0.08);
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: var(--transition-fast);
 }
 
-.indicators-grid.list-view .indicator-sparkline {
-    display: none;
+.indicators-grid.list-view .indicator-view-btn:hover {
+    background: var(--color-naranja);
+    color: #fff;
 }
 
-.indicators-grid.list-view .indicator-sparkline {
-    margin: 0;
-    height: 30px;
-}
-
+/* Adaptación responsiva de vista de lista en tablets y móviles (< 992px) */
 @media (max-width: 991px) {
     .indicators-grid.list-view .indicator-card {
-        grid-template-columns: 1fr;
-        padding: 20px;
-        gap: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
     }
-    
-    .indicators-grid.list-view .indicator-trend-row {
+
+    .indicators-grid.list-view .indicator-card-header {
+        display: flex;
+        align-items: flex-start;
         justify-content: space-between;
-        margin-top: 10px;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .indicators-grid.list-view .indicator-value-row {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .indicators-grid.list-view .indicator-period {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .indicators-grid.list-view .indicator-trend-row {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 4px;
         padding-top: 10px;
-        border-top: 1px solid rgba(0,0,0,0.05);
+        border-top: 1px solid var(--color-arena-oscuro);
     }
 }
 
