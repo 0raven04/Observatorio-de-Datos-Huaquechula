@@ -6,7 +6,7 @@
  *   - Con sesión → Tab: Encuestas (Portal Encuestador) + Mis Visitas (Historial)
  */
 import React from 'react';
-import { ActivityIndicator, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { ActivityIndicator, View, Text, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -30,47 +30,8 @@ const Tab = createBottomTabNavigator();
 // Paleta compartida
 const COLOR_INSTITUCIONAL = '#4A4A4A';
 
-function BotonCerrarSesion() {
-    const { logout } = useAuth();
-
-    const handlePress = () => {
-        Alert.alert(
-            'Cerrar sesión',
-            '¿Estás seguro de que deseas salir de tu cuenta?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Cerrar sesión',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await logout();
-                        } catch (e) {
-                            console.error('Error cerrando sesión:', e);
-                        }
-                    },
-                },
-            ]
-        );
-    };
-
-    return (
-        <TouchableOpacity
-            onPress={handlePress}
-            style={{
-                marginRight: 15,
-                backgroundColor: '#c0392b',
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-            }}
-        >
-            <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 12 }}>Salir 🚪</Text>
-        </TouchableOpacity>
-    );
-}
+// Componente vacío para la pestaña de acción de cerrar sesión
+const PantallaVacia = () => <View style={{ flex: 1, backgroundColor: '#EDEBE3' }} />;
 
 // ── Stack para el flujo de Encuestas ──────────────────────────────────────────
 function EncuestasStack() {
@@ -87,7 +48,6 @@ function EncuestasStack() {
                 component={SelectorEncuestasScreen}
                 options={{
                     title: 'Portal del Encuestador',
-                    headerRight: () => <BotonCerrarSesion />,
                 }}
             />
             <Stack.Screen
@@ -126,6 +86,29 @@ function EncuestasStack() {
 
 // ── Tabs para Encuestador / Usuarios Autenticados ─────────────────────────────
 function EncuestadorTabs() {
+    const { logout } = useAuth();
+
+    const handleCerrarSesion = () => {
+        Alert.alert(
+            'Cerrar sesión',
+            '¿Estás seguro de que deseas salir de tu cuenta?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Cerrar sesión',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await logout();
+                        } catch (e) {
+                            console.error('Error cerrando sesión:', e);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     return (
         <Tab.Navigator
             screenOptions={{
@@ -154,10 +137,25 @@ function EncuestadorTabs() {
                     tabBarLabel: 'Mis encuestas',
                     headerStyle: { backgroundColor: COLOR_INSTITUCIONAL },
                     headerTintColor: '#fff',
-                    headerRight: () => <BotonCerrarSesion />,
                     tabBarIcon: ({ color, size }) => (
                         <TabIcon emoji="🗂️" color={color} size={size} />
                     ),
+                }}
+            />
+            <Tab.Screen
+                name="CerrarSesionTab"
+                component={PantallaVacia}
+                options={{
+                    tabBarLabel: 'Cerrar sesión',
+                    tabBarIcon: ({ color, size }) => (
+                        <TabIcon emoji="🚪" color={color} size={size} />
+                    ),
+                }}
+                listeners={{
+                    tabPress: (e) => {
+                        e.preventDefault();
+                        handleCerrarSesion();
+                    },
                 }}
             />
         </Tab.Navigator>

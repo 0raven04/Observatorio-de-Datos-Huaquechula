@@ -10,32 +10,11 @@ const NARANJA = '#c4b897'; // Ocre/arena oscuro (apagado)
 const MORADO = '#4A4A4A'; // Gris oscuro institucional
 
 export default function SelectorEncuestasScreen({ navigation }) {
-    const { usuario, logout } = useAuth();
+    const { usuario } = useAuth();
     const [encuestas, setEncuestas] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [pendientesOffline, setPendientesOffline] = useState(0);
     const [sincronizando, setSincronizando] = useState(false);
-
-    const handleCerrarSesion = () => {
-        Alert.alert(
-            'Cerrar sesión',
-            '¿Estás seguro de que deseas salir de tu cuenta?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Cerrar sesión',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await logout();
-                        } catch (e) {
-                            console.error('Error cerrando sesión:', e);
-                        }
-                    },
-                },
-            ]
-        );
-    };
 
     const verificarColaOffline = useCallback(async () => {
         try {
@@ -104,7 +83,7 @@ export default function SelectorEncuestasScreen({ navigation }) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            {/* Barra de usuario y cierre de sesión */}
+            {/* Barra informativa del encuestador */}
             <View style={styles.userCard}>
                 <View style={styles.userCardLeft}>
                     <View style={styles.userAvatar}>
@@ -119,9 +98,6 @@ export default function SelectorEncuestasScreen({ navigation }) {
                         </Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.btnLogoutSmall} onPress={handleCerrarSesion}>
-                    <Text style={styles.btnLogoutSmallText}>Cerrar sesión</Text>
-                </TouchableOpacity>
             </View>
 
             {/* Banner de Sincronización Offline Resiliente */}
@@ -331,19 +307,6 @@ const styles = StyleSheet.create({
     userCardSub: {
         fontSize: 11,
         color: '#718096',
-    },
-    btnLogoutSmall: {
-        backgroundColor: '#fff5f5',
-        borderWidth: 1,
-        borderColor: '#feb2b2',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 8,
-    },
-    btnLogoutSmallText: {
-        fontSize: 11,
-        fontWeight: 'bold',
-        color: '#e53e3e',
     },
     offlineBanner: {
         backgroundColor: '#fffbeb',
