@@ -204,7 +204,8 @@ class EncuestaResidenteForm(forms.ModelForm):
         widgets = {
             'edad': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'genero': forms.Select(attrs={'class': 'form-select'}),
-            'barrio_colonia': forms.TextInput(attrs={'class': 'form-control'}),
+            'region_origen': forms.Select(attrs={'class': 'form-select'}),
+            'barrio_colonia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Barrio de San José, Calle Principal...'}),
             'confianza_policia': forms.Select(attrs={'class': 'form-select'}),
             'percepcion_inseguridad': forms.Select(attrs={'class': 'form-select'}),
             'tension_festividades': forms.Select(attrs={'class': 'form-select'}),
@@ -233,6 +234,22 @@ class EncuestaVisitanteForm(forms.ModelForm):
             'satisfaccion': forms.Select(attrs={'class': 'form-select'}),
             'lo_que_mas_gusto': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Cuéntanos qué fue lo que más te gustó de tu visita...'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'residencia_estado' in self.fields:
+            self.fields['residencia_estado'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        pais = (cleaned_data.get('residencia_pais') or '').strip()
+        estado = (cleaned_data.get('residencia_estado') or '').strip()
+        
+        if pais.lower() in ['méxico', 'mexico'] and not estado:
+            self.add_error('residencia_estado', 'Debe seleccionar un estado para México.')
+        elif pais and pais.lower() not in ['méxico', 'mexico'] and not estado:
+            cleaned_data['residencia_estado'] = 'Extranjero'
+        return cleaned_data
 
 class EncuestaInstitucionalForm(forms.ModelForm):
     class Meta:

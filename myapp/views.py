@@ -903,8 +903,10 @@ def formulario(request):
                 hombres_61_75=hombres_61_75,
                 hombres_76_mas=hombres_76_mas
             )
-            
-            return redirect('formulario')
+            messages.success(request, 'Registro de visitantes guardado exitosamente.')
+            if request.user.is_authenticated:
+                return redirect('encuestador_dashboard')
+            return redirect('registro')
             
         except Exception as e:
             messages.error(request, f'Error al crear el registro: {str(e)}')

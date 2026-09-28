@@ -1,701 +1,453 @@
+{% extends 'myapp/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulario de Registro de Visitantes</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7"
-      crossorigin="anonymous"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
-      crossorigin="anonymous"
-    ></script>
-    <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
-    <script src="{% static 'myapp/JAV/javascript.js' %}" defer></script>
-    <style>
-      /* Estilos específicos para la tabla de género y edad */
-      .age-group-header {
-        background-color: var(--color-gris-oscuro);
-        color: white;
-        padding: 15px;
-        font-weight: bold;
-        text-align: center;
-        border-radius: 5px 5px 0 0;
-        margin-bottom: 0;
-      }
-      
-      .age-group-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      }
-      
-      .age-group-table th {
-        background-color: var(--color-gris-oscuro);
-        color: white;
-        padding: 12px 8px;
-        text-align: center;
-        font-weight: bold;
-        border: 1px solid var(--color-gris-oscuro);
-      }
-      
-      .age-group-table td {
-        padding: 10px 8px;
-        text-align: center;
-        border: 1px solid #ddd;
-        vertical-align: middle;
-      }
-      
-      .age-group-table tbody tr:nth-child(even) {
-        background-color: var(--color-arena-claro);
-      }
-      
-      .age-group-table tbody tr:hover {
-        background-color: rgba(214, 206, 170, 0.4); /* arena-oscuro con opacidad */
-      }
-      
-      .age-group-table tfoot th {
-        background-color: var(--color-gris-oscuro);
-        color: white;
-        font-weight: bold;
-      }
-      
-      .age-group-table tfoot td {
-        background-color: var(--color-arena-claro);
-        color: var(--color-gris-oscuro);
-        font-weight: bold;
-      }
-      
-      .age-group-table .group-total {
-        display: inline-block;
-        min-width: 40px;
-        padding: 5px 10px;
-        background-color: var(--color-naranja);
-        color: white;
-        border-radius: 3px;
-        font-weight: bold;
-      }
-      
-      .age-group-table input.form-control {
-        width: 80px;
-        margin: 0 auto;
-        text-align: center;
-        padding: 6px;
-      }
-      
-      .age-group-table input.form-control:focus {
-        border-color: var(--color-naranja-claro);
-        box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
-      }
-      
-      .total-display {
-        background-color: var(--color-gris-oscuro);
-        color: white;
-        padding: 12px;
-        font-weight: bold;
-        text-align: center;
-        border-radius: 0 0 5px 5px;
-        margin-top: -1px;
-        font-size: 1.2rem;
-      }
-      
-      .total-display span {
-        background-color: var(--color-naranja-claro);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        margin-left: 10px;
-      }
-      
-      /* Responsive */
-      @media (max-width: 768px) {
-        .age-group-table {
-          font-size: 0.9rem;
-        }
+
+{% block title %}Nueva Encuesta: Registro de Visitantes{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-5" style="border-radius: 12px; max-width: 850px; margin: 20px auto;">
+    <div class="card-body p-4 p-md-5">
         
-        .age-group-table input.form-control {
-          width: 60px;
-          padding: 4px;
-        }
-        
-        .age-group-header {
-          font-size: 1rem;
-          padding: 10px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div class="cabeza sticky-top">
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#offcanvasNavbar"
-          aria-controls="offcanvasNavbar"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <a href="{% url 'vista_inicio' %}" class="btn boton text-decoration-none">Regresar</a>
-      </div>
-
-      <div
-        class="offcanvas offcanvas-start"
-        tabindex="-1"
-        id="offcanvasNavbar"
-        aria-labelledby="offcanvasNavbarLabel"
-      >
-        <div class="offcanvas-header">
-          <button
-            type="button"
-            class="btn-close text-reset"
-            data-bs-dismiss="offcanvas"
-            aria-label="Close"
-          ></button>
+        <!-- Botón de regreso -->
+        <div class="mb-4">
+            <a href="{% url 'encuestador_dashboard' %}" class="text-decoration-none text-muted">
+                <i class="fas fa-arrow-left me-2"></i>Regresar al Portal
+            </a>
         </div>
-        <div class="offcanvas-body">
-          <button
-            class="btn boton boton-menu"
-            type="button"
-            data-bs-dismiss="offcanvas"
-            onclick="window.location.href='/backup/'"
-          >
-            Respaldo de datos
-          </button>
+
+        <!-- Mensajes del sistema -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 10px;">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle text-success{% else %}fa-exclamation-circle text-danger{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
         </div>
-      </div>
-    </header>
+        {% endif %}
 
-    <div class="caja container-fluid mt-3 p-5">
-      <div class="d-flex justify-content-center">
-        <img
-          src="{% static 'myapp/image/logo.png' %}"
-          class="img-fluid logo"
-          alt="Logo"
-          style="max-height: 100px;"
-        />
-      </div>
+        <form method="POST" id="formulario" action="{% url 'registro' %}" class="needs-validation" novalidate>
+            {% csrf_token %}
 
-      <p class="h1 h1 text-center text-md-start">Registro de visitantes</p>
+            <!-- Título del formulario -->
+            <h2 class="mb-4" style="color: #D35400; border-bottom: 2px solid #D35400; padding-bottom: 10px; font-weight: 800;">
+                <i class="fas fa-users me-2"></i>Nueva Encuesta: Registro de Visitantes
+            </h2>
 
-      <form
-        class="needs-validation g-3"
-        novalidate
-        name="formulario"
-        id="formulario"
-        method="POST"
-        action="{% url 'registro' %}"
-      >
-        {% csrf_token %}
+            <p class="text-muted mb-4 small">
+                <strong>Dirigido a:</strong> Visitantes individuales, familias y grupos turísticos.<br>
+                <strong>Objetivo:</strong> Cuantificar el flujo de visitantes, perfil demográfico por edad y género, temporalidad, procedencia y motivos de viaje en el municipio de Huaquechula.
+            </p>
 
-        <div class="row p-3 p-md-6 mb-3">
-          <div class="col-12">
-            <!-- Tabla de distribución por edad y género -->
-            <div class="age-group-header">
-              Distribución de personas por grupo de edad y género
+            <!-- Bloque A: Origen y Dinámica del Viaje -->
+            <div class="card border-0 bg-light p-3 p-md-4 mb-4" style="border-radius: 10px;">
+                <h5 class="fw-bold mb-3" style="color: #D35400;">
+                    <i class="fas fa-route me-2"></i>Bloque A: Origen y Dinámica del Viaje
+                </h5>
+
+                <div class="row g-3">
+                    <!-- 1. Procedencia con Selector Dinámico en Cascada -->
+                    <div class="col-12">
+                        <label class="form-label fw-bold" style="color: #2c3e50;">
+                            <i class="fas fa-map-marked-alt text-danger me-1"></i>1. Procedencia del Visitante <span class="text-danger">*</span>
+                        </label>
+                        <div class="card border-0 p-3" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div class="row g-2">
+                                <!-- Selector de País -->
+                                <div class="col-md-4">
+                                    <label for="reg_pais" class="form-label small fw-semibold text-muted">País</label>
+                                    <select class="form-select" id="reg_pais" required>
+                                        <option value="México" selected>México</option>
+                                    </select>
+                                </div>
+
+                                <!-- Selector de Estado (visible si es México) -->
+                                <div class="col-md-4" id="contenedorEstadoReg">
+                                    <label for="reg_estado" class="form-label small fw-semibold text-muted">Estado</label>
+                                    <select class="form-select" id="reg_estado">
+                                    </select>
+                                </div>
+
+                                <!-- Selector/Input de Ciudad -->
+                                <div class="col-md-4" id="contenedorCiudadReg">
+                                    <label for="reg_ciudadSelect" class="form-label small fw-semibold text-muted">Ciudad / Municipio</label>
+                                    <!-- Select cuando es México -->
+                                    <select class="form-select" id="reg_ciudadSelect">
+                                    </select>
+                                    <!-- Input texto cuando es Extranjero -->
+                                    <input type="text" class="form-control" id="reg_ciudadInput" placeholder="Escriba la ciudad..." style="display: none;" />
+                                </div>
+
+                                <!-- Contenedor para especificar otro municipio si se selecciona "Otro..." -->
+                                <div class="col-12 mt-2" id="contenedorCiudadOtroReg" style="display: none;">
+                                    <label for="reg_ciudadOtro" class="form-label small fw-semibold text-muted">Especifique el municipio o localidad:</label>
+                                    <input type="text" class="form-control" id="reg_ciudadOtro" placeholder="Nombre del municipio o localidad..." />
+                                </div>
+                            </div>
+
+                            <!-- Resumen / Previsualización de procedencia consolidada -->
+                            <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-2 text-muted small">
+                                <div>
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                    Procedencia registrada: <strong id="procedenciaPreview" class="text-dark">Huaquechula, Puebla</strong>
+                                </div>
+                                <div id="badgeNacionalidad">
+                                    <span class="badge bg-primary" id="tipoVisitanteBadge">Nacional</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos ocultos sincronizados con el backend de RegistroVisita -->
+                        <input type="hidden" name="procedencia" id="procedencia" value="Huaquechula, Puebla" required />
+                        <input type="hidden" name="es_extranjero" id="es_extranjero" value="0" />
+                        <input type="hidden" name="pais_origen" id="pais_origen" value="" />
+                        <div class="invalid-feedback">Por favor indique la procedencia.</div>
+                    </div>
+
+                    <!-- Estancia esperada (días) -->
+                    <div class="col-md-6">
+                        <label for="estancia_dias" class="form-label fw-bold">2. Estancia esperada (días)</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="estancia_dias"
+                            name="estancia_dias"
+                            min="1"
+                            max="255"
+                            value="1"
+                            required
+                        />
+                        <div class="invalid-feedback">El número de días debe estar entre 1 y 255.</div>
+                    </div>
+
+                    <!-- Visitas previas -->
+                    <div class="col-md-6">
+                        <label for="visitas_previas" class="form-label fw-bold">3. Número de visitas previas a Huaquechula</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="visitas_previas"
+                            name="visitas_previas"
+                            min="1"
+                            max="255"
+                            value="1"
+                            required
+                        />
+                        <div class="invalid-feedback">El número de visitas debe estar entre 1 y 255.</div>
+                    </div>
+
+                    <!-- Motivo de la visita -->
+                    <div class="col-md-6">
+                        <label for="motivo_visita" class="form-label fw-bold">4. Motivo principal de la visita</label>
+                        <select class="form-select" id="motivo_visita" name="motivo_visita" required>
+                            <option value="turismo" selected>Turismo / Cultura / Tradición</option>
+                            <option value="visita_familiar">Visita familiar / Amigos</option>
+                            <option value="negocios">Negocios / Trabajo</option>
+                            <option value="estudios">Estudios / Investigación</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo de transporte -->
+                    <div class="col-md-6">
+                        <label for="tipo_transporte" class="form-label fw-bold">5. Medio de transporte utilizado</label>
+                        <select class="form-select" id="tipo_transporte" name="tipo_transporte" required>
+                            <option value="automovil" selected>Automóvil particular</option>
+                            <option value="autobus">Autobús de pasajeros / Tour</option>
+                            <option value="avion">Avión</option>
+                            <option value="tren">Tren</option>
+                            <option value="otros">Otro transporte</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <table class="age-group-table">
-              <thead>
-                <tr>
-                  <th>Grupo de Edad</th>
-                  <th>Mujeres</th>
-                  <th>Hombres</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>0-15 años</td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="mujeres_0_15"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="0_15"
-                      data-gender="mujeres"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="hombres_0_15"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="0_15"
-                      data-gender="hombres"
-                    />
-                  </td>
-                  <td><span class="group-total" data-group="0_15">0</span></td>
-                </tr>
-                <tr>
-                  <td>16-30 años</td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="mujeres_16_30"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="16_30"
-                      data-gender="mujeres"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="hombres_16_30"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="16_30"
-                      data-gender="hombres"
-                    />
-                  </td>
-                  <td><span class="group-total" data-group="16_30">0</span></td>
-                </tr>
-                <tr>
-                  <td>31-45 años</td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="mujeres_31_45"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="31_45"
-                      data-gender="mujeres"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="hombres_31_45"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="31_45"
-                      data-gender="hombres"
-                    />
-                  </td>
-                  <td><span class="group-total" data-group="31_45">0</span></td>
-                </tr>
-                <tr>
-                  <td>46-60 años</td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="mujeres_46_60"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="46_60"
-                      data-gender="mujeres"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="hombres_46_60"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="46_60"
-                      data-gender="hombres"
-                    />
-                  </td>
-                  <td><span class="group-total" data-group="46_60">0</span></td>
-                </tr>
-                <tr>
-                  <td>61-75 años</td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="mujeres_61_75"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="61_75"
-                      data-gender="mujeres"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="hombres_61_75"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="61_75"
-                      data-gender="hombres"
-                    />
-                  </td>
-                  <td><span class="group-total" data-group="61_75">0</span></td>
-                </tr>
-                <tr>
-                  <td>76 años o más</td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="mujeres_76_mas"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="76_mas"
-                      data-gender="mujeres"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control age-input"
-                      name="hombres_76_mas"
-                      min="0"
-                      max="255"
-                      value="0"
-                      data-group="76_mas"
-                      data-gender="hombres"
-                    />
-                  </td>
-                  <td>
-                    <span class="group-total" data-group="76_mas">0</span>
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th>Total</th>
-                  <th><span id="total-mujeres">0</span></th>
-                  <th><span id="total-hombres">0</span></th>
-                  <th><span id="total-personas">0</span></th>
-                </tr>
-              </tfoot>
-            </table>
-            <div class="total-display">
-              Total de personas: <span id="display-total">0</span>
+
+            <!-- Bloque B: Distribución del Grupo por Edad y Género -->
+            <div class="card border-0 bg-light p-3 p-md-4 mb-4" style="border-radius: 10px;">
+                <h5 class="fw-bold mb-2" style="color: #D35400;">
+                    <i class="fas fa-users-cog me-2"></i>Bloque B: Distribución del Grupo por Edad y Género
+                </h5>
+                <p class="text-muted small mb-3">
+                    Indique la cantidad de personas que integran el grupo según su género y rango de edad:
+                </p>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered bg-white shadow-sm align-middle text-center mb-0" style="border-radius: 8px; overflow: hidden;">
+                        <thead class="text-white" style="background-color: var(--color-gris-oscuro);">
+                            <tr>
+                                <th scope="col" style="width: 35%;" class="text-start ps-3">Rango de Edad</th>
+                                <th scope="col" style="width: 25%;"><i class="fas fa-female me-1 text-warning"></i>Mujeres</th>
+                                <th scope="col" style="width: 25%;"><i class="fas fa-male me-1 text-info"></i>Hombres</th>
+                                <th scope="col" style="width: 15%;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">0 - 15 años</td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="mujeres_0_15" min="0" max="255" value="0" data-group="0_15" data-gender="mujeres">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="hombres_0_15" min="0" max="255" value="0" data-group="0_15" data-gender="hombres">
+                                </td>
+                                <td><span class="badge bg-secondary px-2 py-1 group-total" data-group="0_15">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">16 - 30 años</td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="mujeres_16_30" min="0" max="255" value="0" data-group="16_30" data-gender="mujeres">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="hombres_16_30" min="0" max="255" value="0" data-group="16_30" data-gender="hombres">
+                                </td>
+                                <td><span class="badge bg-secondary px-2 py-1 group-total" data-group="16_30">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">31 - 45 años</td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="mujeres_31_45" min="0" max="255" value="0" data-group="31_45" data-gender="mujeres">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="hombres_31_45" min="0" max="255" value="0" data-group="31_45" data-gender="hombres">
+                                </td>
+                                <td><span class="badge bg-secondary px-2 py-1 group-total" data-group="31_45">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">46 - 60 años</td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="mujeres_46_60" min="0" max="255" value="0" data-group="46_60" data-gender="mujeres">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="hombres_46_60" min="0" max="255" value="0" data-group="46_60" data-gender="hombres">
+                                </td>
+                                <td><span class="badge bg-secondary px-2 py-1 group-total" data-group="46_60">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">61 - 75 años</td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="mujeres_61_75" min="0" max="255" value="0" data-group="61_75" data-gender="mujeres">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="hombres_61_75" min="0" max="255" value="0" data-group="61_75" data-gender="hombres">
+                                </td>
+                                <td><span class="badge bg-secondary px-2 py-1 group-total" data-group="61_75">0</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">76 años o más</td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="mujeres_76_mas" min="0" max="255" value="0" data-group="76_mas" data-gender="mujeres">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control text-center age-input" name="hombres_76_mas" min="0" max="255" value="0" data-group="76_mas" data-gender="hombres">
+                                </td>
+                                <td><span class="badge bg-secondary px-2 py-1 group-total" data-group="76_mas">0</span></td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-light fw-bold">
+                            <tr>
+                                <td class="text-start ps-3 text-uppercase small text-muted">Totales</td>
+                                <td><span id="total-mujeres" class="badge" style="background-color: #D35400; font-size: 0.95rem;">0</span></td>
+                                <td><span id="total-hombres" class="badge" style="background-color: #4A4A4A; font-size: 0.95rem;">0</span></td>
+                                <td><span id="total-personas" class="badge bg-dark" style="font-size: 0.95rem;">0</span></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Resumen destacado del conteo -->
+                <div class="p-3 mt-3 rounded text-center text-white fw-bold d-flex justify-content-center align-items-center flex-wrap gap-2 shadow-sm" style="background-color: var(--color-gris-oscuro); border-radius: 10px;">
+                    <span style="font-size: 1.05rem;"><i class="fas fa-user-friends me-2 text-warning"></i>Total de personas en el grupo:</span>
+                    <span id="display-total" class="badge px-3 py-2 fs-6 shadow-sm" style="background-color: #D35400;">0</span>
+                </div>
+                <input type="hidden" id="total-personas-hidden" name="total_personas" value="0">
             </div>
-            <!-- Campo oculto para enviar el total al servidor -->
-            <input type="hidden" id="total-personas-hidden" name="total_personas" value="0">
-          </div>
 
-          <!-- Campos restantes del formulario -->
-          <!-- Estancia esperada (días) -->
-          <div class="col-12 col-md-6 mb-3">
-            <label for="estancia_dias" class="form-label">Estancia esperada (días)</label>
-            <input
-              type="number"
-              class="form-control"
-              id="estancia_dias"
-              name="estancia_dias"
-              placeholder="Ingresa el número de días"
-              min="1"
-              max="255"
-              value="1"
-              required
-            />
-            <div class="invalid-feedback">
-              Ingresa un número válido (entre 1 y 255)
+            <!-- Botones de Acción -->
+            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <a href="{% url 'encuestador_dashboard' %}" class="btn btn-outline-secondary px-4">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
+                <button type="submit" class="btn text-white px-5 py-2 fw-bold shadow-sm" style="background-color: #D35400; border: none; border-radius: 8px;">
+                    <i class="fas fa-save me-2"></i>Guardar Registro
+                </button>
             </div>
-          </div>
-
-          <!-- Visitas previas - CAMPO AGREGADO -->
-          <div class="col-12 col-md-6 mb-3">
-            <label for="visitas_previas" class="form-label">Visitas previas</label>
-            <input
-              type="number"
-              class="form-control"
-              id="visitas_previas"
-              name="visitas_previas"
-              placeholder="Número de visitas anteriores"
-              min="1"
-              max="255"
-              value="1"
-              required
-            />
-            <div class="invalid-feedback">
-              Ingresa un número válido (entre 1 y 255)
-            </div>
-          </div>
-
-          <!-- Motivo de la visita -->
-          <div class="col-12 col-md-6 mb-3">
-            <label for="motivo_visita" class="form-label">Motivo de la visita</label>
-            <select class="form-select" id="motivo_visita" name="motivo_visita" required>
-              <option value="turismo" selected>Turismo</option>
-              <option value="negocios">Negocios</option>
-              <option value="visita_familiar">Visita familiar</option>
-              <option value="estudios">Estudios</option>
-              <option value="otros">Otros</option>
-            </select>
-            <div class="invalid-feedback">Campo requerido.</div>
-          </div>
-
-          <!-- Tipo de transporte -->
-          <div class="col-12 col-md-6 mb-3">
-            <label for="tipo_transporte" class="form-label">Tipo de transporte</label>
-            <select class="form-select" id="tipo_transporte" name="tipo_transporte" required>
-              <option value="automovil" selected>Automóvil</option>
-              <option value="autobus">Autobús</option>
-              <option value="avion">Avión</option>
-              <option value="tren">Tren</option>
-              <option value="otros">Otro</option>
-            </select>
-            <div class="invalid-feedback">Campo requerido.</div>
-          </div>
-
-          <!-- Procedencia -->
-          <div class="col-12 col-md-6 mb-3">
-            <label for="procedencia" class="form-label">Procedencia (Estado o región)</label>
-            <input
-              type="text"
-              class="form-control"
-              id="procedencia"
-              name="procedencia"
-              placeholder="Ej. Ciudad de México"
-              maxlength="100"
-              required
-            />
-            <div class="invalid-feedback">Este campo es obligatorio.</div>
-          </div>
-
-          <!-- ¿Es extranjero? -->
-          <div class="col-12 col-md-6 mb-3">
-            <label class="form-label mb-2">¿Es extranjero?</label>
-            <div class="d-flex justify-content-start gap-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="radio"
-                  name="es_extranjero"
-                  id="extranjero_si"
-                  value="1"
-                />
-                <label class="form-check-label" for="extranjero_si"> Sí </label>
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="radio"
-                  name="es_extranjero"
-                  id="extranjero_no"
-                  value="0"
-                  checked
-                />
-                <label class="form-check-label" for="extranjero_no"> No </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- País de origen (condicional) -->
-          <div class="col-12 col-md-6 mb-3" id="paisSelector" style="display: none;">
-            <label for="pais_origen" class="form-label">País de origen</label>
-            <select class="form-select" id="pais_origen" name="pais_origen">
-              <option value="">Selecciona un país...</option>
-              <option value="Mexico" selected>México</option>
-              <option value="United States">Estados Unidos</option>
-              <option value="Canada">Canadá</option>
-              <option value="Argentina">Argentina</option>
-              <option value="Brazil">Brazil</option>
-              <option value="Chile">Chile</option>
-              <option value="Colombia">Colombia</option>
-              <option value="Spain">España</option>
-              <option value="France">Francia</option>
-              <option value="Germany">Alemania</option>
-              <option value="United Kingdom">Reino Unido</option>
-              <option value="Japan">Japón</option>
-              <option value="China">China</option>
-              <!-- Otros países -->
-            </select>
-            <div class="invalid-feedback">Selecciona un país de origen</div>
-          </div>
-
-
-          <div class="col-12 mt-4">
-            <input
-              type="submit"
-              class="btn boton bt-body w-100"
-              value="Registrar"
-            />
-          </div>
-        </div>
-      </form>
+        </form>
     </div>
+</div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const ageInputs = document.querySelectorAll(".age-input");
-        const displayTotal = document.getElementById("display-total");
-        const totalMujeresSpan = document.getElementById("total-mujeres");
-        const totalHombresSpan = document.getElementById("total-hombres");
-        const totalPersonasSpan = document.getElementById("total-personas");
-        const totalPersonasHidden = document.getElementById("total-personas-hidden");
-        const paisSelector = document.getElementById("paisSelector");
-        const paisOrigenSelect = document.getElementById("pais_origen");
-        const esExtranjeroRadios = document.querySelectorAll('input[name="es_extranjero"]');
-        
-        // Función para actualizar los totales
-        function updateTotals() {
-          let totalMujeres = 0;
-          let totalHombres = 0;
-          let totalGeneral = 0;
+<style>
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 0.65rem 0.85rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #D35400;
+        box-shadow: 0 0 0 0.2rem rgba(211, 84, 0, 0.18);
+    }
+    .age-input {
+        max-width: 85px;
+        margin: 0 auto;
+        font-weight: 700;
+        padding: 6px;
+    }
+    .table td, .table th {
+        vertical-align: middle;
+    }
+</style>
 
-          // Calcular totales por grupo
-          const groups = ["0_15", "16_30", "31_45", "46_60", "61_75", "76_mas"];
+<script src="{% static 'myapp/JAV/geo_dinamico.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Inicializar selector geográfico dinámico en cascada
+    initDynamicLocation({
+        paisSelectId: 'reg_pais',
+        estadoContainerId: 'contenedorEstadoReg',
+        estadoSelectId: 'reg_estado',
+        ciudadContainerId: 'contenedorCiudadReg',
+        ciudadSelectId: 'reg_ciudadSelect',
+        ciudadInputId: 'reg_ciudadInput',
+        ciudadOtroContainerId: 'contenedorCiudadOtroReg',
+        ciudadOtroInputId: 'reg_ciudadOtro',
+        consolidatedInputId: 'procedencia',
+        previewId: 'procedenciaPreview',
+        esExtranjeroInputId: 'es_extranjero',
+        paisOrigenInputId: 'pais_origen',
+        defaultPais: 'México',
+        defaultEstado: 'Puebla',
+        defaultCiudad: 'Huaquechula'
+    });
 
-          groups.forEach((group) => {
-            const mujeresInput = document.querySelector(
-              `input[data-group="${group}"][data-gender="mujeres"]`
-            );
-            const hombresInput = document.querySelector(
-              `input[data-group="${group}"][data-gender="hombres"]`
-            );
+    // Actualizar badge visual de tipo de visitante
+    const regPais = document.getElementById("reg_pais");
+    const tipoBadge = document.getElementById("tipoVisitanteBadge");
+    if (regPais && tipoBadge) {
+        function updateBadge() {
+            const p = regPais.value;
+            if (p === "México" || p === "Mexico") {
+                tipoBadge.className = "badge bg-primary";
+                tipoBadge.textContent = "Nacional";
+            } else if (p) {
+                tipoBadge.className = "badge bg-warning text-dark";
+                tipoBadge.textContent = "Extranjero (" + p + ")";
+            } else {
+                tipoBadge.className = "badge bg-secondary";
+                tipoBadge.textContent = "Sin definir";
+            }
+        }
+        regPais.addEventListener("change", updateBadge);
+        updateBadge();
+    }
+
+    const ageInputs = document.querySelectorAll(".age-input");
+    const displayTotal = document.getElementById("display-total");
+    const totalMujeresSpan = document.getElementById("total-mujeres");
+    const totalHombresSpan = document.getElementById("total-hombres");
+    const totalPersonasSpan = document.getElementById("total-personas");
+    const totalPersonasHidden = document.getElementById("total-personas-hidden");
+    
+    // Función para calcular y actualizar totales en tiempo real
+    function updateTotals() {
+        let totalMujeres = 0;
+        let totalHombres = 0;
+        let totalGeneral = 0;
+
+        const groups = ["0_15", "16_30", "31_45", "46_60", "61_75", "76_mas"];
+
+        groups.forEach((group) => {
+            const mujeresInput = document.querySelector(`input[data-group="${group}"][data-gender="mujeres"]`);
+            const hombresInput = document.querySelector(`input[data-group="${group}"][data-gender="hombres"]`);
             
-            const mujeres = parseInt(mujeresInput.value) || 0;
-            const hombres = parseInt(hombresInput.value) || 0;
+            const mujeres = Math.max(0, parseInt(mujeresInput.value) || 0);
+            const hombres = Math.max(0, parseInt(hombresInput.value) || 0);
             const groupTotal = mujeres + hombres;
 
-            // Actualizar total del grupo
-            document.querySelector(
-              `.group-total[data-group="${group}"]`
-            ).textContent = groupTotal;
+            // Actualizar subtotal de la fila
+            const rowTotalSpan = document.querySelector(`.group-total[data-group="${group}"]`);
+            if (rowTotalSpan) {
+                rowTotalSpan.textContent = groupTotal;
+                if (groupTotal > 0) {
+                    rowTotalSpan.className = "badge bg-dark px-2 py-1 group-total";
+                } else {
+                    rowTotalSpan.className = "badge bg-secondary px-2 py-1 group-total";
+                }
+            }
 
             totalMujeres += mujeres;
             totalHombres += hombres;
             totalGeneral += groupTotal;
-          });
+        });
 
-          // Actualizar totales generales
-          totalMujeresSpan.textContent = totalMujeres;
-          totalHombresSpan.textContent = totalHombres;
-          totalPersonasSpan.textContent = totalGeneral;
-          displayTotal.textContent = totalGeneral;
-          totalPersonasHidden.value = totalGeneral;
+        // Actualizar totales generales
+        totalMujeresSpan.textContent = totalMujeres;
+        totalHombresSpan.textContent = totalHombres;
+        totalPersonasSpan.textContent = totalGeneral;
+        displayTotal.textContent = totalGeneral;
+        totalPersonasHidden.value = totalGeneral;
+    }
+
+    // Listeners para los inputs de edad
+    ageInputs.forEach((input) => {
+        input.addEventListener("input", function() {
+            if (parseInt(this.value) > 255) this.value = 255;
+            if (parseInt(this.value) < 0 || isNaN(parseInt(this.value))) this.value = 0;
+            updateTotals();
+        });
+        input.addEventListener("change", updateTotals);
+    });
+
+    // Validación antes de enviar
+    const form = document.getElementById("formulario");
+    form.addEventListener("submit", function (event) {
+        const totalGeneral = parseInt(displayTotal.textContent) || 0;
+        const procedencia = document.getElementById("procedencia").value;
+        const esExtranjero = document.getElementById("es_extranjero").value;
+        const paisOrigen = document.getElementById("pais_origen").value;
+        const estanciaDias = document.getElementById("estancia_dias");
+        const visitasPrevias = document.getElementById("visitas_previas");
+
+        // Al menos una persona debe registrarse
+        if (totalGeneral < 1) {
+            event.preventDefault();
+            alert("Debe ingresar al menos una persona en la tabla de edades y género.");
+            return;
         }
 
-        // Añadir event listeners a todos los inputs de edad
-        ageInputs.forEach((input) => {
-          input.addEventListener("input", function() {
-            // Validar que no exceda 255
-            if (parseInt(this.value) > 255) {
-              this.value = 255;
-            }
-            if (parseInt(this.value) < 0) {
-              this.value = 0;
-            }
-            updateTotals();
-          });
-          input.addEventListener("change", updateTotals);
-        });
-
-        // Manejar visibilidad del selector de país según si es extranjero
-        esExtranjeroRadios.forEach(radio => {
-          radio.addEventListener("change", function() {
-            if (this.value === "1") {
-              paisSelector.style.display = "block";
-              paisOrigenSelect.setAttribute("required", "required");
-            } else {
-              paisSelector.style.display = "none";
-              paisOrigenSelect.removeAttribute("required");
-              paisOrigenSelect.value = "Mexico"; // Establecer México por defecto
-            }
-          });
-        });
-
-        // Establecer México como país por defecto al cargar
-        paisOrigenSelect.value = "Mexico";
-
-        // Validación del formulario
-        document.getElementById("formulario").addEventListener("submit", function (event) {
-          const totalGeneral = parseInt(displayTotal.textContent) || 0;
-          const esExtranjero = document.querySelector('input[name="es_extranjero"]:checked');
-          const paisOrigen = document.getElementById("pais_origen").value;
-          const procedencia = document.getElementById("procedencia").value;
-          const estanciaDias = document.getElementById("estancia_dias");
-          const visitasPrevias = document.getElementById("visitas_previas");
-
-          // Validar que haya al menos una persona
-          if (totalGeneral < 1) {
+        // Procedencia obligatoria
+        if (!procedencia || procedencia.trim() === "") {
             event.preventDefault();
-            alert("Debe ingresar al menos una persona para registrar.");
+            alert("Por favor seleccione la procedencia del visitante.");
             return;
-          }
+        }
 
-          // Validar procedencia
-          if (!procedencia || procedencia.trim() === "") {
+        // Validar campos numéricos
+        const numEstancia = parseInt(estanciaDias.value);
+        if (isNaN(numEstancia) || numEstancia < 1 || numEstancia > 255) {
             event.preventDefault();
-            alert("Debe ingresar la procedencia.");
+            alert("La estancia esperada en días debe estar entre 1 y 255.");
+            estanciaDias.focus();
             return;
-          }
+        }
 
-          // Validar campos numéricos
-          const numericFields = [estanciaDias, visitasPrevias];
-          numericFields.forEach(field => {
-            if (field) {
-              const value = parseInt(field.value);
-              if (isNaN(value) || value < 1 || value > 255) {
-                event.preventDefault();
-                alert(`El valor en ${field.previousElementSibling?.textContent || field.name} debe estar entre 1 y 255.`);
-                return;
-              }
-            }
-          });
+        const numVisitas = parseInt(visitasPrevias.value);
+        if (isNaN(numVisitas) || numVisitas < 1 || numVisitas > 255) {
+            event.preventDefault();
+            alert("Las visitas previas deben estar entre 1 y 255.");
+            visitasPrevias.focus();
+            return;
+        }
 
-          // Si es extranjero, validar que se seleccione un país diferente a México
-          if (esExtranjero && esExtranjero.value === "1") {
-            if (!paisOrigen || paisOrigen === "") {
-              event.preventDefault();
-              alert("Si el visitante es extranjero, debe seleccionar un país de origen.");
-              return;
-            }
-            if (paisOrigen === "Mexico") {
-              // Confirmar si realmente es mexicano pero marcó como extranjero
-              if (!confirm("¿Está seguro que es extranjero pero seleccionó México como país de origen?")) {
-                event.preventDefault();
-                return;
-              }
-            }
-          }
+        // Si es extranjero, validar país
+        if (esExtranjero === "1" && (!paisOrigen || paisOrigen.trim() === "")) {
+            event.preventDefault();
+            alert("Si el visitante es extranjero, debe seleccionar su país de origen.");
+            return;
+        }
+    });
 
-          // Validar que los valores de edad no excedan 255
-          ageInputs.forEach(input => {
-            const value = parseInt(input.value);
-            if (value > 255) {
-              event.preventDefault();
-              alert("Los valores por grupo no pueden exceder 255.");
-              return;
-            }
-          });
-        });
-
-        // Inicializar los totales
-        updateTotals();
-      });
-    </script>
-  </body>
-</html>
-
-{% block extra_js %}
-<script src="{% static 'myapp/JAV/js_lista_regsitro.js' %}" defer></script>
+    // Inicializar totales
+    updateTotals();
+});
+</script>
 {% endblock %}

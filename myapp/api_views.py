@@ -553,7 +553,7 @@ class MisEncuestasView(APIView):
                 'icono': '🏠',
                 'fecha': r.fecha.isoformat(),
                 'cargado_bd': True,
-                'resumen': f"Barrio: {r.barrio_colonia} | Edad: {r.edad}"
+                'resumen': f"Región: {r.region_origen or r.barrio_colonia} | Edad: {r.edad}"
             })
 
         # 3. Institucional
@@ -597,6 +597,22 @@ class MisEncuestasView(APIView):
                 })
         except Exception:
             pass
+
+        # 6. Registros de Visitas (Afluencia)
+        try:
+            visitas_reg = RegistroVisita.objects.filter(clave_encuestador=encuestador).order_by('-fecha') if encuestador else RegistroVisita.objects.all().order_by('-fecha')
+            for vr in visitas_reg:
+                resultado.append({
+                    'id': f"visita_{vr.id_registro}",
+                    'tipo': "Registro de Visitantes (Afluencia)",
+                    'tipo_codigo': 'visita',
+                    'icono': '👥',
+                    'fecha': vr.fecha.isoformat(),
+                    'cargado_bd': True,
+                    'resumen': f"Lugar: {vr.lugar_visita} | Procedencia: {vr.procedencia} | Personas: {vr.total_personas}"
+                })
+        except Exception as e:
+            logger.warning("Error cargando RegistroVisita en MisEncuestas: %s", e)
 
         # Ordenar por fecha descendente
         resultado.sort(key=lambda x: x['fecha'], reverse=True)

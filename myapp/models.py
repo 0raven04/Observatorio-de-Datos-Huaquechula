@@ -1065,6 +1065,28 @@ class EncuestaResidente(models.Model):
         ('Prefiero no decirlo', 'Prefiero no decirlo')
     ]
     genero = models.CharField(max_length=30, choices=genero_choices, null=True, blank=True)
+    
+    JUNTAS_AUXILIARES_CHOICES = [
+        ('Cabecera Municipal', 'Cabecera Municipal (Huaquechula Centro)'),
+        ('Cacaloxúchitl', 'Cacaloxúchitl'),
+        ('Mártir Cuauhtémoc', 'Mártir Cuauhtémoc'),
+        ('San Antonio Cuautla', 'San Antonio Cuautla'),
+        ('San Diego el Organal', 'San Diego el Organal'),
+        ('San Juan Huiluco', 'San Juan Huiluco'),
+        ('Santa Ana Coatepec', 'Santa Ana Coatepec'),
+        ('Santiago Tetla', 'Santiago Tetla'),
+        ('Soledad Morelos', 'Soledad Morelos'),
+        ('Teacalco de Dorantes', 'Teacalco de Dorantes'),
+        ('Tezonteopan de Bonilla', 'Tezonteopan de Bonilla'),
+        ('Otra localidad', 'Otra localidad / inspectoría rural'),
+    ]
+    region_origen = models.CharField(
+        max_length=100,
+        choices=JUNTAS_AUXILIARES_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name='Comunidad o Junta Auxiliar de origen'
+    )
     barrio_colonia = models.CharField(max_length=100, null=True, blank=True)
     
     # Seguridad (opcionales por compatibilidad con API/Resumen)
@@ -1115,6 +1137,11 @@ class EncuestaResidente(models.Model):
         ('perdiendo', 'No, se está perdiendo')
     ]
     interes_jovenes = models.CharField(max_length=20, choices=interes_jovenes_choices, null=True, blank=True, verbose_name='Interés de jóvenes en tradiciones')
+
+    def save(self, *args, **kwargs):
+        if not self.barrio_colonia and self.region_origen:
+            self.barrio_colonia = self.region_origen
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Encuesta Residente {self.id} - {self.fecha.strftime('%Y-%m-%d')}"

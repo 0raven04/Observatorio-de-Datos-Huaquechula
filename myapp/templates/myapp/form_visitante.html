@@ -46,29 +46,56 @@
                 </div>
 
                 <!-- II. Origen y Conectividad -->
-                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">II. Origen y Conectividad</h4>
-                <div class="row g-3 mb-4">
-                    <p class="text-muted small">4. ¿Cuál es tu lugar de residencia habitual?</p>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Ciudad</label>
-                        {{ form.residencia_ciudad }}
-                        {% if form.residencia_ciudad.errors %}
-                            <div class="text-danger small">{{ form.residencia_ciudad.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Estado / Provincia</label>
-                        {{ form.residencia_estado }}
-                        {% if form.residencia_estado.errors %}
-                            <div class="text-danger small">{{ form.residencia_estado.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">País</label>
-                        {{ form.residencia_pais }}
-                        {% if form.residencia_pais.errors %}
-                            <div class="text-danger small">{{ form.residencia_pais.errors }}</div>
-                        {% endif %}
+                <h4 class="mb-3 mt-5" style="color: var(--color-gris-oscuro); font-weight: 600;">
+                    <i class="fas fa-map-marked-alt text-primary me-2"></i>II. Origen y Conectividad
+                </h4>
+                <div class="card border-0 p-3 mb-4" style="background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label class="form-label fw-bold mb-2">4. ¿Cuál es tu lugar de residencia habitual? <span class="text-danger">*</span></label>
+                    <div class="row g-3">
+                        <!-- 1. PAÍS -->
+                        <div class="col-md-4">
+                            <label for="vis_residencia_pais" class="form-label small fw-semibold text-muted">País de Residencia</label>
+                            <select id="vis_residencia_pais" name="residencia_pais" class="form-select" required>
+                                <option value="México" selected>México</option>
+                            </select>
+                            {% if form.residencia_pais.errors %}
+                                <div class="text-danger small">{{ form.residencia_pais.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 2. ESTADO (Visible si es México) -->
+                        <div class="col-md-4" id="contenedorEstadoVis">
+                            <label for="vis_residencia_estado" class="form-label small fw-semibold text-muted">Estado</label>
+                            <select id="vis_residencia_estado" name="residencia_estado" class="form-select">
+                                <option value="">Seleccione un estado...</option>
+                            </select>
+                            {% if form.residencia_estado.errors %}
+                                <div class="text-danger small">{{ form.residencia_estado.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 3. CIUDAD / MUNICIPIO -->
+                        <div class="col-md-4" id="contenedorCiudadVis">
+                            <label for="vis_ciudadSelect" class="form-label small fw-semibold text-muted">Ciudad / Municipio</label>
+
+                            <!-- A: Select para cuando es México -->
+                            <select id="vis_ciudadSelect" name="residencia_ciudad" class="form-select">
+                                <option value="">Seleccione una ciudad...</option>
+                            </select>
+
+                            <!-- B: Input text para otros países -->
+                            <input type="text" id="vis_ciudadInput" class="form-control" placeholder="Escriba su ciudad" style="display: none;">
+                            
+                            {% if form.residencia_ciudad.errors %}
+                                <div class="text-danger small">{{ form.residencia_ciudad.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contenedor opcional para especificar otro municipio si se selecciona "Otro..." -->
+                        <div class="col-12 mt-2" id="contenedorCiudadOtroVis" style="display: none;">
+                            <label for="vis_ciudadOtro" class="form-label small fw-semibold text-muted">Especifique el municipio o localidad:</label>
+                            <input type="text" id="vis_ciudadOtro" class="form-control" placeholder="Nombre del municipio o localidad..." />
+                        </div>
                     </div>
                 </div>
 
@@ -266,8 +293,26 @@
         }
     </style>
 
+    <script src="{% static 'myapp/JAV/geo_dinamico.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar selector de residencia dinámico en cascada
+            initDynamicLocation({
+                paisSelectId: 'vis_residencia_pais',
+                estadoContainerId: 'contenedorEstadoVis',
+                estadoSelectId: 'vis_residencia_estado',
+                ciudadContainerId: 'contenedorCiudadVis',
+                ciudadSelectId: 'vis_ciudadSelect',
+                ciudadInputId: 'vis_ciudadInput',
+                ciudadOtroContainerId: 'contenedorCiudadOtroVis',
+                ciudadOtroInputId: 'vis_ciudadOtro',
+                ciudadFieldName: 'residencia_ciudad',
+                estadoFieldName: 'residencia_estado',
+                defaultPais: 'México',
+                defaultEstado: 'Puebla',
+                defaultCiudad: 'Huaquechula'
+            });
+
             const stars = document.querySelectorAll('.star-btn');
             const hiddenInput = document.getElementById('id_satisfaccion');
             const ratingLabel = document.getElementById('star-rating-label');

@@ -134,6 +134,7 @@ urlpatterns = [
     path('encuestador/residente/', views.nueva_encuesta_residente, name='nueva_encuesta_residente'),
     path('encuestador/visitante/', views.nueva_encuesta_visitante, name='nueva_encuesta_visitante'),
     path('encuestador/institucional/', views.nueva_encuesta_institucional, name='nueva_encuesta_institucional'),
+    path('encuestador/registro/', views.formulario, name='nueva_encuesta_registro'),
 
     # =====================================================
     # Módulo de Encuestas Personalizadas (Google Forms)

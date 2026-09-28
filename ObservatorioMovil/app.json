@@ -2,7 +2,7 @@
   "expo": {
     "name": "Encuestas moviles-Observatorio Huaquechula",
     "slug": "observatorio-huaquechula",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -19,7 +19,7 @@
     "android": {
       "package": "com.observatorio.huaquechula",
       "usesCleartextTraffic": true,
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#EDEBE3",
         "foregroundImage": "./assets/android-icon-foreground.png",

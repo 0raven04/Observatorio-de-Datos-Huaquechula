@@ -92,6 +92,14 @@ class EncuestaVisitanteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'fecha', 'encuestador_clave']
 
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        pais = str(data.get('residencia_pais', '')).strip()
+        estado = str(data.get('residencia_estado', '')).strip()
+        if pais.lower() not in ['méxico', 'mexico'] and not estado:
+            data['residencia_estado'] = 'Extranjero'
+        return super().to_internal_value(data)
+
     def get_encuestador_clave(self, obj):
         return obj.encuestador.clave_encuestador if obj.encuestador else None
 
@@ -107,7 +115,7 @@ class EncuestaResidenteSerializer(serializers.ModelSerializer):
         model = EncuestaResidente
         fields = [
             'id', 'fecha', 'encuestador_clave',
-            'edad', 'genero', 'barrio_colonia',
+            'edad', 'genero', 'region_origen', 'barrio_colonia',
             'confianza_policia', 'percepcion_inseguridad',
             'tension_festividades', 'acceso_servicios_festividades', 'perdida_tradicion',
             'participacion_preservacion', 'participacion_decisiones', 'capacitacion_turistica',
