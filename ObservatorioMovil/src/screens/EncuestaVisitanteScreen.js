@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { encuestasService } from '../services/encuestasService';
+import SelectorProcedencia from '../components/SelectorProcedencia';
 
 const DORADO = '#D6CEAA';
 const TEXTO_OSCURO = '#4A4A4A';
@@ -130,8 +131,14 @@ export default function EncuestaVisitanteScreen({ navigation }) {
             Alert.alert('Campo requerido', 'Por favor ingresa tu edad.');
             return;
         }
-        if (!form.residencia_ciudad || !form.residencia_estado) {
-            Alert.alert('Campo requerido', 'Por favor completa tu ciudad y estado de residencia.');
+
+        const esMexico = form.residencia_pais === 'México' || form.residencia_pais === 'Mexico';
+        if (esMexico && (!form.residencia_ciudad || !form.residencia_estado)) {
+            Alert.alert('Campo requerido', 'Por favor completa el estado y ciudad de residencia.');
+            return;
+        }
+        if (!esMexico && !form.residencia_ciudad) {
+            Alert.alert('Campo requerido', 'Por favor ingresa la ciudad de residencia.');
             return;
         }
 
@@ -142,7 +149,7 @@ export default function EncuestaVisitanteScreen({ navigation }) {
                 edad: parseInt(form.edad),
                 viaja_con: form.viaja_con,
                 residencia_ciudad: form.residencia_ciudad,
-                residencia_estado: form.residencia_estado,
+                residencia_estado: esMexico ? form.residencia_estado : (form.residencia_estado || 'Extranjero'),
                 residencia_pais: form.residencia_pais || 'México',
                 zonas_visitadas: form.zonas_visitadas.join(', '),
                 actividades: form.actividades.join(', '),
@@ -206,31 +213,18 @@ export default function EncuestaVisitanteScreen({ navigation }) {
                 <Text style={styles.blockTitle}>II. Origen y Conectividad</Text>
                 <Text style={styles.sublabel}>4. ¿Cuál es tu lugar de residencia habitual?</Text>
 
-                <Text style={styles.label}>Ciudad</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Ciudad"
-                    placeholderTextColor="#aaa"
-                    value={form.residencia_ciudad}
-                    onChangeText={(v) => setForm({ ...form, residencia_ciudad: v })}
-                />
-
-                <Text style={styles.label}>Estado / Provincia</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Estado"
-                    placeholderTextColor="#aaa"
-                    value={form.residencia_estado}
-                    onChangeText={(v) => setForm({ ...form, residencia_estado: v })}
-                />
-
-                <Text style={styles.label}>País</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="País"
-                    placeholderTextColor="#aaa"
-                    value={form.residencia_pais}
-                    onChangeText={(v) => setForm({ ...form, residencia_pais: v })}
+                <SelectorProcedencia
+                    initialPais={form.residencia_pais}
+                    initialEstado={form.residencia_estado || 'Puebla'}
+                    initialCiudad={form.residencia_ciudad || 'Huaquechula'}
+                    onChange={({ pais, estado, ciudad }) => {
+                        setForm((prev) => ({
+                            ...prev,
+                            residencia_pais: pais,
+                            residencia_estado: estado,
+                            residencia_ciudad: ciudad,
+                        }));
+                    }}
                 />
 
                 <Text style={[styles.label, { marginTop: 14 }]}>

@@ -5,20 +5,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, StyleSheet, FlatList, RefreshControl,
-    ActivityIndicator, TouchableOpacity,
+    ActivityIndicator, TouchableOpacity, Alert
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { encuestasService } from '../services/encuestasService';
+import offlineQueue from '../services/offlineQueue';
 
 const COLOR_TEXTO = '#4A4A4A';
 const FONDO = '#EDEBE3';
 const BLANCO = '#ffffff';
 const VERDE_EXITO = '#28a745';
-const AZUL_ACCENTO = '#007bff';
+const AZUL_ACCENTO = '#3a6073';
+const NARANJA_ALERTA = '#d97706';
 
 export default function MisEncuestasScreen() {
     const [encuestas, setEncuestas] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [refrescando, setRefrescando] = useState(false);
+    const [sincronizando, setSincronizando] = useState(false);
 
     const cargarMisEncuestas = useCallback(async () => {
         try {
@@ -32,13 +36,51 @@ export default function MisEncuestasScreen() {
         }
     }, []);
 
+    // Se ejecuta cada vez que el encuestador entra o regresa a esta pestaña
+    useFocusEffect(
+        useCallback(() => {
+            cargarMisEncuestas();
+        }, [cargarMisEncuestas])
+    );
+
+    // Escuchar eventos de la cola offline para actualización reactiva instantánea
     useEffect(() => {
-        cargarMisEncuestas();
+        const unsubscribe = offlineQueue.subscribe(() => {
+            cargarMisEncuestas();
+        });
+        return () => {
+            if (typeof unsubscribe === 'function') unsubscribe();
+        };
     }, [cargarMisEncuestas]);
 
     const onRefresh = () => {
         setRefrescando(true);
         cargarMisEncuestas();
+    };
+
+    const sincronizarOffline = async () => {
+        setSincronizando(true);
+        try {
+            const res = await encuestasService.sincronizarColaOffline();
+            await cargarMisEncuestas();
+            if (res.synced > 0) {
+                Alert.alert(
+                    '✅ Sincronización Exitosa',
+                    `Se sincronizaron ${res.synced} encuesta(s) con la base de datos central.`
+                );
+            } else if (res.remaining > 0) {
+                Alert.alert(
+                    '📡 Sin Conexión Aún',
+                    'No se pudo conectar al servidor central. Las encuestas siguen resguardadas localmente.'
+                );
+            } else {
+                Alert.alert('Al día', 'Todas las encuestas ya están en la base de datos.');
+            }
+        } catch (e) {
+            Alert.alert('Aviso', 'Error al sincronizar. Revisa la cobertura o señal celular.');
+        } finally {
+            setSincronizando(false);
+        }
     };
 
     const formatearFechaHora = (isoStr) => {
@@ -62,7 +104,7 @@ export default function MisEncuestasScreen() {
         const esBDOk = item.cargado_bd !== false;
 
         return (
-            <View style={styles.card}>
+            <View style={[styles.card, !esBDOk && styles.cardOffline]}>
                 <View style={styles.cardHeader}>
                     <Text style={styles.cardIcon}>{item.icono || '📋'}</Text>
                     <View style={styles.cardHeaderTitle}>
@@ -78,7 +120,7 @@ export default function MisEncuestasScreen() {
                 <View style={styles.cardFooter}>
                     <View style={[styles.badge, esBDOk ? styles.badgeVerde : styles.badgeAmarillo]}>
                         <Text style={[styles.badgeText, esBDOk ? styles.badgeTextVerde : styles.badgeTextAmarillo]}>
-                            {esBDOk ? '🟢 Cargado en BD del Proyecto' : '🟡 Guardado Localmente'}
+                            {esBDOk ? '🟢 Cargado en BD del Proyecto' : '🟡 Guardado Localmente (Pendiente)'}
                         </Text>
                     </View>
                 </View>
@@ -86,20 +128,52 @@ export default function MisEncuestasScreen() {
         );
     };
 
+    const totalEnBD = encuestas.filter(e => e.cargado_bd !== false).length;
+    const totalPendientes = encuestas.length - totalEnBD;
+
     return (
         <View style={styles.container}>
             <View style={styles.banner}>
                 <View style={styles.statBox}>
                     <Text style={styles.statNumber}>{encuestas.length}</Text>
-                    <Text style={styles.statLabel}>Encuestas Realizadas</Text>
+                    <Text style={styles.statLabel}>Total Levantadas</Text>
                 </View>
                 <View style={styles.statBox}>
                     <Text style={[styles.statNumber, { color: VERDE_EXITO }]}>
-                        {encuestas.filter(e => e.cargado_bd !== false).length}
+                        {totalEnBD}
                     </Text>
                     <Text style={styles.statLabel}>En Base de Datos</Text>
                 </View>
+                {totalPendientes > 0 && (
+                    <View style={styles.statBox}>
+                        <Text style={[styles.statNumber, { color: NARANJA_ALERTA }]}>
+                            {totalPendientes}
+                        </Text>
+                        <Text style={styles.statLabel}>Pendientes</Text>
+                    </View>
+                )}
             </View>
+
+            {/* Banner de Sincronización si hay encuestas pendientes */}
+            {totalPendientes > 0 && (
+                <View style={styles.offlineActionBanner}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.offlineActionTitle}>📦 {totalPendientes} encuesta{totalPendientes > 1 ? 's' : ''} sin sincronizar</Text>
+                        <Text style={styles.offlineActionSub}>Guardadas en el teléfono. Toca para enviar a la base de datos.</Text>
+                    </View>
+                    <TouchableOpacity
+                        style={[styles.btnSync, sincronizando && { opacity: 0.6 }]}
+                        onPress={sincronizarOffline}
+                        disabled={sincronizando}
+                    >
+                        {sincronizando ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.btnSyncText}>Sincronizar ⚡</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+            )}
 
             {cargando ? (
                 <View style={styles.centerContainer}>
@@ -124,7 +198,7 @@ export default function MisEncuestasScreen() {
                     renderItem={renderItem}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
-                        <RefreshControl refrescando={refrescando} onRefresh={onRefresh} colors={[AZUL_ACCENTO]} />
+                        <RefreshControl refreshing={refrescando} onRefresh={onRefresh} colors={[AZUL_ACCENTO]} />
                     }
                 />
             )}
@@ -158,6 +232,10 @@ const styles = StyleSheet.create({
         borderLeftWidth: 4,
         borderLeftColor: AZUL_ACCENTO,
     },
+    cardOffline: {
+        borderLeftColor: NARANJA_ALERTA,
+        backgroundColor: '#fffdfa',
+    },
     cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
     cardIcon: { fontSize: 24, marginRight: 12 },
     cardHeaderTitle: { flex: 1 },
@@ -171,6 +249,29 @@ const styles = StyleSheet.create({
     badgeText: { fontSize: 12, fontWeight: 'bold' },
     badgeTextVerde: { color: VERDE_EXITO },
     badgeTextAmarillo: { color: '#f39c12' },
+    offlineActionBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff3cd',
+        borderWidth: 1,
+        borderColor: '#ffeeba',
+        borderRadius: 12,
+        padding: 14,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        gap: 12,
+    },
+    offlineActionTitle: { fontSize: 14, fontWeight: 'bold', color: '#856404' },
+    offlineActionSub: { fontSize: 11, color: '#856404', marginTop: 2 },
+    btnSync: {
+        backgroundColor: AZUL_ACCENTO,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    btnSyncText: { color: BLANCO, fontWeight: 'bold', fontSize: 13 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
     cargandoTexto: { marginTop: 12, color: '#666', fontSize: 14 },
     emptyIcon: { fontSize: 48, marginBottom: 12 },

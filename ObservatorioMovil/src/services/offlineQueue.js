@@ -2,8 +2,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './api';
 
 const QUEUE_STORAGE_KEY = '@observatorio_offline_queue_v1';
+const syncListeners = new Set();
 
 export const offlineQueue = {
+    /**
+     * Permite a las pantallas suscribirse a eventos de sincronización para actualizar vistas en tiempo real.
+     */
+    subscribe(callback) {
+        syncListeners.add(callback);
+        return () => syncListeners.delete(callback);
+    },
+
+    notifyListeners(eventData) {
+        syncListeners.forEach(cb => {
+            try {
+                cb(eventData);
+            } catch (e) {
+                console.error('Error notificando listener de offlineQueue:', e);
+            }
+        });
+    },
+
     /**
      * Obtiene todos los elementos pendientes en la cola offline.
      */
@@ -44,6 +63,7 @@ export const offlineQueue = {
             };
             queue.push(newItem);
             await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+            this.notifyListeners({ type: 'enqueued', item: newItem, count: queue.length });
             return newItem;
         } catch (e) {
             console.error('Error al encolar encuesta offline:', e);
@@ -93,12 +113,14 @@ export const offlineQueue = {
         }
 
         await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(remainingQueue));
-        return {
+        const result = {
             total: queue.length,
             synced: syncedCount,
             failed: failedCount,
             remaining: remainingQueue.length,
         };
+        this.notifyListeners({ type: 'synced', result });
+        return result;
     },
 
     /**
@@ -106,6 +128,7 @@ export const offlineQueue = {
      */
     async clearQueue() {
         await AsyncStorage.removeItem(QUEUE_STORAGE_KEY);
+        this.notifyListeners({ type: 'cleared', count: 0 });
     }
 };
 

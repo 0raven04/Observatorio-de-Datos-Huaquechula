@@ -53,10 +53,14 @@ export default function LoginScreen() {
                 {/* Encabezado */}
                 <View style={styles.header}>
                     <View style={styles.logoCircle}>
-                        <Text style={styles.logoText}>🏛️</Text>
+                        <Image
+                            source={require('../../assets/logo.png')}
+                            style={styles.logoImage}
+                            resizeMode="contain"
+                        />
                     </View>
-                    <Text style={styles.titulo}>Observatorio de Datos</Text>
-                    <Text style={styles.subtitulo}>Huaquechula, Puebla</Text>
+                    <Text style={styles.titulo}>Encuestas Móviles</Text>
+                    <Text style={styles.subtitulo}>Observatorio Huaquechula</Text>
                 </View>
 
                 {/* Tarjeta de login */}
@@ -123,23 +127,26 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     logoCircle: {
-        width: 84,
-        height: 84,
-        borderRadius: 42,
+        width: 90,
+        height: 90,
+        borderRadius: 45,
         backgroundColor: BLANCO,
-        borderWidth: 3,
+        borderWidth: 2,
         borderColor: DORADO,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
         elevation: 4,
-        shadowColor: DORADO,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.15,
         shadowRadius: 6,
+        overflow: 'hidden',
     },
-    logoText: {
-        fontSize: 38,
+    logoImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
     },
     titulo: {
         fontSize: 22,

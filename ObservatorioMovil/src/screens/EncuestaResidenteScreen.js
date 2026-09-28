@@ -5,9 +5,10 @@
 import React, { useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    ScrollView, Alert, ActivityIndicator,
+    ScrollView, Alert, ActivityIndicator, Modal, FlatList, SafeAreaView
 } from 'react-native';
 import { encuestasService } from '../services/encuestasService';
+import { JUNTAS_AUXILIARES } from '../constants/geoData';
 
 const DORADO = '#D6CEAA';
 const VERDE_OBS = '#28a745';
@@ -42,10 +43,12 @@ function SelectorSelect({ label, opciones, seleccionado, onSeleccionar }) {
 
 export default function EncuestaResidenteScreen({ navigation }) {
     const [enviando, setEnviando] = useState(false);
+    const [modalJuntas, setModalJuntas] = useState(false);
     const [form, setForm] = useState({
         edad: '35',
         genero: 'Mujer',
-        barrio_colonia: 'Centro',
+        region_origen: 'Cabecera Municipal',
+        barrio_colonia: '',
         confianza_policia: 3,
         percepcion_inseguridad: 2,
         tension_festividades: 1,
@@ -63,6 +66,8 @@ export default function EncuestaResidenteScreen({ navigation }) {
         try {
             const payload = {
                 ...form,
+                region_origen: form.region_origen || 'Cabecera Municipal',
+                barrio_colonia: form.barrio_colonia.trim() || form.region_origen || 'Cabecera Municipal',
                 edad: parseInt(form.edad) || 30,
                 confianza_policia: parseInt(form.confianza_policia) || 3,
                 percepcion_inseguridad: parseInt(form.percepcion_inseguridad) || 2,
@@ -99,7 +104,25 @@ export default function EncuestaResidenteScreen({ navigation }) {
 
             {/* Datos Generales */}
             <View style={styles.block}>
-                <Text style={styles.blockTitle}>Datos Demográficos</Text>
+                <Text style={styles.blockTitle}>Datos Demográficos y Ubicación</Text>
+                
+                <Text style={styles.label}>Comunidad o Junta Auxiliar de Origen <Text style={{ color: '#d9534f' }}>*</Text></Text>
+                <TouchableOpacity style={styles.selectBtn} onPress={() => setModalJuntas(true)}>
+                    <Text style={styles.selectBtnText}>
+                        {JUNTAS_AUXILIARES.find(j => j.val === form.region_origen)?.label || form.region_origen}
+                    </Text>
+                    <Text style={styles.selectBtnArrow}>▾</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.label}>Barrio / Colonia específica (Opcional)</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Ej. Barrio de San José, Calle Principal..."
+                    placeholderTextColor="#aaa"
+                    value={form.barrio_colonia}
+                    onChangeText={(v) => setForm({ ...form, barrio_colonia: v })}
+                />
+
                 <Text style={styles.label}>Edad</Text>
                 <TextInput
                     style={styles.input}
@@ -119,15 +142,6 @@ export default function EncuestaResidenteScreen({ navigation }) {
                     ]}
                     seleccionado={form.genero}
                     onSeleccionar={(v) => setForm({ ...form, genero: v })}
-                />
-
-                <Text style={styles.label}>Barrio / Colonia / Localidad</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Ej. Centro"
-                    placeholderTextColor="#aaa"
-                    value={form.barrio_colonia}
-                    onChangeText={(v) => setForm({ ...form, barrio_colonia: v })}
                 />
             </View>
 
@@ -243,6 +257,43 @@ export default function EncuestaResidenteScreen({ navigation }) {
             >
                 {enviando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnTexto}>Guardar Encuesta</Text>}
             </TouchableOpacity>
+
+            {/* Modal para selección de Junta Auxiliar */}
+            <Modal visible={modalJuntas} animationType="slide" transparent={true} onRequestClose={() => setModalJuntas(false)}>
+                <View style={styles.modalOverlay}>
+                    <SafeAreaView style={{ flex: 1, justifyContent: 'flex-end' }}>
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Comunidad o Junta Auxiliar</Text>
+                                <TouchableOpacity onPress={() => setModalJuntas(false)} style={styles.closeBtn}>
+                                    <Text style={styles.closeBtnText}>✕</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <FlatList
+                                data={JUNTAS_AUXILIARES}
+                                keyExtractor={(item) => item.val}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.modalRow}
+                                        onPress={() => {
+                                            setForm(prev => ({ ...prev, region_origen: item.val }));
+                                            setModalJuntas(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.modalRowText,
+                                            form.region_origen === item.val && { fontWeight: 'bold', color: VERDE_OBS }
+                                        ]}>
+                                            {item.label}
+                                        </Text>
+                                        {form.region_origen === item.val && <Text style={{ color: VERDE_OBS, fontWeight: 'bold' }}>✓</Text>}
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        </View>
+                    </SafeAreaView>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }
@@ -316,4 +367,71 @@ const styles = StyleSheet.create({
     },
     btnDeshabilitado: { opacity: 0.6 },
     btnTexto: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    selectBtn: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#f9f9f9',
+        borderWidth: 1,
+        borderColor: GRIS_BORDE,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        marginBottom: 10,
+    },
+    selectBtnText: {
+        fontSize: 14,
+        color: TEXTO_OSCURO,
+        fontWeight: '500',
+    },
+    selectBtnArrow: {
+        fontSize: 16,
+        color: '#888',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContainer: {
+        backgroundColor: BLANCO,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '75%',
+        paddingBottom: 20,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    modalTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: TEXTO_OSCURO,
+    },
+    closeBtn: {
+        padding: 6,
+    },
+    closeBtnText: {
+        fontSize: 18,
+        color: '#999',
+        fontWeight: 'bold',
+    },
+    modalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 18,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f3f3',
+    },
+    modalRowText: {
+        fontSize: 14,
+        color: TEXTO_OSCURO,
+    },
 });

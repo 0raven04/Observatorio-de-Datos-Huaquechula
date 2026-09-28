@@ -48,10 +48,70 @@ async function enviarConFallbackOffline(endpoint, datos, tipo) {
 }
 
 export const encuestasService = {
-    /** GET /api/mobile/mis-encuestas/ — Lista unificada de encuestas realizadas por el usuario */
+    /** GET /api/mobile/mis-encuestas/ — Lista unificada con soporte offline resiliente */
     async getMisEncuestas() {
-        const response = await api.get('/api/mobile/mis-encuestas/');
-        return response.data;
+        let remotas = [];
+        try {
+            const response = await api.get('/api/mobile/mis-encuestas/');
+            remotas = response.data || [];
+        } catch (error) {
+            console.warn('[encuestasService] Sin conexión con el servidor para mis-encuestas, mostrando cola local:', error.message);
+        }
+
+        // Obtener elementos pendientes en cola offline
+        let localesPendientes = [];
+        try {
+            const cola = await offlineQueue.getQueue();
+            localesPendientes = cola.map(item => {
+                const payload = item.payload || {};
+                let tipoLabel = 'Encuesta';
+                let icono = '📋';
+                let resumen = 'Guardada localmente (pendiente de sincronización)';
+
+                if (item.tipo === 'visitante') {
+                    tipoLabel = 'Encuesta: Perfil del Visitante';
+                    icono = '🗺️';
+                    resumen = `Origen: ${payload.residencia_ciudad || ''}, ${payload.residencia_estado || ''} | Guardada en dispositivo`;
+                } else if (item.tipo === 'residente') {
+                    tipoLabel = 'Encuesta: Residente Local';
+                    icono = '🏠';
+                    resumen = `Región: ${payload.region_origen || payload.barrio_colonia || ''} | Guardada en dispositivo`;
+                } else if (item.tipo === 'institucional') {
+                    tipoLabel = 'Encuesta: Institucional';
+                    icono = '🏛️';
+                    resumen = `Visitantes Festividades: ${payload.visitantes_festividades || 0} | Guardada en dispositivo`;
+                } else if (item.tipo === 'comercio') {
+                    tipoLabel = 'Encuesta: Comercio';
+                    icono = '🏪';
+                    resumen = `Comercio: ${payload.tipo_comercio || ''} | Guardada en dispositivo`;
+                } else if (item.tipo === 'visita') {
+                    tipoLabel = 'Registro de Visitantes (Afluencia)';
+                    icono = '👥';
+                    resumen = `Lugar: ${payload.lugar_visita || ''} | Procedencia: ${payload.procedencia || ''} | Personas: ${payload.numero_personas || 1}`;
+                } else if (item.tipo === 'dinamica') {
+                    tipoLabel = 'Encuesta Dinámica';
+                    icono = '📋';
+                    resumen = 'Respuestas guardadas localmente en dispositivo';
+                }
+
+                return {
+                    id: item.id,
+                    tipo: tipoLabel,
+                    tipo_codigo: item.tipo,
+                    icono: icono,
+                    fecha: payload.fecha_captura_local || item.fecha_guardado_local || new Date().toISOString(),
+                    cargado_bd: false,
+                    resumen: resumen,
+                };
+            });
+        } catch (e) {
+            console.error('Error procesando cola offline para mis-encuestas:', e);
+        }
+
+        // Combinar encuestas locales pendientes y remotas
+        const combinadas = [...localesPendientes, ...remotas];
+        combinadas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        return combinadas;
     },
 
     /** POST /api/mobile/encuestas/visitante/ — Guarda encuesta de visitante con resiliencia offline */

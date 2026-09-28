@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { visitasService } from '../services/visitasService';
+import SelectorProcedencia from '../components/SelectorProcedencia';
 
 // Paleta del Observatorio (alineada con el sitio web)
 const DORADO = '#D6CEAA';
@@ -74,9 +75,9 @@ export default function FormularioVisitaScreen() {
         tamanio_grupo: '1',
         es_extranjero: false,
         pais_origen: '',
-        procedencia: '',
-        tipo_transporte: '',
-        motivo_visita: '',
+        procedencia: 'Huaquechula, Puebla',
+        tipo_transporte: 'Automovil',
+        motivo_visita: 'Turismo',
         estancia_dias: '1',
         numero_visitas: '1',
     });
@@ -126,12 +127,16 @@ export default function FormularioVisitaScreen() {
                 })),
             };
 
-            await visitasService.crearVisita(payload);
-            Alert.alert('✅ Registro guardado', 'La visita fue registrada correctamente.');
+            const res = await visitasService.crearVisita(payload);
+            if (res && res.offline) {
+                Alert.alert('💾 Guardada en Modo Offline', 'Sin cobertura celular en este punto. El registro de visita quedó guardado en el dispositivo y se sincronizará al recuperar señal.');
+            } else {
+                Alert.alert('✅ Registro guardado', 'La visita fue registrada correctamente.');
+            }
             // Resetear formulario
             setForm({
                 tamanio_grupo: '1', es_extranjero: false, pais_origen: '',
-                procedencia: '', tipo_transporte: '', motivo_visita: '',
+                procedencia: 'Huaquechula, Puebla', tipo_transporte: 'Automovil', motivo_visita: 'Turismo',
                 estancia_dias: '1', numero_visitas: '1',
             });
             setPersonas([{ edad: '', sexo: '' }]);
@@ -168,38 +173,20 @@ export default function FormularioVisitaScreen() {
                 placeholderTextColor="#aaa"
             />
 
-            {/* ¿Es extranjero? */}
-            <View style={styles.switchRow}>
-                <Text style={styles.label}>¿Visitante extranjero?</Text>
-                <Switch
-                    value={form.es_extranjero}
-                    onValueChange={(v) => setForm((f) => ({ ...f, es_extranjero: v }))}
-                    trackColor={{ false: '#ccc', true: AZUL_ENCABEZADO }}
-                    thumbColor="#fff"
-                />
-            </View>
-
-            {form.es_extranjero && (
-                <>
-                    <Text style={styles.label}>País de origen</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Ej: Estados Unidos"
-                        placeholderTextColor="#aaa"
-                        value={form.pais_origen}
-                        onChangeText={(v) => setForm((f) => ({ ...f, pais_origen: v }))}
-                    />
-                </>
-            )}
-
-            {/* Procedencia */}
-            <Text style={styles.label}>Procedencia (ciudad)</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Ej: Ciudad de México"
-                placeholderTextColor="#aaa"
-                value={form.procedencia}
-                onChangeText={(v) => setForm((f) => ({ ...f, procedencia: v }))}
+            {/* Procedencia en cascada */}
+            <Text style={[styles.label, { marginTop: 14 }]}>1. Procedencia del Visitante</Text>
+            <SelectorProcedencia
+                initialPais={form.es_extranjero ? (form.pais_origen || 'Estados Unidos') : 'México'}
+                initialEstado="Puebla"
+                initialCiudad="Huaquechula"
+                onChange={({ pais, estado, ciudad, textoConsolidado, esExtranjero }) => {
+                    setForm((f) => ({
+                        ...f,
+                        procedencia: textoConsolidado,
+                        es_extranjero: esExtranjero,
+                        pais_origen: esExtranjero ? pais : '',
+                    }));
+                }}
             />
 
             {/* Transporte */}

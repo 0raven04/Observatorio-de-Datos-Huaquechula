@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { encuestasService } from '../services/encuestasService';
+import offlineQueue from '../services/offlineQueue';
 import { useAuth } from '../context/AuthContext';
 
 const AZUL = '#3a6073'; // Azul pizarra (apagado)
@@ -15,6 +16,17 @@ export default function SelectorEncuestasScreen({ navigation }) {
     const [cargando, setCargando] = useState(true);
     const [pendientesOffline, setPendientesOffline] = useState(0);
     const [sincronizando, setSincronizando] = useState(false);
+
+    // Escuchar eventos en vivo de la cola offline
+    useEffect(() => {
+        const unsubscribe = offlineQueue.subscribe(async () => {
+            const count = await encuestasService.obtenerPendientesOffline();
+            setPendientesOffline(count);
+        });
+        return () => {
+            if (typeof unsubscribe === 'function') unsubscribe();
+        };
+    }, []);
 
     const verificarColaOffline = useCallback(async () => {
         try {
@@ -177,6 +189,21 @@ export default function SelectorEncuestasScreen({ navigation }) {
                     <View style={styles.cardInfo}>
                         <Text style={styles.cardTitle}>Encuesta: Institucional</Text>
                         <Text style={styles.cardDesc}>Gobernanza municipal, salvaguardia del PCI y regulación.</Text>
+                    </View>
+                    <Text style={styles.chevron}>›</Text>
+                </TouchableOpacity>
+
+                {/* Opción Registro de Visitantes */}
+                <TouchableOpacity
+                    style={[styles.card, { borderLeftColor: '#d35400' }]}
+                    onPress={() => navigation.navigate('NuevaVisita')}
+                >
+                    <View style={[styles.iconCircle, { backgroundColor: '#d3540022' }]}>
+                        <Text style={styles.iconEmoji}>👥</Text>
+                    </View>
+                    <View style={styles.cardInfo}>
+                        <Text style={styles.cardTitle}>Registro de Visitantes (Afluencia)</Text>
+                        <Text style={styles.cardDesc}>Conteo de grupos, procedencia, transporte y distribución demográfica.</Text>
                     </View>
                     <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
