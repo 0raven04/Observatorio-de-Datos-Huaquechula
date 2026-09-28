@@ -220,21 +220,20 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
                         <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                        <li class="nav-item has-submenu">
-                            <a class="nav-link submenu-toggle" href="#">
-                                Encuesta <span class="submenu-arrow">▼</span>
-                            </a>
-                            <ul class="submenu">
-                                {% if user.is_authenticated %}
+                        {% if user.is_authenticated %}
+                            <li class="nav-item has-submenu">
+                                <a class="nav-link submenu-toggle" href="#">
+                                    Mi Cuenta <span class="submenu-arrow">▼</span>
+                                </a>
+                                <ul class="submenu">
+                                    <li><a class="nav-link submenu-item" href="{% url 'redirigir_usuario' %}">Perfil</a></li>
                                     <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
-                                    <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
                                     <li><form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="nav-link submenu-item" style="border:none;background:none;width:100%;text-align:left;">Cerrar sesión</button></form></li>
-                                {% else %}
-                                    <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                                    <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
-                                {% endif %}
-                            </ul>
-                        </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -246,26 +245,25 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'mapa' %}">Mapa</a></li>
                     <li class="nav-item"><a class="nav-link active" href="{% url 'dashboard' %}">Observatorio</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'repositorio' %}">Repositorio</a></li>
-                    <li class="nav-item has-submenu">
-                        <a class="nav-link submenu-toggle" href="#">
-                            Encuesta <span class="submenu-arrow">▼</span>
-                        </a>
-                        <ul class="submenu">
-                            {% if user.is_authenticated %}
+                    {% if user.is_authenticated %}
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link submenu-toggle" href="#">
+                                Mi Cuenta <span class="submenu-arrow">▼</span>
+                            </a>
+                            <ul class="submenu">
+                                <li><a class="nav-link submenu-item" href="{% url 'redirigir_usuario' %}">Perfil</a></li>
                                 <li><a class="nav-link submenu-item" href="{% url 'encuestador_dashboard' %}">Portal Encuestador</a></li>
-                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
                                 <li>
                                     <form action="{% url 'logout' %}" method="post" id="logout-form-cat">
                                         {% csrf_token %}
                                         <a class="nav-link submenu-item" href="#" onclick="document.getElementById('logout-form-cat').submit(); return false;">Cerrar sesión</a>
                                     </form>
                                 </li>
-                            {% else %}
-                                <li><a class="nav-link submenu-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                                <li><a class="nav-link submenu-item" href="{% url 'registro' %}">Encuesta Pública</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
