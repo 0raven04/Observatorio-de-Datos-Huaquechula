@@ -95,7 +95,56 @@ En la parte superior verás tu tarjeta de perfil con tu nombre y usuario (`👤 
 
 ---
 
-## 📋 3. Contenido Completo de las Encuestas Oficiales
+## 🎯 3. Metas y Objetivos de Levantamiento (Individual y Grupal)
+
+Para que el Observatorio de Datos Huaquechula genere estadísticas fiables, los indicadores matemáticos programados en el sistema requieren un **umbral mínimo de datos** (muestra estadísticamente representativa). Si se capturan muy pocas encuestas, el sistema marcará alertas de desfase o mediciones no representativas en el Centro de Mando.
+
+### 3.1. ¿Cómo se vinculan las encuestas con los Indicadores Oficiales?
+
+| Indicador Clave | Encuesta que lo Alimenta | Preguntas Clave | Meta Mínima Requerida (Representatividad) |
+|---|---|---|---|
+| **ID 57: Satisfacción del Visitante** | 🗺️ Encuesta: Perfil del Visitante | Nivel de satisfacción (1-5 ⭐), procedencia y atractivos visitados | **150 a 250 encuestas** por festividad o temporada |
+| **ID 34: Tensión sobre Población Local y PCI** | 🏠 Encuesta: Residente Local | Tensión en festividades (1-4), saturación de servicios, respeto a tradiciones | **120 a 180 encuestas** distribuidas en cabecera y juntas auxiliares |
+| **Gobernanza y Salvaguardia Patrimonial** | 🏛️ Encuesta: Institucional | Herramientas de inventario, planeación técnica y regulación | **8 a 15 encuestas** a autoridades, mayordomías y comités |
+
+---
+
+### 3.2. Metas Individuales Sugeridas (Ritmo de Trabajo)
+
+La aplicación móvil está optimizada para captura ultra-rápida mediante botones táctiles, lo que permite un flujo ágil:
+
+- ⏱️ **Meta por Hora:**
+  - **5 a 7 encuestas por hora** (en zonas de afluencia constante como el Zócalo, Ex Convento o Altares).
+  - *Distribución del tiempo:* Una encuesta de visitante toma entre 3 y 4 minutos; una de residente entre 4 y 5 minutos. Con 10 minutos de descanso/traslado por hora, esta meta se cumple cómodamente sin saturar a los encuestadores.
+- 📅 **Meta por Día (Jornada de Campo):**
+  - **Media Jornada (4 horas de campo):** **20 a 25 encuestas** por encuestador.
+  - **Jornada Completa (6 horas con pausas para comida e hidratación):** **30 a 40 encuestas** por encuestador.
+
+---
+
+### 3.3. Metas Grupales / Por Brigada
+
+Dependiendo del tamaño del equipo desplegado en Huaquechula, estas son las metas grupales sugeridas para alcanzar la cobertura total de los indicadores:
+
+- **Brigada Básica (3 encuestadores jóvenes):**
+  - **Meta por día:** ~90 a 105 encuestas en conjunto.
+  - **Meta en fin de semana (2 días):** **180 a 210 encuestas** (Alcanza el 100% de la muestra requerida para calcular los indicadores ID 57 e ID 34).
+- **Brigada Estudiantil Completa (5 a 8 encuestadores):**
+  - **Meta por día:** ~150 a 240 encuestas en conjunto.
+  - **Meta en temporada cumbre (Día de Muertos / Festival de 3 días):** **450 a 600 encuestas**, logrando un análisis con 95% de nivel de confianza y margen de error inferior al 4%.
+
+---
+
+### 3.4. Distribución Recomendada de Cuotas (Mix de Encuestas)
+
+Para asegurar que todos los indicadores queden cubiertos equitativamente, cada encuestador o brigada debe balancear sus entrevistas diarias siguiendo esta proporción:
+- 🗺️ **60% Encuestas de Visitante:** Dirigidas a turistas y visitantes de otros municipios, estados o países (alimenta satisfacción, origen y derrama).
+- 🏠 **35% Encuestas de Residente:** Dirigidas a vecinos locales (alimenta el eje social, percepción de seguridad, afectación de servicios y tradiciones).
+- 🏛️ **5% Encuestas Institucionales:** Dirigidas a mayordomos, párrocos, comités de barrio o directores municipales (generalmente asignadas a los coordinadores de brigada).
+
+---
+
+## 📋 4. Contenido Completo de las Encuestas Oficiales
 
 A continuación se detalla la estructura íntegra, preguntas, escalas y opciones de cada una de las tres encuestas oficiales del Observatorio:
 
@@ -287,7 +336,7 @@ graph LR
 
 ---
 
-## 💡 Preguntas Frecuentes para el Encuestador (FAQ)
+## 💡 5. Preguntas Frecuentes para el Encuestador (FAQ)
 
 - **¿Qué hago si se traba la app o me equivoco en una respuesta?**  
   Puedes cambiar cualquier selección antes de presionar el botón *"Guardar Encuesta"*. Si una persona decide no terminar la entrevista a la mitad, simplemente presiona la flecha de retroceso arriba a la izquierda para cancelar el registro.
