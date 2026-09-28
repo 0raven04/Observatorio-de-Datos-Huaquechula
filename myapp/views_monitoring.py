@@ -7,8 +7,8 @@ import time
 import json
 import logging
 import requests
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db import connection
 from django.db.models import Avg, Max, Count
@@ -177,6 +177,10 @@ def monitoreo_en_vivo_view(request):
     Permite supervisar en tiempo real la ingesta de encuestas en Huaquechula,
     con gráficos de resiliencia de red, lag por cobertura y feed de telemetría.
     """
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if getattr(request.user, 'tipo', '') != 'admin':
+        return HttpResponseForbidden("Acceso denegado. Solo administradores pueden acceder al módulo de monitoreo.")
     return render(request, 'myapp/monitoreo_en_vivo.html')
 
 
