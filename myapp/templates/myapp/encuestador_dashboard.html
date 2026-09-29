@@ -367,40 +367,4 @@
     </div>
 </div>
 
-<!-- ── Últimos registros ── -->
-<p class="section-label"><i class="fas fa-history me-1"></i>Actividad Reciente</p>
-<div class="panel">
-    <div class="panel-title"><i class="fas fa-clock" style="color:#007bff;"></i>Últimos 5 registros de visita</div>
-    {% if ultimos_registros %}
-    <table class="act-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Fecha</th>
-                <th>Procedencia</th>
-                <th>Motivo</th>
-                <th>Transporte</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in ultimos_registros %}
-            <tr>
-                <td>#{{ r.id_registro }}</td>
-                <td>{{ r.fecha|date:"d M Y, H:i" }}</td>
-                <td>{{ r.procedencia }}</td>
-                <td>
-                    <span class="act-badge" style="background:rgba(74,74,74,0.1); color:#4A4A4A;">
-                        {{ r.get_motivo_visita_display }}
-                    </span>
-                </td>
-                <td>{{ r.get_tipo_transporte_display }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p style="color:var(--enc-muted); font-size:0.85rem;">No hay registros aún.</p>
-    {% endif %}
-</div>
-
 {% endblock %}

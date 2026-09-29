@@ -4035,9 +4035,6 @@ def encuestador_dashboard(request):
         .order_by('-total')
     )
 
-    # ── Últimos 5 registros ──
-    ultimos_registros = RegistroVisita.objects.order_by('-fecha')[:5]
-
     context = {
         'usuario': usuario,
         'encuestador': encuestador,
@@ -4057,7 +4054,6 @@ def encuestador_dashboard(request):
         'encuestas_recientes': encuestas_recientes,
         # Análisis
         'motivos': motivos,
-        'ultimos_registros': ultimos_registros,
     }
     return render(request, 'myapp/encuestador_dashboard.html', context)
 
