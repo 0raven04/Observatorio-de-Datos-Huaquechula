@@ -248,12 +248,6 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link submenu-item {% if 'lista_encuestas' in request.resolver_match.url_name or 'crear_encuesta' in request.resolver_match.url_name or 'editar_encuesta' in request.resolver_match.url_name or 'ver_respuestas' in request.resolver_match.url_name %}active{% endif %}"
-                                       href="{% url 'lista_encuestas' %}">
-                                        <i class="fas fa-tasks me-1"></i> Gestor de encuestas
-                                    </a>
-                                </li>
-                                <li>
                                     <a class="nav-link submenu-item {% if request.resolver_match.url_name == 'monitoreo_en_vivo' %}active{% endif %}"
                                        href="{% url 'monitoreo_en_vivo' %}">
                                         <i class="fas fa-chart-line me-1"></i> Monitoreo
@@ -379,12 +373,6 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'encuestador_dashboard' %}active{% endif %}"
                         href="{% url 'encuestador_dashboard' %}">
                         <i class="fas fa-clipboard-check me-2"></i>Portal de Encuestas
-                    </a>
-                </li>
-                <li class="sidebar-item text-center">
-                    <a class="nav-link {% if 'lista_encuestas' in request.resolver_match.url_name or 'crear_encuesta' in request.resolver_match.url_name or 'editar_encuesta' in request.resolver_match.url_name or 'ver_respuestas' in request.resolver_match.url_name %}active{% endif %}"
-                        href="{% url 'lista_encuestas' %}">
-                        <i class="fas fa-tasks me-2"></i>Gestor de Encuestas
                     </a>
                 </li>
                 <li class="sidebar-item text-center">
