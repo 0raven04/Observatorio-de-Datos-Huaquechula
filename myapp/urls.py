@@ -53,6 +53,7 @@ urlpatterns = [
     path('subir-documento/', views.subir_documento, name='subir_documento'),
     path('editar-documento/<int:id>/', views.editar_documento, name='editar_documento'),
     path('descargar/<int:id>/', views.descargar_documento, name='descargar_documento'),
+    path('documentos/ver/<int:id>/', views.ver_documento, name='ver_documento'),
     path('eliminar/<int:id>/', views.eliminar_documento, name='eliminar_documento'),
     path('api/documentos/<str:categoria_id>/', views.obtener_documentos_categoria, name='documentos_categoria'),
     path('repositorio/', views.repositorio, name='repositorio'),

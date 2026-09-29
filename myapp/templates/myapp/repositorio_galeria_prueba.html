@@ -614,7 +614,7 @@
                 <div class="doc-hover-actions">
                     {% if doc.archivo or doc.url %}
                     <a href="javascript:void(0)"
-                        data-view-url="{% if doc.archivo %}{{ doc.archivo.url }}{% else %}{{ doc.url }}{% endif %}"
+                        data-view-url="{% if doc.archivo %}{% url 'ver_documento' doc.id %}{% else %}{{ doc.url }}{% endif %}"
                         data-download-url="{% url 'descargar_documento' doc.id %}" data-titulo="{{ doc.titulo|escape }}"
                         data-tipo="{{ doc.tipo|escape }}" data-extension="{{ doc.tipo_archivo|escape }}"
                         onclick="visualizarDocumento(this.dataset.viewUrl, this.dataset.downloadUrl, this.dataset.titulo, this.dataset.tipo, this.dataset.extension)"
@@ -691,6 +691,11 @@
                     Visualizar Recurso
                 </h5>
                 <div class="d-flex align-items-center gap-2 ms-auto">
+                    <a id="viewDocumentNewTabBtn" href="#" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold"
+                        style="font-size:0.88rem;" title="Abrir en pestaña nueva">
+                        <i class="fas fa-external-link-alt me-1"></i> Nueva pestaña
+                    </a>
                     <a id="viewDocumentDownloadBtn" href="#"
                         class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold"
                         style="font-size:0.88rem;">
@@ -715,6 +720,7 @@
         const modalTitle = document.getElementById('viewDocumentModalLabel');
         const modalBody = document.getElementById('viewDocumentModalBody');
         const downloadBtn = document.getElementById('viewDocumentDownloadBtn');
+        const newTabBtn = document.getElementById('viewDocumentNewTabBtn');
 
         // Configurar título y botón de descarga
         modalTitle.innerHTML = `<i class="fas fa-file-alt text-primary me-2"></i> ${titulo}`;
@@ -739,6 +745,10 @@
         let displayUrl = viewUrl;
         if (viewUrl.includes('drive.google.com') && viewUrl.includes('/view')) {
             displayUrl = viewUrl.replace('/view', '/preview');
+        }
+
+        if (newTabBtn) {
+            newTabBtn.href = displayUrl;
         }
 
         // Retrasar levemente la inyección para asegurar transiciones suaves
@@ -766,8 +776,20 @@
                 </div>
             `;
             } else {
-                // PDFs e históricos embebidos
-                modalBody.innerHTML = `<iframe src="${displayUrl}" style="width: 100%; height: 70vh; border: none; background: #fff;" allowfullscreen></iframe>`;
+                // PDFs y documentos embebidos con <object> e <iframe> como fallback robusto
+                modalBody.innerHTML = `
+                <div style="width: 100%; height: 75vh; position: relative;">
+                    <object data="${displayUrl}" type="application/pdf" style="width: 100%; height: 100%; border: none; background: #fff;">
+                        <iframe src="${displayUrl}" style="width: 100%; height: 100%; border: none; background: #fff;" allowfullscreen>
+                            <div class="p-4 text-center text-white d-flex flex-column align-items-center justify-content-center h-100">
+                                <p class="mb-3 fs-5">Tu navegador no puede previsualizar directamente este documento en el visor.</p>
+                                <a href="${displayUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary rounded-pill px-4 py-2">
+                                    <i class="fas fa-external-link-alt me-1"></i> Abrir documento en nueva pestaña
+                                </a>
+                            </div>
+                        </iframe>
+                    </object>
+                </div>`;
             }
         }, 250);
 

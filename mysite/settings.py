@@ -55,6 +55,9 @@ ALLOWED_HOSTS = ['*'] + \
 _csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()]
 
+# Permitir incrustación de recursos propios (PDFs, previsualizaciones en modales) desde el mismo origen
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 # ── Seguridad HTTPS (solo en producción, cuando DEBUG=False) ──────────────────
 # NOTA: Azure App Service termina SSL en el load balancer (proxy), por lo que
 # Django recibe HTTP internamente. Se usa SECURE_PROXY_SSL_HEADER para detectar
@@ -69,7 +72,7 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
 # Application definition

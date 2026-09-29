@@ -1237,6 +1237,54 @@ def descargar_documento(request, id):
     messages.error(request, 'El documento no tiene un recurso asociado.')
     return redirect('repositorio')
 
+
+def ver_documento(request, id):
+    """Vista para visualizar/reproducir un documento de forma inline (visor integrado o nueva pestaña)"""
+    documento = get_object_or_404(Documento, id=id)
+    
+    # Verificar permisos de acceso
+    if documento.clasificacion == 'publico':
+        pass
+    elif documento.clasificacion == 'privado' and not request.user.is_authenticated:
+        messages.warning(request, 'Debes iniciar sesión para visualizar este documento')
+        return redirect('login') + f'?next={request.path}'
+    elif documento.clasificacion == 'confidencial' and not (request.user.is_authenticated and (request.user.is_superuser or (hasattr(request.user, 'tipo') and request.user.tipo == 'admin'))):
+        messages.error(request, 'No tienes permiso para visualizar este documento')
+        return redirect('repositorio')
+    
+    # Servir archivo local si existe
+    if documento.archivo:
+        try:
+            if documento.archivo.storage.exists(documento.archivo.name):
+                filename = os.path.basename(documento.archivo.name)
+                content_type, _ = mimetypes.guess_type(filename)
+                if not content_type:
+                    content_type = 'application/pdf' if filename.lower().endswith('.pdf') else 'application/octet-stream'
+                
+                response = FileResponse(
+                    documento.archivo.open('rb'),
+                    content_type=content_type,
+                    as_attachment=False,
+                    filename=filename
+                )
+                response['X-Frame-Options'] = 'SAMEORIGIN'
+                response['Content-Disposition'] = f'inline; filename="{filename}"'
+                return response
+            else:
+                messages.error(request, 'El archivo físico no se encuentra en el servidor')
+                return redirect('repositorio')
+        except Exception as e:
+            messages.error(request, f'Error al visualizar el archivo: {str(e)}')
+            return redirect('repositorio')
+            
+    # Redirigir a URL externa si no hay archivo local
+    if documento.url:
+        return redirect(documento.url)
+        
+    messages.error(request, 'El documento no tiene un recurso asociado.')
+    return redirect('repositorio')
+
+
 # ==============================================
 # VISTAS ADICIONALES SIMPLIFICADAS
 # ==============================================

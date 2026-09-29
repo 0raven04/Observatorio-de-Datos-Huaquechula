@@ -244,14 +244,18 @@
                 <div class="card-body">
                     <div class="d-grid gap-2">
                         <!-- Ver documento -->
-                        {% if documento.url %}
+                        {% if documento.archivo %}
+                        <a href="{% url 'ver_documento' documento.id_documento %}" target="_blank" class="btn btn-primary btn-action">
+                            <i class="fas fa-external-link-alt me-2"></i>Ver Documento
+                        </a>
+                        {% elif documento.url %}
                         <a href="{{ documento.url }}" target="_blank" class="btn btn-primary btn-action">
                             <i class="fas fa-external-link-alt me-2"></i>Ver Documento
                         </a>
                         {% endif %}
                         
                         <!-- Descargar -->
-                        {% if documento.url and documento.id_documento %}
+                        {% if documento.archivo or documento.url %}
                         <a href="{% url 'descargar_documento' documento.id_documento %}" 
                            class="btn btn-success btn-action">
                             <i class="fas fa-download me-2"></i>Descargar
