@@ -63,15 +63,57 @@
             height: auto;
             width: 100% !important;
             min-width: 100% !important;
+            padding: 0.75rem 1rem !important;
+        }
+
+        .dashboard-sidebar nav {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 6px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .dashboard-sidebar nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sidebar-nav-group {
+            width: auto !important;
+            flex-shrink: 0;
+        }
+
+        .sidebar-sub-nav {
+            display: none !important;
         }
 
         .dashboard-main {
             margin-left: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            padding-top: 20px !important;
+            padding: 1rem !important;
+            padding-top: 15px !important;
         }
     }
+
+    @media (max-width: 576px) {
+        .chart-type-switcher {
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .chart-type-btn {
+            font-size: 0.78rem !important;
+            padding: 4px 10px !important;
+        }
+        .modal-body {
+            padding: 12px !important;
+        }
+        .kpi-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
 
     /* Forzar paleta de base.css */
     :root {
