@@ -44,6 +44,7 @@ ObservatorioMovil/node_modules_old/
 ObservatorioMovil/.expo/
 ObservatorioMovil/android/
 ObservatorioMovil/ios/
+*.apk
 
 # OS
 .DS_Store
