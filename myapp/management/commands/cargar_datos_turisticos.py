@@ -60,7 +60,6 @@ class Command(BaseCommand):
                     "tipo_archivo": "kml",
                     "visible": True,
                     "procesado": True,
-                    "num_geometrias": 12,
                     "descripcion": "Catálogo oficial de sitios patrimoniales, ofrendas monumentales y servicios"
                 }
             )
