@@ -1616,6 +1616,89 @@ def mapa(request):
     return render(request, 'mapa.html', context)
 
 
+@require_http_methods(["GET", "POST"])
+def api_generar_circuito_turistico(request):
+    """
+    API para generación y cálculo algorítmico de Circuitos Turísticos Inteligentes (TSP / pgRouting).
+    Permite calcular la secuencia óptima de visitas minimizando distancia caminada y
+    evitando cruces de ruta, proporcionando métricas de pasos, tiempo de caminata y de estancia.
+    """
+    import logging
+    _logger = logging.getLogger(__name__)
+
+    try:
+        if request.method == "POST":
+            if request.content_type == "application/json" and request.body:
+                data = json.loads(request.body.decode('utf-8'))
+            else:
+                data = request.POST
+        else:
+            data = request.GET
+
+        categoria = data.get('categoria', 'ofrenda')
+
+        # Manejo flexible de puntos_ids (lista JSON, parámetro GET múltiple, o texto separado por comas)
+        puntos_ids = None
+        puntos_raw = data.get('puntos_ids')
+        if hasattr(data, 'getlist') and not puntos_raw:
+            puntos_raw = data.getlist('puntos_ids[]') or data.getlist('puntos_ids')
+
+        if puntos_raw:
+            if isinstance(puntos_raw, str):
+                try:
+                    puntos_ids = [int(x.strip()) for x in puntos_raw.split(',') if x.strip().isdigit()]
+                except Exception:
+                    puntos_ids = None
+            elif isinstance(puntos_raw, (list, tuple)):
+                puntos_ids = [int(x) for x in puntos_raw if str(x).isdigit()]
+
+        # Coordenadas de origen
+        origen_lat = None
+        origen_lng = None
+        lat_val = data.get('origen_lat')
+        lng_val = data.get('origen_lng')
+        if lat_val and lng_val:
+            try:
+                origen_lat = float(lat_val)
+                origen_lng = float(lng_val)
+            except (ValueError, TypeError):
+                origen_lat = None
+                origen_lng = None
+
+        origen_nombre = data.get('origen_nombre', 'Zócalo de Huaquechula')
+
+        # Circuito cerrado
+        circuito_cerrado_val = str(data.get('circuito_cerrado', 'true')).lower().strip()
+        circuito_cerrado = circuito_cerrado_val in ('true', '1', 'yes', 'si', 't')
+
+        # Límite de paradas
+        try:
+            max_paradas = int(data.get('max_paradas', 15))
+        except (ValueError, TypeError):
+            max_paradas = 15
+
+        from myapp.services.circuit_service import generar_circuito_turistico
+        resultado = generar_circuito_turistico(
+            categoria=categoria,
+            puntos_ids=puntos_ids,
+            origen_lat=origen_lat,
+            origen_lng=origen_lng,
+            origen_nombre=origen_nombre,
+            circuito_cerrado=circuito_cerrado,
+            max_paradas=max_paradas
+        )
+
+        return JsonResponse(resultado, safe=False)
+
+    except Exception as e:
+        _logger.error(f"Error generando circuito turístico: {e}", exc_info=True)
+        return JsonResponse({
+            "status": "error",
+            "mensaje": f"Ocurrió un error al generar el circuito: {str(e)}",
+            "paradas": [],
+            "resumen": {}
+        }, status=500)
+
 
 @login_required
 def subir_desde_url(request):

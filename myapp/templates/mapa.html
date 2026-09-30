@@ -343,6 +343,14 @@
 
 {% block extra_html %}
 <!-- ===================================================
+     FAB DE CIRCUITOS TURÍSTICOS
+     =================================================== -->
+<button id="fab-circuitos" title="Circuitos Turísticos Inteligentes" aria-label="Abrir circuitos turísticos">
+    <i class="fas fa-route"></i>
+    <span>Circuitos</span>
+</button>
+
+<!-- ===================================================
      FAB DE RESEÑAS
      =================================================== -->
 <button id="fab-resenas" title="Ver reseñas del municipio" aria-label="Abrir reseñas">
@@ -448,6 +456,133 @@
                 <i class="fas fa-paper-plane"></i> Enviar reseña
             </button>
         </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     MODAL DE CIRCUITOS TURÍSTICOS INTELIGENTES (TSP / pgRouting)
+     =================================================== -->
+<div id="modal-circuito-overlay" role="dialog" aria-modal="true" aria-label="Circuitos Turísticos">
+    <div id="modal-circuito">
+        <div class="modal-circuito-header">
+            <h3><i class="fas fa-route" style="color: #e67e22;"></i> Circuitos Turísticos</h3>
+            <button id="btn-cerrar-modal-circuito" class="modal-circuito-close" aria-label="Cerrar modal">&times;</button>
+        </div>
+
+        <div class="modal-circuito-body">
+            <!-- Sección 1: Categoría / Tipo de Circuito -->
+            <div class="circuito-seccion-titulo">
+                <i class="fas fa-map-marked-alt" style="color: #b33927;"></i> 1. Selecciona tu recorrido
+            </div>
+            <div class="circuito-presets-grid">
+                <!-- Ofrendas -->
+                <div class="circuito-preset-card selected" data-categoria="ofrenda">
+                    <span class="circuito-badge-tag">Tradición</span>
+                    <div class="circuito-preset-icon"><i class="fas fa-fire"></i></div>
+                    <div class="circuito-preset-info">
+                        <h4>Ofrendas Monumentales</h4>
+                        <p>Recorrido por los altares tradicionales de Día de Muertos en hogares locales.</p>
+                    </div>
+                </div>
+
+                <!-- Histórico -->
+                <div class="circuito-preset-card" data-categoria="sitio_turistico">
+                    <span class="circuito-badge-tag" style="background:#e8f4fd; color:#1b6ca8;">Patrimonio</span>
+                    <div class="circuito-preset-icon" style="color:#1b6ca8; background:#e8f4fd;"><i class="fas fa-landmark"></i></div>
+                    <div class="circuito-preset-info">
+                        <h4>Histórico y Templos</h4>
+                        <p>Ex-convento franciscano, capillas de barrio y monumentos arquitectónicos.</p>
+                    </div>
+                </div>
+
+                <!-- Integral -->
+                <div class="circuito-preset-card" data-categoria="todos">
+                    <span class="circuito-badge-tag" style="background:#eafaf1; color:#27ae60;">Completo</span>
+                    <div class="circuito-preset-icon" style="color:#27ae60; background:#eafaf1;"><i class="fas fa-utensils"></i></div>
+                    <div class="circuito-preset-info">
+                        <h4>Circuito Integral</h4>
+                        <p>Experiencia completa: patrimonio cultural, gastronomía local y servicios.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Punto de Partida -->
+            <div class="circuito-seccion-titulo">
+                <i class="fas fa-compass" style="color: #b33927;"></i> 2. Punto de partida
+            </div>
+            <div class="circuito-opciones-grupo">
+                <button type="button" class="circuito-opcion-btn selected" id="opt-origen-zocalo" data-origen="zocalo">
+                    <i class="fas fa-archway"></i> Zócalo Central
+                </button>
+                <button type="button" class="circuito-opcion-btn" id="opt-origen-gps" data-origen="gps">
+                    <i class="fas fa-crosshairs"></i> Mi Ubicación (GPS)
+                </button>
+            </div>
+
+            <!-- Sección 3: Modalidad del Recorrido -->
+            <div class="circuito-seccion-titulo">
+                <i class="fas fa-sync-alt" style="color: #b33927;"></i> 3. Tipo de trayecto
+            </div>
+            <div class="circuito-switch-wrap">
+                <div>
+                    <div class="circuito-switch-label">Circuito Cerrado</div>
+                    <div class="circuito-switch-sub">Regresa automáticamente al punto de partida</div>
+                </div>
+                <input type="checkbox" id="check-circuito-cerrado" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #b33927;">
+            </div>
+
+            <!-- Botón Generar -->
+            <button id="btn-generar-circuito" class="btn-generar-circuito">
+                <i class="fas fa-magic"></i> Optimizar y Trazar Circuito
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     PANEL FLOTANTE DE CIRCUITO ACTIVO
+     =================================================== -->
+<div id="panel-circuito-activo" role="region" aria-label="Resumen de Circuito Activo">
+    <div class="pca-header">
+        <div class="pca-header-title">
+            <i class="fas fa-route" style="color: #f39c12; font-size: 1.2rem;"></i>
+            <h3 id="pca-titulo-circuito">Circuito Turístico</h3>
+            <span class="pca-badge-paradas" id="pca-num-paradas">0 paradas</span>
+        </div>
+        <div class="pca-header-actions">
+            <button id="btn-toggle-paradas" class="pca-btn-action" title="Ver lista de paradas">
+                <i class="fas fa-list-ol"></i> <span id="pca-toggle-text">Ver paradas</span>
+            </button>
+            <button id="btn-centrar-circuito" class="pca-btn-action" title="Centrar todo el circuito">
+                <i class="fas fa-expand"></i> Centrar
+            </button>
+            <button id="btn-cerrar-circuito" class="pca-btn-close" title="Cerrar circuito y volver al mapa">&times;</button>
+        </div>
+    </div>
+
+    <!-- Métricas en Grid -->
+    <div class="pca-metrics-grid">
+        <div class="pca-metric-item">
+            <div class="pca-metric-val" id="pca-distancia">—</div>
+            <div class="pca-metric-lbl"><i class="fas fa-ruler-horizontal"></i> Distancia</div>
+        </div>
+        <div class="pca-metric-item">
+            <div class="pca-metric-val" id="pca-tiempo-caminata">—</div>
+            <div class="pca-metric-lbl"><i class="fas fa-walking"></i> Caminata</div>
+        </div>
+        <div class="pca-metric-item">
+            <div class="pca-metric-val" id="pca-tiempo-total">—</div>
+            <div class="pca-metric-lbl"><i class="fas fa-clock"></i> Tiempo Total</div>
+        </div>
+        <div class="pca-metric-item">
+            <div class="pca-metric-val" id="pca-pasos">—</div>
+            <div class="pca-metric-lbl"><i class="fas fa-shoe-prints"></i> Pasos Est.</div>
+        </div>
+    </div>
+
+    <!-- Lista desplegable de Paradas -->
+    <div class="pca-paradas-lista" id="pca-paradas-lista">
+        <!-- Generado dinámicamente con JS -->
     </div>
 </div>
 
@@ -757,20 +892,18 @@
                         var idCapa = L.stamp(layer);
                         var idCatBD = p.id_categoria_bd || null;
 
-                        // Lo guardamos en la lista global inmediatamente
-                        window.todosLosMarcadores.push({ id: idCapa, layer: layer, tipo: tipoSistema, subcat: idCatBD });
-
                         // Simulación de ubicación del usuario
                         var puntoOrigen = L.latLng(18.768500, -98.543200);
 
                         // Buscamos el punto más cercano de esta figura hacia el usuario
                         var puntoDestino = window.obtenerPuntoMasCercanoDeCapa(layer, puntoOrigen);
-                        var distanciaMetros = puntoOrigen.distanceTo(puntoDestino);
+                        var distanciaMetros = puntoDestino ? puntoOrigen.distanceTo(puntoDestino) : 0;
                         var tiempoMinutos = Math.max(1, Math.round(distanciaMetros / 83));
 
                         // Construir objeto de datos para el panel
                         var datosPanel = {
                             idCapa: idCapa,
+                            idPunto: p.id_punto,
                             nombre: p.nombre || "Sin nombre",
                             imagen: p.imagen || "",
                             categoria: p.categoria_filtro || "Otros",
@@ -782,6 +915,17 @@
                             galeria: p.galeria || [],
                             ofrenda_anfitrion: p.ofrenda_anfitrion || ""
                         };
+
+                        // Lo guardamos en la lista global con sus datos completos
+                        window.todosLosMarcadores.push({
+                            id: idCapa,
+                            layer: layer,
+                            tipo: tipoSistema,
+                            subcat: idCatBD,
+                            idPunto: p.id_punto,
+                            datos: datosPanel
+                        });
+                        layer._datosPanel = datosPanel;
 
                         // En lugar de popup, agregamos evento de clic
                         layer.on('click', function (e) {
@@ -1501,6 +1645,449 @@
         init();
     }
 
+})();
+
+// =================================================================
+// MÓDULO DE CIRCUITOS TURÍSTICOS AUTOMÁTICOS (TSP / pgRouting)
+// =================================================================
+(function () {
+    let fabCircuito = null;
+    let modalOverlay = null;
+    let btnCerrarModal = null;
+    let btnGenerar = null;
+    let presetCards = [];
+    let btnZocalo = null;
+    let btnGps = null;
+    let checkCerrado = null;
+
+    let panelActivo = null;
+    let btnCerrarCircuito = null;
+    let btnCentrarCircuito = null;
+    let btnToggleParadas = null;
+    let listaParadasEl = null;
+
+    let categoriaSeleccionada = 'ofrenda';
+    let origenSeleccionado = 'zocalo';
+    let gpsCoordsCache = null;
+
+    let circuitoLayerGroup = null;
+    let circuitoActivoData = null;
+
+    const ZOCALO_COORDS = [18.769895, -98.544040];
+
+    function abrirModal() {
+        if (!modalOverlay) return;
+        if (window.cerrarPanelMarcador) window.cerrarPanelMarcador();
+        modalOverlay.classList.add('activo');
+    }
+
+    function cerrarModal() {
+        if (!modalOverlay) return;
+        modalOverlay.classList.remove('activo');
+    }
+
+    function seleccionarPreset(card) {
+        presetCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        categoriaSeleccionada = card.getAttribute('data-categoria') || 'ofrenda';
+    }
+
+    function seleccionarOrigen(tipo) {
+        origenSeleccionado = tipo;
+        if (tipo === 'zocalo') {
+            if (btnZocalo) btnZocalo.classList.add('selected');
+            if (btnGps) btnGps.classList.remove('selected');
+        } else {
+            if (btnGps) btnGps.classList.add('selected');
+            if (btnZocalo) btnZocalo.classList.remove('selected');
+
+            // Solicitar geolocalización de inmediato para validar y cachear
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) {
+                        gpsCoordsCache = {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude
+                        };
+                        if (window.showCustomAlert) {
+                            window.showCustomAlert('Ubicación GPS lista para el circuito.', 'success');
+                        }
+                    },
+                    function (err) {
+                        console.warn("GPS error:", err);
+                        if (window.showCustomAlert) {
+                            window.showCustomAlert('No se pudo acceder a tu ubicación. Se usará el Zócalo.', 'info');
+                        }
+                        if (btnZocalo) btnZocalo.click();
+                    },
+                    { enableHighAccuracy: true, timeout: 7000 }
+                );
+            } else {
+                if (window.showCustomAlert) {
+                    window.showCustomAlert('Tu navegador no soporta geolocalización.', 'info');
+                }
+                if (btnZocalo) btnZocalo.click();
+            }
+        }
+    }
+
+    function generarCircuito() {
+        const map = window._leaflet_map_instance;
+        if (!map) {
+            alert('El mapa aún no está listo.');
+            return;
+        }
+
+        if (btnGenerar) {
+            btnGenerar.disabled = true;
+            btnGenerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizando recorrido...';
+        }
+
+        let params = new URLSearchParams();
+        params.append('categoria', categoriaSeleccionada);
+        params.append('circuito_cerrado', checkCerrado && checkCerrado.checked ? 'true' : 'false');
+
+        if (origenSeleccionado === 'gps' && gpsCoordsCache) {
+            params.append('origen_lat', gpsCoordsCache.lat);
+            params.append('origen_lng', gpsCoordsCache.lng);
+            params.append('origen_nombre', 'Tu Ubicación Actual');
+        } else {
+            params.append('origen_lat', ZOCALO_COORDS[0]);
+            params.append('origen_lng', ZOCALO_COORDS[1]);
+            params.append('origen_nombre', 'Zócalo de Huaquechula');
+        }
+
+        fetch(`/api/gis/circuito-turistico/?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+                if (btnGenerar) {
+                    btnGenerar.disabled = false;
+                    btnGenerar.innerHTML = '<i class="fas fa-magic"></i> Optimizar y Trazar Circuito';
+                }
+
+                if (data.status === 'success' && data.paradas && data.paradas.length > 0) {
+                    cerrarModal();
+                    circuitoActivoData = data;
+                    dibujarCircuitoEnMapa(data);
+                    actualizarPanelCircuito(data);
+                    if (window.showCustomAlert) {
+                        window.showCustomAlert(`¡Circuito optimizado con éxito! (${data.resumen.distancia_total_km} km, ${data.resumen.total_paradas} paradas)`, 'success');
+                    }
+                } else if (data.status === 'empty') {
+                    if (window.showCustomAlert) {
+                        window.showCustomAlert(data.mensaje || 'No se encontraron puntos para este circuito.', 'info');
+                    } else {
+                        alert(data.mensaje);
+                    }
+                } else {
+                    if (window.showCustomAlert) {
+                        window.showCustomAlert(data.mensaje || 'Error al calcular la ruta.', 'error');
+                    } else {
+                        alert(data.mensaje || 'Error al calcular circuito');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Error al generar circuito turístico:", err);
+                if (btnGenerar) {
+                    btnGenerar.disabled = false;
+                    btnGenerar.innerHTML = '<i class="fas fa-magic"></i> Optimizar y Trazar Circuito';
+                }
+                if (window.showCustomAlert) {
+                    window.showCustomAlert('Error de red al consultar el circuito.', 'error');
+                } else {
+                    alert('Error de conexión al generar el circuito.');
+                }
+            });
+    }
+
+    function dibujarCircuitoEnMapa(data) {
+        const map = window._leaflet_map_instance;
+        if (!map) return;
+
+        // 1. Limpiar simulación o ruta previa si estuviera corriendo
+        if (window._simulacionInterval) clearInterval(window._simulacionInterval);
+        if (window._controlRutaActual) {
+            try { map.removeControl(window._controlRutaActual); } catch (e) {}
+            window._controlRutaActual = null;
+        }
+        if (window._marcadorUsuario) {
+            try { map.removeLayer(window._marcadorUsuario); } catch (e) {}
+            window._marcadorUsuario = null;
+        }
+        if (window._lineaRestante) {
+            try { map.removeLayer(window._lineaRestante); } catch (e) {}
+            window._lineaRestante = null;
+        }
+        if (window._lineaRecorrida) {
+            try { map.removeLayer(window._lineaRecorrida); } catch (e) {}
+            window._lineaRecorrida = null;
+        }
+
+        // 2. Limpiar capa previa de circuitos
+        if (circuitoLayerGroup) {
+            map.removeLayer(circuitoLayerGroup);
+        }
+        circuitoLayerGroup = L.layerGroup().addTo(map);
+
+        // 3. Ocultar temporalmente los marcadores estándar del mapa para que resalte el circuito
+        if (window.todosLosMarcadores) {
+            window.todosLosMarcadores.forEach(m => {
+                if (map.hasLayer(m.layer)) map.removeLayer(m.layer);
+            });
+        }
+
+        // 4. Dibujar polilínea del circuito
+        const waypoints = data.waypoints || [];
+        if (waypoints.length > 1) {
+            // Sombra / halo exterior dorado/naranja
+            L.polyline(waypoints, {
+                color: '#f39c12',
+                weight: 7,
+                opacity: 0.5,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(circuitoLayerGroup);
+
+            // Trazo principal terracotta
+            L.polyline(waypoints, {
+                color: '#b33927',
+                weight: 4.5,
+                opacity: 0.95,
+                dashArray: '8, 8',
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(circuitoLayerGroup);
+        }
+
+        // 5. Dibujar cada parada numerada
+        data.paradas.forEach((parada, idx) => {
+            let marker;
+            if (parada.es_origen) {
+                const iconoOrigen = L.divIcon({
+                    className: 'circuito-div-icon',
+                    html: `<div class="circuito-marker-origin" title="${parada.nombre}"><i class="fas fa-flag-checkered"></i></div>`,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17]
+                });
+                marker = L.marker([parada.lat, parada.lng], { icon: iconoOrigen, zIndexOffset: 2000 }).addTo(circuitoLayerGroup);
+                marker.bindPopup(`<strong>🚩 Punto de Partida</strong><br>${parada.nombre}`);
+            } else {
+                const iconoParada = L.divIcon({
+                    className: 'circuito-div-icon',
+                    html: `<div class="circuito-marker-badge" title="Parada #${parada.orden}: ${parada.nombre}">${parada.orden}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+                marker = L.marker([parada.lat, parada.lng], { icon: iconoParada, zIndexOffset: 1000 + idx }).addTo(circuitoLayerGroup);
+
+                // Evento de clic en marcador: abrir panel de información
+                marker.on('click', function () {
+                    let itemMarcador = window.todosLosMarcadores ? window.todosLosMarcadores.find(m => m.idPunto === parada.id_punto) : null;
+                    if (itemMarcador && itemMarcador.datos && window.abrirPanelMarcador) {
+                        window.abrirPanelMarcador(itemMarcador.datos);
+                    } else {
+                        let contenido = `<strong>#${parada.orden} ${parada.nombre}</strong><br>`;
+                        if (parada.anfitrion) contenido += `<em>Dedicada a: ${parada.anfitrion}</em><br>`;
+                        contenido += `<small>${parada.categoria_display}</small>`;
+                        marker.bindPopup(contenido).openPopup();
+                    }
+                });
+            }
+        });
+
+        // 6. Ajustar vista del mapa
+        if (waypoints.length > 0) {
+            const bounds = L.latLngBounds(waypoints);
+            map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
+        }
+    }
+
+    function actualizarPanelCircuito(data) {
+        if (!panelActivo) return;
+
+        const res = data.resumen || {};
+        const paradas = data.paradas || [];
+
+        // Título dinámico
+        const tituloEl = document.getElementById('pca-titulo-circuito');
+        if (tituloEl) {
+            if (data.categoria === 'ofrenda') {
+                tituloEl.innerText = '🕯️ Ruta de Ofrendas Monumentales';
+            } else if (data.categoria === 'sitio_turistico') {
+                tituloEl.innerText = '🏛️ Circuito Histórico y Templos';
+            } else {
+                tituloEl.innerText = '🌟 Circuito Integral Huaquechula';
+            }
+        }
+
+        const badgeParadas = document.getElementById('pca-num-paradas');
+        if (badgeParadas) {
+            badgeParadas.innerText = `${res.total_paradas || 0} paradas`;
+        }
+
+        // Métricas
+        const distEl = document.getElementById('pca-distancia');
+        if (distEl) distEl.innerText = `${res.distancia_total_km || 0} km`;
+
+        const camEl = document.getElementById('pca-tiempo-caminata');
+        if (camEl) camEl.innerText = `${res.tiempo_caminata_min || 0} min`;
+
+        const totEl = document.getElementById('pca-tiempo-total');
+        if (totEl) totEl.innerText = res.tiempo_total_formato || `${res.tiempo_total_min || 0} min`;
+
+        const pasosEl = document.getElementById('pca-pasos');
+        if (pasosEl) pasosEl.innerText = `~${(res.pasos_estimados || 0).toLocaleString()}`;
+
+        // Renderizar lista de paradas
+        if (listaParadasEl) {
+            listaParadasEl.innerHTML = '';
+            paradas.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = 'pca-parada-item';
+
+                const numClass = p.es_origen ? 'pca-parada-num origen' : 'pca-parada-num';
+                const numText = p.es_origen ? '<i class="fas fa-flag"></i>' : p.orden;
+
+                let subtitulo = p.categoria_display || '';
+                if (p.anfitrion) subtitulo = `Dedicada a: ${p.anfitrion}`;
+
+                let tramoHtml = '';
+                if (p.distancia_siguiente_m > 0) {
+                    tramoHtml = `<div class="pca-parada-tramo"><i class="fas fa-walking"></i> ${Math.round(p.distancia_siguiente_m)}m (${p.tiempo_siguiente_min} min)</div>`;
+                }
+
+                item.innerHTML = `
+                    <div class="${numClass}">${numText}</div>
+                    <div class="pca-parada-info">
+                        <div class="pca-parada-nombre">${p.nombre}</div>
+                        <div class="pca-parada-meta">${subtitulo}</div>
+                    </div>
+                    ${tramoHtml}
+                `;
+
+                // Clic en el item: centrar mapa y abrir detalle
+                item.addEventListener('click', function () {
+                    const map = window._leaflet_map_instance;
+                    if (map) {
+                        let zoom = Math.max(map.getZoom(), 17);
+                        map.flyTo([p.lat, p.lng], zoom, { duration: 1.0 });
+
+                        if (!p.es_origen && window.todosLosMarcadores) {
+                            let itemMarcador = window.todosLosMarcadores.find(m => m.idPunto === p.id_punto);
+                            if (itemMarcador && itemMarcador.datos && window.abrirPanelMarcador) {
+                                window.abrirPanelMarcador(itemMarcador.datos);
+                            }
+                        }
+                    }
+                });
+
+                listaParadasEl.appendChild(item);
+            });
+        }
+
+        // Mostrar panel
+        panelActivo.classList.add('panel-visible');
+    }
+
+    function toggleParadasAcordeon() {
+        if (!listaParadasEl) return;
+        listaParadasEl.classList.toggle('expandido');
+        const toggleText = document.getElementById('pca-toggle-text');
+        if (toggleText) {
+            toggleText.innerText = listaParadasEl.classList.contains('expandido') ? 'Ocultar' : 'Ver paradas';
+        }
+    }
+
+    function centrarCircuito() {
+        const map = window._leaflet_map_instance;
+        if (map && circuitoActivoData && circuitoActivoData.waypoints) {
+            const bounds = L.latLngBounds(circuitoActivoData.waypoints);
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+        }
+    }
+
+    function limpiarCircuito() {
+        const map = window._leaflet_map_instance;
+        if (map && circuitoLayerGroup) {
+            map.removeLayer(circuitoLayerGroup);
+            circuitoLayerGroup = null;
+        }
+        circuitoActivoData = null;
+
+        if (panelActivo) {
+            panelActivo.classList.remove('panel-visible');
+        }
+
+        if (window.cerrarPanelMarcador) {
+            window.cerrarPanelMarcador();
+        }
+
+        // Restaurar marcadores estándar del mapa
+        if (window.mostrarTodosLosMarcadores) {
+            window.mostrarTodosLosMarcadores();
+        }
+
+        if (window.showCustomAlert) {
+            window.showCustomAlert('Circuito turístico cerrado. Mapa restaurado.', 'info');
+        }
+    }
+
+    function initCircuitos() {
+        fabCircuito = document.getElementById('fab-circuitos');
+        modalOverlay = document.getElementById('modal-circuito-overlay');
+        btnCerrarModal = document.getElementById('btn-cerrar-modal-circuito');
+        btnGenerar = document.getElementById('btn-generar-circuito');
+        presetCards = Array.from(document.querySelectorAll('.circuito-preset-card'));
+        btnZocalo = document.getElementById('opt-origen-zocalo');
+        btnGps = document.getElementById('opt-origen-gps');
+        checkCerrado = document.getElementById('check-circuito-cerrado');
+
+        panelActivo = document.getElementById('panel-circuito-activo');
+        btnCerrarCircuito = document.getElementById('btn-cerrar-circuito');
+        btnCentrarCircuito = document.getElementById('btn-centrar-circuito');
+        btnToggleParadas = document.getElementById('btn-toggle-paradas');
+        listaParadasEl = document.getElementById('pca-paradas-lista');
+
+        if (!fabCircuito || !modalOverlay) {
+            console.warn('CIRCUITOS: Elementos no encontrados en DOM');
+            return;
+        }
+
+        fabCircuito.addEventListener('click', abrirModal);
+        if (btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+
+        modalOverlay.addEventListener('click', function (e) {
+            if (e.target === modalOverlay) cerrarModal();
+        });
+
+        presetCards.forEach(card => {
+            card.addEventListener('click', function () {
+                seleccionarPreset(this);
+            });
+        });
+
+        if (btnZocalo) btnZocalo.addEventListener('click', () => seleccionarOrigen('zocalo'));
+        if (btnGps) btnGps.addEventListener('click', () => seleccionarOrigen('gps'));
+
+        if (btnGenerar) btnGenerar.addEventListener('click', generarCircuito);
+
+        if (btnCerrarCircuito) btnCerrarCircuito.addEventListener('click', limpiarCircuito);
+        if (btnCentrarCircuito) btnCentrarCircuito.addEventListener('click', centrarCircuito);
+        if (btnToggleParadas) btnToggleParadas.addEventListener('click', toggleParadasAcordeon);
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('activo')) {
+                cerrarModal();
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCircuitos);
+    } else {
+        initCircuitos();
+    }
 })();
 </script>
 {% endblock %}

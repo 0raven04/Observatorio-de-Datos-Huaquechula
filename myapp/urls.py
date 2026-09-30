@@ -38,6 +38,7 @@ urlpatterns = [
     
     # URLs de mapas y geolocalización
     path('mapa/', views.mapa, name='mapa'),
+    path('api/gis/circuito-turistico/', views.api_generar_circuito_turistico, name='api_generar_circuito_turistico'),
     
     # URLs de respaldo
     path('backup/', views.backup_database, name='backup_database'),
