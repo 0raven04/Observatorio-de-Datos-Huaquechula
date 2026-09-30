@@ -36,19 +36,19 @@ class Command(BaseCommand):
             # 2. Categorías de Sitios Turísticos
             cat_religioso, _ = Categoria_Sitio.objects.get_or_create(
                 nombre="Patrimonio Religioso",
-                defaults={"codigo_slug": "patrimonio-religioso", "descripcion": "Templos, ex-conventos y capillas coloniales"}
+                defaults={"codigo_slug": "patrimonio-religioso"}
             )
             cat_historico, _ = Categoria_Sitio.objects.get_or_create(
                 nombre="Atractivo Histórico",
-                defaults={"codigo_slug": "atractivo-historico", "descripcion": "Monumentos y patrimonio cultural de Huaquechula"}
+                defaults={"codigo_slug": "atractivo-historico"}
             )
             cat_plazas, _ = Categoria_Sitio.objects.get_or_create(
                 nombre="Plazas y Espacios Públicos",
-                defaults={"codigo_slug": "plazas-y-espacios-publicos", "descripcion": "Zócalo, plazas cívicas y quioscos"}
+                defaults={"codigo_slug": "plazas-y-espacios-publicos"}
             )
             cat_gastronomia, _ = Categoria_Sitio.objects.get_or_create(
                 nombre="Gastronomía y Tradición",
-                defaults={"codigo_slug": "gastronomia-y-tradicion", "descripcion": "Mercados, panaderías tradicionales y gastronomía"}
+                defaults={"codigo_slug": "gastronomia-y-tradicion"}
             )
 
             # 3. Archivo KMZ maestro de catálogo
