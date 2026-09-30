@@ -58,7 +58,7 @@
             <div class="mb-3">
                 <label for="survey-title-input" class="form-label fw-bold text-dark fs-5">Título de la Encuesta</label>
                 <input type="text" class="form-control form-control-lg border-0 border-bottom rounded-0 px-0" 
-                       id="survey-title-input" placeholder="Encuesta sin título" style="font-size: 1.8rem; font-weight: 700; focus: none;"
+                       id="survey-title-input" placeholder="Encuesta sin título" style="font-size: clamp(1.3rem, 3vw, 1.8rem); font-weight: 700;"
                        value="{% if survey %}{{ survey.titulo }}{% endif %}">
             </div>
             <div class="mb-3">
@@ -76,7 +76,7 @@
                             <strong>Respuestas anónimas</strong> (No requiere iniciar sesión)
                         </label>
                     </div>
-                    <div class="d-flex gap-3 mt-2">
+                    <div class="d-flex flex-wrap gap-3 mt-2">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" id="survey-web-input"
                                    {% if survey %}{% if survey.disponible_web %}checked{% endif %}{% else %}checked{% endif %}>
@@ -93,8 +93,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-5 text-md-end">
-                    <button class="btn btn-outline-secondary me-2 btn-sm" id="btn-cancel">Cancelar</button>
+                <div class="col-md-5 text-md-end mt-2 mt-md-0 d-flex justify-content-md-end justify-content-start gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-cancel">Cancelar</button>
                     <button class="btn btn-dark btn-sm px-4" id="btn-save-survey" style="background-color: var(--color-gris-oscuro);">
                         <i class="fas fa-save me-1"></i> Guardar Encuesta
                     </button>
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${optionsHTML}
 
                     <!-- Footer actions inside card -->
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
                             <!-- Reordenar -->
                             <button class="btn btn-outline-secondary btn-sm move-up-btn" ${index === 0 ? 'disabled' : ''} title="Subir">

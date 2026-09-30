@@ -168,6 +168,46 @@
     [data-theme="dark"] .metric-pill {
         background: rgba(255,255,255,0.06);
     }
+
+    /* Media queries responsivas */
+    @media (max-width: 768px) {
+        .container, .container-fluid {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+        .mon-header-card {
+            padding: 1.1rem 1rem;
+        }
+        .mon-panel {
+            padding: 1rem 0.9rem;
+        }
+        .kpi-stat-card {
+            padding: 1rem;
+        }
+        .kpi-value {
+            font-size: 1.65rem;
+        }
+        .flow-widget-card .card-body {
+            padding: 0.9rem !important;
+        }
+        .mon-panel > div[style*="height: 260px"] {
+            height: 220px !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container, .container-fluid {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        .mon-header-card h1 {
+            font-size: 1.3rem;
+        }
+        .metric-pill {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+        }
+    }
 </style>
 {% endblock %}
 

@@ -129,7 +129,41 @@
         grid-template-columns: 1fr 1fr;
         gap: 16px;
     }
-    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+        .two-col { grid-template-columns: 1fr; }
+        .enc-header {
+            padding: 14px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .enc-header-actions {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        main.container {
+            padding: 16px 10px 32px !important;
+        }
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .kpi-card {
+            padding: 12px 14px;
+        }
+        .kpi-val {
+            font-size: 1.5rem;
+        }
+        .motivo-name {
+            width: 85px;
+            font-size: 0.75rem;
+        }
+        .panel {
+            padding: 14px;
+        }
+    }
 
     /* ── Panel card ── */
     .panel {

@@ -113,7 +113,13 @@
         @media(max-width:900px){
             .kpi-grid,.grid-2,.grid-3 { grid-template-columns:1fr; }
         }
-        @media(max-width:600px){ .kpi-grid { grid-template-columns:1fr; } }
+        @media(max-width:600px){
+            .dash { padding: 1.5rem 1rem; }
+            .kpi-grid { grid-template-columns:1fr; }
+            .kpi-val { font-size: 1.85rem; }
+            .kpi-card { padding: 1.25rem 1.1rem; }
+            .sec-title { font-size: 1.3rem; margin-bottom: 1.25rem; }
+        }
     </style>
 {% endblock %}
 

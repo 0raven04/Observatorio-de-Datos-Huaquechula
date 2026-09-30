@@ -5,6 +5,15 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'myapp/CSS/style.css' %}" />
     <link href="{% static 'myapp/CSS/style_crud.css' %}" rel="stylesheet" />
+    <style>
+        @media (max-width: 768px) {
+            .btn-filtro {
+                min-width: calc(50% - 6px);
+                font-size: 0.82rem;
+                padding: 6px 8px;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -35,7 +44,7 @@
 
         <!-- Filtros por botones -->
         <div class="card-body p-3 bg-light border-bottom">
-            <div class="d-flex w-100 gap-2">
+            <div class="d-flex flex-wrap w-100 gap-2">
                 <button class="btn btn-outline-dark flex-fill active btn-filtro fw-bold" data-filtro="todos" style="border-radius: 8px;">Todos</button>
                 <button class="btn btn-outline-dark flex-fill btn-filtro fw-bold" data-filtro="admin" style="border-radius: 8px;">Administradores</button>
                 <button class="btn btn-outline-dark flex-fill btn-filtro fw-bold" data-filtro="encuestador" style="border-radius: 8px;">Encuestadores</button>

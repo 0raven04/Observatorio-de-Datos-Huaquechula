@@ -11,24 +11,22 @@
 {% block content %}
 <div class="container" style="max-width: 1400px; margin: 0 auto;">
   
-  <div class="row mb-4 align-items-center">
-    <div class="col-md-12 mb-3">
-      <div class="d-flex justify-content-end">
-        <div class="d-flex">
-          <button type="button" class="btn boton bt-body me-1" onclick="abrirModalCreacion()">
-            <i class="fas fa-plus me-1"></i> Nuevo Archivo URL
-          </button>
-          <button type="button" class="btn boton bt-body" data-bs-toggle="modal" data-bs-target="#categoriaModal">
-            <i class="fas fa-plus me-1"></i> Nueva categoría
-          </button>
-        </div>
+  <div class="row mb-3 align-items-center">
+    <div class="col-md-12 mb-2">
+      <div class="d-flex justify-content-md-end justify-content-start flex-wrap gap-2">
+        <button type="button" class="btn boton bt-body" onclick="abrirModalCreacion()">
+          <i class="fas fa-plus me-1"></i> Nuevo Archivo URL
+        </button>
+        <button type="button" class="btn boton bt-body" data-bs-toggle="modal" data-bs-target="#categoriaModal">
+          <i class="fas fa-plus me-1"></i> Nueva categoría
+        </button>
       </div>
     </div>
   </div>
   
   <!-- Filtros y búsqueda -->
   <div class="mb-4">
-    <div class="row">
+    <div class="row g-2 g-md-3">
       <div class="col-md-6">
         <div class="search-box">
           <i class="fas fa-search"></i>
@@ -65,7 +63,7 @@
   <!-- Tabla de archivos -->
   <div class="card mb-4">
     <div class="card-header py-3 card-header-dark text-center">
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0 text-black">
           <i class="fas fa-external-link-alt me-2"></i> Archivos por URL
           <span class="badge bg-light text-dark ms-2" id="totalCount">{{ archivos|length }}</span>

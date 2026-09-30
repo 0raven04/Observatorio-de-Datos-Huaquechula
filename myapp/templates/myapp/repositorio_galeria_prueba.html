@@ -469,16 +469,33 @@
             padding-top: 64px;
         }
 
-        .feature-banner img {
-            height: 220px;
+        .feature-banner img,
+        #observatorioCarousel .carousel-item img {
+            height: 220px !important;
         }
 
         .toolbar {
             padding: 12px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .toolbar .search-box {
+            width: 100% !important;
+            min-width: 100% !important;
         }
 
         .gallery-grid {
             grid-template-columns: 1fr;
+        }
+
+        .stat-pill {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .galeria-title {
+            font-size: 1.75rem;
         }
     }
 </style>
